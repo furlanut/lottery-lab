@@ -6,6 +6,7 @@ from __future__ import annotations
 """
 
 from datetime import date, datetime
+from typing import Optional
 
 from sqlalchemy import (
     Date,
@@ -71,9 +72,9 @@ class Previsione(Base):
     max_colpi: Mapped[int] = mapped_column(Integer, default=9)
     posta: Mapped[float] = mapped_column(Float, default=1.0)
     stato: Mapped[str] = mapped_column(String(20), default="ATTIVA")
-    colpo_esito: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    data_esito: Mapped[date | None] = mapped_column(Date, nullable=True)
-    vincita: Mapped[float | None] = mapped_column(Float, nullable=True)
+    colpo_esito: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    data_esito: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    vincita: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
@@ -89,10 +90,10 @@ class Bankroll(Base):
     tipo: Mapped[str] = mapped_column(String(20), nullable=False)
     importo: Mapped[float] = mapped_column(Float, nullable=False)
     saldo: Mapped[float] = mapped_column(Float, nullable=False)
-    previsione_id: Mapped[int | None] = mapped_column(
+    previsione_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("previsioni.id"), nullable=True
     )
-    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
@@ -108,12 +109,12 @@ class BacktestRun(Base):
         DateTime, server_default=func.now(), nullable=False
     )
     parametri: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    train_start: Mapped[date | None] = mapped_column(Date, nullable=True)
-    train_end: Mapped[date | None] = mapped_column(Date, nullable=True)
-    test_start: Mapped[date | None] = mapped_column(Date, nullable=True)
-    test_end: Mapped[date | None] = mapped_column(Date, nullable=True)
+    train_start: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    train_end: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    test_start: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    test_end: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     risultati: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 
 def get_engine():

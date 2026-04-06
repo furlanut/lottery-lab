@@ -181,6 +181,86 @@ def health() -> None:
         raise typer.Exit(code=1)
 
 
+@app.command()
+def predict(
+    csv_file: Path | None = typer.Option(None, "--csv", help="File CSV sorgente dati"),
+    min_score: int = typer.Option(3, "--min-score", help="Score minimo"),
+    top_n: int = typer.Option(20, "--top-n", help="Numero massimo risultati"),
+) -> None:
+    """Genera previsioni basate sull'ultima estrazione disponibile."""
+    from lotto_predictor.predictor.generator import genera_previsioni, carica_dati_csv
+
+    if csv_file:
+        dati = carica_dati_csv(csv_file)
+    else:
+        console.print("[red]Specificare --csv (supporto DB in arrivo)[/red]")
+        raise typer.Exit(code=1)
+
+    previsioni = genera_previsioni(dati, min_score=min_score, top_n=top_n)
+
+    if not previsioni:
+        console.print("\n[yellow]Nessun segnale con score >= {min_score}. "
+                      "NON giocare questo turno.[/yellow]\n")
+        return
+
+    table = Table(title=f"Previsioni (score >= {min_score})")
+    table.add_column("#", style="bold")
+    table.add_column("Ruota")
+    table.add_column("Ambo")
+    table.add_column("Score")
+    table.add_column("Filtri")
+
+    for i, p in enumerate(previsioni, 1):
+        a, b = p["ambo"]
+        filtri = "+".join(p["filtri"])
+        table.add_row(str(i), p["ruota"], f"{a:2d}-{b:2d}", str(p["score"]), filtri)
+
+    console.print(table)
+    console.print()
+
+
+@app.command()
+def backtest(
+    csv_file: Path | None = typer.Option(None, "--csv", help="File CSV sorgente dati"),
+    min_score: int = typer.Option(2, "--min-score", help="Score minimo"),
+    max_colpi: int = typer.Option(9, "--max-colpi", help="Colpi massimi per ciclo"),
+    train_ratio: float = typer.Option(0.7, "--train-ratio", help="Ratio train/test"),
+) -> None:
+    """Esegue backtesting con split temporale."""
+    from lotto_predictor.analyzer.backtester import esegui_backtest, formatta_report
+    from lotto_predictor.predictor.generator import carica_dati_csv
+
+    if csv_file:
+        dati = carica_dati_csv(csv_file)
+    else:
+        console.print("[red]Specificare --csv (supporto DB in arrivo)[/red]")
+        raise typer.Exit(code=1)
+
+    console.print(f"[bold]Backtesting su {len(dati)} estrazioni...[/bold]\n")
+    report = esegui_backtest(dati, min_score=min_score, max_colpi=max_colpi,
+                             train_ratio=train_ratio)
+    console.print(formatta_report(report))
+    console.print()
+
+
+@app.command()
+def notify(
+    test: bool = typer.Option(False, "--test", help="Invia notifica di test"),
+) -> None:
+    """Invia notifiche via ntfy."""
+    from lotto_predictor.notifier.ntfy import notifica_test
+
+    if test:
+        ok = notifica_test()
+        if ok:
+            console.print("[green]Notifica di test inviata.[/green]")
+        else:
+            console.print("[red]Errore invio notifica. Verifica NTFY_TOPIC.[/red]")
+            raise typer.Exit(code=1)
+    else:
+        console.print("[yellow]Usa --test per inviare una notifica di prova.[/yellow]")
+
+
 def _mostra_stats(stats: dict) -> None:
     """Mostra statistiche di importazione."""
     table = Table(show_header=False, box=None)
