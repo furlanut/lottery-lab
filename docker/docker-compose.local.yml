@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: lotto-db
+    environment:
+      POSTGRES_USER: lotto
+      POSTGRES_PASSWORD: lotto
+      POSTGRES_DB: lotto_convergent
+    ports:
+      - "5432:5432"
+    volumes:
+      - lotto_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lotto -d lotto_convergent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  lotto_pgdata:
