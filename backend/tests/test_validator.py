@@ -3,7 +3,6 @@
 from datetime import date
 
 import pytest
-
 from lotto_predictor.ingestor.validator import (
     ValidationError,
     valida_concorso,
@@ -44,8 +43,18 @@ class TestValidaRuota:
     """Test validazione ruota."""
 
     def test_ruote_valide(self):
-        for ruota in ["BARI", "CAGLIARI", "FIRENZE", "GENOVA", "MILANO",
-                       "NAPOLI", "PALERMO", "ROMA", "TORINO", "VENEZIA"]:
+        for ruota in [
+            "BARI",
+            "CAGLIARI",
+            "FIRENZE",
+            "GENOVA",
+            "MILANO",
+            "NAPOLI",
+            "PALERMO",
+            "ROMA",
+            "TORINO",
+            "VENEZIA",
+        ]:
             assert valida_ruota(ruota) == ruota
 
     def test_case_insensitive(self):

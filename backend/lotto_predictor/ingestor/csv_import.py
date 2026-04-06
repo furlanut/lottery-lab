@@ -47,31 +47,34 @@ def parse_file_csv(filepath: Path) -> list[dict]:
                 data_estrazione = valida_data(row["date"])
                 ruota = valida_ruota(row["wheel"])
 
-                numeri = [
-                    int(row[f"n{i}"]) for i in range(1, 6)
-                ]
+                numeri = [int(row[f"n{i}"]) for i in range(1, 6)]
                 valida_numeri(numeri)
 
                 # Il CSV non ha il numero concorso, usiamo 0 come placeholder
                 concorso = int(row.get("concorso", 0))
 
-                risultati.append({
-                    "concorso": concorso,
-                    "data": data_estrazione,
-                    "ruota": ruota,
-                    "numeri": numeri,
-                })
+                risultati.append(
+                    {
+                        "concorso": concorso,
+                        "data": data_estrazione,
+                        "ruota": ruota,
+                        "numeri": numeri,
+                    }
+                )
             except (ValidationError, ValueError, KeyError) as e:
                 errori.append(f"Riga {row_num}: {e}")
 
     if errori:
         logger.warning(
             "File %s: %d errori su %d righe",
-            filepath.name, len(errori), row_num,
+            filepath.name,
+            len(errori),
+            row_num,
         )
 
     logger.info(
         "File %s: %d estrazioni valide importate",
-        filepath.name, len(risultati),
+        filepath.name,
+        len(risultati),
     )
     return risultati

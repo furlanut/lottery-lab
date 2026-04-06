@@ -19,6 +19,7 @@ class Candidato:
         dettaglio: informazioni aggiuntive sul segnale
         peso: peso del segnale (default 1.0)
     """
+
     num_a: int
     num_b: int
     filtro: str
@@ -40,6 +41,7 @@ class DrawData:
         ruota: nome della ruota
         numeri: lista dei 5 numeri estratti
     """
+
     data: str
     ruota: str
     numeri: list[int] = field(default_factory=list)

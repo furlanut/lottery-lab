@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 # Caricamento dati
 # ---------------------------------------------------------------------------
 
+
 def carica_dati_csv(filepath: str) -> list[tuple[str, dict[str, list[int]]]]:
     """Carica i dati storici da un file CSV.
 
@@ -46,8 +47,8 @@ def carica_dati_csv(filepath: str) -> list[tuple[str, dict[str, list[int]]]]:
     with open(filepath, newline="", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         for row in reader:
-            data_str = row["data"]
-            ruota = row["ruota"].upper().strip()
+            data_str = row.get("date", row.get("data", ""))
+            ruota = row.get("wheel", row.get("ruota", "")).upper().strip()
             numeri = [
                 int(row["n1"]),
                 int(row["n2"]),
@@ -77,11 +78,7 @@ def carica_dati_db(session: Session) -> list[tuple[str, dict[str, list[int]]]]:
     Returns:
         Lista di tuple (data, {ruota: [n1..n5]}) ordinate per data crescente.
     """
-    rows = (
-        session.query(Estrazione)
-        .order_by(Estrazione.data, Estrazione.ruota)
-        .all()
-    )
+    rows = session.query(Estrazione).order_by(Estrazione.data, Estrazione.ruota).all()
 
     by_date: dict[str, dict[str, list[int]]] = defaultdict(dict)
     for est in rows:
@@ -98,6 +95,7 @@ def carica_dati_db(session: Session) -> list[tuple[str, dict[str, list[int]]]]:
 # ---------------------------------------------------------------------------
 # Generazione previsioni
 # ---------------------------------------------------------------------------
+
 
 def genera_previsioni(
     dati: list[tuple[str, dict[str, list[int]]]],
@@ -143,13 +141,15 @@ def genera_previsioni(
             soglia_ritardo_diametrale=settings.filter_s91_ritardo_diametrale,
         )
         for seg in segnali:
-            all_signals.append({
-                "ruota": seg.ruota,
-                "ambo": seg.ambo,
-                "score": seg.score,
-                "filtri": seg.filtri,
-                "dettagli": seg.dettagli,
-            })
+            all_signals.append(
+                {
+                    "ruota": seg.ruota,
+                    "ambo": seg.ambo,
+                    "score": seg.score,
+                    "filtri": seg.filtri,
+                    "dettagli": seg.dettagli,
+                }
+            )
 
     # Ordina per score decrescente
     all_signals.sort(key=lambda s: -s["score"])
@@ -167,6 +167,7 @@ def genera_previsioni(
 # ---------------------------------------------------------------------------
 # Persistenza previsioni
 # ---------------------------------------------------------------------------
+
 
 def salva_previsioni(
     session: Session,

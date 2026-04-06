@@ -5,6 +5,7 @@ Per ogni numero estratto sulla ruota, calcola il diametrale
 sulla stessa ruota, genera la coppia (numero, diametrale)
 come candidato ambo.
 """
+
 from __future__ import annotations
 
 from lotto_predictor.analyzer.cyclometry import diametrale, is_valid_ambo
@@ -51,9 +52,7 @@ class Somma91(FilterBase):
             if not is_valid_ambo(num, diam):
                 continue
 
-            delay = self._ritardo_numero(
-                dati, indice_estrazione, ruota, diam
-            )
+            delay = self._ritardo_numero(dati, indice_estrazione, ruota, diam)
 
             if delay >= self._soglia_ritardo:
                 candidati.append(

@@ -23,7 +23,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from lotto_predictor.config import settings
-from lotto_predictor.models.database import Bankroll, Previsione
+from lotto_predictor.models.database import Bankroll
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ _BANKROLL_SOGLIA_SCORE_3 = 300.0
 # ---------------------------------------------------------------------------
 # Decisione di gioco
 # ---------------------------------------------------------------------------
+
 
 def decide_play(
     bankroll: float,
@@ -83,8 +84,7 @@ def decide_play(
     if score == 3 and bankroll < _BANKROLL_SOGLIA_SCORE_3:
         return (
             False,
-            f"Score 3 con bankroll {bankroll:.2f}€ sotto soglia "
-            f"({_BANKROLL_SOGLIA_SCORE_3:.2f}€)",
+            f"Score 3 con bankroll {bankroll:.2f}€ sotto soglia ({_BANKROLL_SOGLIA_SCORE_3:.2f}€)",
         )
 
     # Regola 5: via libera
@@ -94,6 +94,7 @@ def decide_play(
 # ---------------------------------------------------------------------------
 # Calcolo costi
 # ---------------------------------------------------------------------------
+
 
 def calcola_costo_ciclo(
     posta: float,
@@ -119,6 +120,7 @@ def calcola_costo_ciclo(
 # ---------------------------------------------------------------------------
 # Registrazione movimenti
 # ---------------------------------------------------------------------------
+
 
 def registra_giocata(
     session: Session,
@@ -154,7 +156,9 @@ def registra_giocata(
 
     logger.info(
         "Registrata giocata: -%.2f€ (prev #%d), saldo %.2f€",
-        posta, previsione_id, nuovo_saldo,
+        posta,
+        previsione_id,
+        nuovo_saldo,
     )
     return record
 
@@ -193,7 +197,9 @@ def registra_vincita(
 
     logger.info(
         "Registrata vincita: +%.2f€ (prev #%d), saldo %.2f€",
-        vincita, previsione_id, nuovo_saldo,
+        vincita,
+        previsione_id,
+        nuovo_saldo,
     )
     return record
 
@@ -201,6 +207,7 @@ def registra_vincita(
 # ---------------------------------------------------------------------------
 # Interrogazioni bankroll
 # ---------------------------------------------------------------------------
+
 
 def get_bankroll_attuale(session: Session) -> float:
     """Restituisce il saldo corrente del bankroll.
@@ -215,11 +222,7 @@ def get_bankroll_attuale(session: Session) -> float:
         Saldo corrente.
     """
     # Prendi il saldo dall'ultimo movimento (ordinato per id desc)
-    ultimo = (
-        session.query(Bankroll.saldo)
-        .order_by(Bankroll.id.desc())
-        .first()
-    )
+    ultimo = session.query(Bankroll.saldo).order_by(Bankroll.id.desc()).first()
     if ultimo is not None:
         return float(ultimo[0])
     return settings.bankroll_iniziale

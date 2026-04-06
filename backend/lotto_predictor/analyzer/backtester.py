@@ -3,6 +3,7 @@
 Framework di backtesting con split temporale train/test.
 Verifica l'hit rate dei segnali convergenti out-of-sample.
 """
+
 from __future__ import annotations
 
 import logging
@@ -27,6 +28,7 @@ class RisultatoBacktest:
         ratio: rapporto hit_rate / baseline
         colpi_medi: colpo medio di uscita per gli hit
     """
+
     score: int
     segnali: int = 0
     hit: int = 0
@@ -40,6 +42,7 @@ class RisultatoBacktest:
 @dataclass
 class ReportBacktest:
     """Report completo del backtesting."""
+
     dataset_size: int
     train_size: int
     test_size: int
@@ -84,9 +87,7 @@ def esegui_backtest(
 
     for draw_idx in range(split, len(dati) - max_colpi):
         for ruota in RUOTE:
-            previsioni = calcola_convergenza(
-                dati, draw_idx, ruota, min_score=min_score
-            )
+            previsioni = calcola_convergenza(dati, draw_idx, ruota, min_score=min_score)
 
             for pred in previsioni:
                 score = pred.score
@@ -147,7 +148,10 @@ def formatta_report(report: ReportBacktest) -> str:
     lines.append(f"Totale segnali: {report.totale_segnali}")
     lines.append(f"Totale hit: {report.totale_hit}")
     lines.append("")
-    lines.append(f"{'SCORE':>5} {'SEGNALI':>8} {'HIT':>6} {'HIT%':>7} {'BASE%':>7} {'RATIO':>7} {'COLPO':>6}")
+    header = (
+        f"{'SCORE':>5} {'SEGNALI':>8} {'HIT':>6} {'HIT%':>7} {'BASE%':>7} {'RATIO':>7} {'COLPO':>6}"
+    )
+    lines.append(header)
     lines.append("-" * 55)
 
     for score in sorted(report.risultati_per_score.keys()):
@@ -155,7 +159,7 @@ def formatta_report(report: ReportBacktest) -> str:
         marker = " <<<" if r.ratio > 1.5 else (" <" if r.ratio > 1.2 else "")
         lines.append(
             f"{r.score:>5} {r.segnali:>8} {r.hit:>6} "
-            f"{r.hit_rate*100:>6.2f}% {r.baseline*100:>6.2f}% "
+            f"{r.hit_rate * 100:>6.2f}% {r.baseline * 100:>6.2f}% "
             f"{r.ratio:>6.2f}x {r.colpi_medi:>5.1f}{marker}"
         )
 

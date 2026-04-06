@@ -1,4 +1,5 @@
 """Notifiche push via ntfy.sh — Lotto Convergent."""
+
 from __future__ import annotations
 
 import logging

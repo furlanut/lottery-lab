@@ -28,6 +28,7 @@ from lotto_predictor.config import settings
 
 class Base(DeclarativeBase):
     """Classe base per tutti i modelli."""
+
     pass
 
 
@@ -105,9 +106,7 @@ class BacktestRun(Base):
     __tablename__ = "backtest_runs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    data_run: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), nullable=False
-    )
+    data_run: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     parametri: Mapped[dict] = mapped_column(JSONB, nullable=False)
     train_start: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     train_end: Mapped[Optional[date]] = mapped_column(Date, nullable=True)

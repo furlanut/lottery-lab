@@ -2,11 +2,9 @@
 
 Test con dati sintetici per verificare il comportamento dei filtri.
 """
+
 from __future__ import annotations
 
-import pytest
-
-from lotto_predictor.analyzer.cyclometry import cyclo_dist, diametrale, fuori90, decade
 from lotto_predictor.analyzer.filters.base import Candidato
 
 
@@ -34,11 +32,14 @@ class TestFiltroVincolo90:
         # d2 = cyclo_dist(30, 65) = 35
         # 10 + 35 = 45 -> SEGNALE
         return [
-            ("01/01/2024", {
-                "BARI": [10, 30, 50, 70, 85],
-                "CAGLIARI": [20, 65, 40, 55, 75],
-                "FIRENZE": [1, 2, 3, 4, 5],
-            }),
+            (
+                "01/01/2024",
+                {
+                    "BARI": [10, 30, 50, 70, 85],
+                    "CAGLIARI": [20, 65, 40, 55, 75],
+                    "FIRENZE": [1, 2, 3, 4, 5],
+                },
+            ),
         ]
 
     def test_genera_candidati(self):
@@ -55,6 +56,7 @@ class TestFiltroVincolo90:
     def test_nome(self):
         """Verifica il nome identificativo del filtro."""
         from lotto_predictor.analyzer.filters.vincolo90 import Vincolo90
+
         assert Vincolo90().nome == "vincolo90"
 
 
@@ -82,6 +84,7 @@ class TestFiltroIsotopismo:
     def test_nome(self):
         """Verifica il nome identificativo del filtro."""
         from lotto_predictor.analyzer.filters.isotopismo import Isotopismo
+
         assert Isotopismo().nome == "isotopismo"
 
 
@@ -92,10 +95,12 @@ class TestFiltroRitardo:
         """Crea dati con un ambo assente per molte estrazioni."""
         data = []
         for i in range(200):
-            data.append((
-                f"{i+1:02d}/01/2024",
-                {"BARI": [1, 2, 3, 4, 5]},  # mai 88-89
-            ))
+            data.append(
+                (
+                    f"{i + 1:02d}/01/2024",
+                    {"BARI": [1, 2, 3, 4, 5]},  # mai 88-89
+                )
+            )
         return data
 
     def test_ritardo_alto(self):
@@ -112,6 +117,7 @@ class TestFiltroRitardo:
     def test_nome(self):
         """Verifica il nome identificativo del filtro."""
         from lotto_predictor.analyzer.filters.ritardo import RitardoCritico
+
         assert RitardoCritico().nome == "ritardo"
 
 
@@ -145,6 +151,7 @@ class TestFiltroDecade:
     def test_nome(self):
         """Verifica il nome identificativo del filtro."""
         from lotto_predictor.analyzer.filters.decade import CoerenzaDecina
+
         assert CoerenzaDecina().nome == "decade"
 
 
@@ -156,15 +163,19 @@ class TestFiltroSomma91:
         data = []
         # 20 estrazioni senza il numero 46 (diametrale di 1)
         for i in range(20):
-            data.append((
-                f"{i+1:02d}/01/2024",
-                {"BARI": [2, 3, 4, 5, 6]},  # mai 46
-            ))
+            data.append(
+                (
+                    f"{i + 1:02d}/01/2024",
+                    {"BARI": [2, 3, 4, 5, 6]},  # mai 46
+                )
+            )
         # L'ultima estrazione ha il numero 1
-        data.append((
-            "21/01/2024",
-            {"BARI": [1, 10, 20, 30, 40]},
-        ))
+        data.append(
+            (
+                "21/01/2024",
+                {"BARI": [1, 10, 20, 30, 40]},
+            )
+        )
         return data
 
     def test_rileva_diametrale_caldo(self):
@@ -181,6 +192,7 @@ class TestFiltroSomma91:
     def test_nome(self):
         """Verifica il nome identificativo del filtro."""
         from lotto_predictor.analyzer.filters.somma91 import Somma91
+
         assert Somma91().nome == "somma91"
 
 
@@ -189,7 +201,8 @@ class TestConvergenza:
 
     def test_import(self):
         """Verifica che il modulo convergenza sia importabile."""
-        from lotto_predictor.analyzer.convergence import calcola_convergenza, SegnaleConvergente
+        from lotto_predictor.analyzer.convergence import calcola_convergenza
+
         assert callable(calcola_convergenza)
 
     def test_dati_vuoti(self):

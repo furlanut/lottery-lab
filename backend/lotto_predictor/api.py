@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException
 from sqlalchemy import func, select, text
 
 from lotto_predictor.config import settings
-from lotto_predictor.models.database import Estrazione, Previsione, get_session
+from lotto_predictor.models.database import Estrazione, get_session
 from lotto_predictor.models.schemas import HealthResponse
 
 app = FastAPI(
@@ -58,6 +58,6 @@ def health_check():
                     "request_id": "",
                 }
             },
-        )
+        ) from e
     finally:
         session.close()

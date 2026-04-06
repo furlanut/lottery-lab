@@ -6,6 +6,7 @@ alla coerenza di decina tra i due numeri dell'ambo.
 - Distanza ciclometrica <= 10: 0.5
 - Altrimenti:              0.0
 """
+
 from __future__ import annotations
 
 from lotto_predictor.analyzer.cyclometry import cyclo_dist, decade

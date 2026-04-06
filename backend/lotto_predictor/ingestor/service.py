@@ -13,9 +13,9 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
-from lotto_predictor.models.database import Estrazione, get_session
 from lotto_predictor.ingestor.csv_import import parse_file_csv
 from lotto_predictor.ingestor.txt_parser import parse_file_txt, scan_archivio_txt
+from lotto_predictor.models.database import Estrazione, get_session
 
 logger = logging.getLogger(__name__)
 
@@ -38,17 +38,19 @@ def inserisci_estrazioni(session: Session, records: list[dict]) -> dict:
 
     for record in records:
         try:
-            stmt = pg_insert(Estrazione).values(
-                concorso=record["concorso"],
-                data=record["data"],
-                ruota=record["ruota"],
-                n1=record["numeri"][0],
-                n2=record["numeri"][1],
-                n3=record["numeri"][2],
-                n4=record["numeri"][3],
-                n5=record["numeri"][4],
-            ).on_conflict_do_nothing(
-                constraint="uq_data_ruota"
+            stmt = (
+                pg_insert(Estrazione)
+                .values(
+                    concorso=record["concorso"],
+                    data=record["data"],
+                    ruota=record["ruota"],
+                    n1=record["numeri"][0],
+                    n2=record["numeri"][1],
+                    n3=record["numeri"][2],
+                    n4=record["numeri"][3],
+                    n5=record["numeri"][4],
+                )
+                .on_conflict_do_nothing(constraint="uq_data_ruota")
             )
             result = session.execute(stmt)
 
@@ -65,7 +67,9 @@ def inserisci_estrazioni(session: Session, records: list[dict]) -> dict:
     stats = {"inseriti": inseriti, "duplicati": duplicati, "errori": errori}
     logger.info(
         "Inserimento completato: %d inseriti, %d duplicati, %d errori",
-        inseriti, duplicati, errori,
+        inseriti,
+        duplicati,
+        errori,
     )
     return stats
 
@@ -180,7 +184,9 @@ def importa_archivio_completo(
 
         logger.info(
             "Importazione archivio completata: %d file, %d inseriti, %d duplicati",
-            len(files), totale_inseriti, totale_duplicati,
+            len(files),
+            totale_inseriti,
+            totale_duplicati,
         )
         return risultato
     finally:

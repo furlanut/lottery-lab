@@ -12,8 +12,16 @@ Verifica integrita dei dati prima dell'inserimento nel database:
 from datetime import date, datetime
 
 RUOTE_VALIDE = {
-    "BARI", "CAGLIARI", "FIRENZE", "GENOVA", "MILANO",
-    "NAPOLI", "PALERMO", "ROMA", "TORINO", "VENEZIA",
+    "BARI",
+    "CAGLIARI",
+    "FIRENZE",
+    "GENOVA",
+    "MILANO",
+    "NAPOLI",
+    "PALERMO",
+    "ROMA",
+    "TORINO",
+    "VENEZIA",
 }
 
 

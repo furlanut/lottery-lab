@@ -9,13 +9,13 @@ Score:
   3: segnale moderato
   4-5: segnale forte, priorita massima
 """
+
 from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from lotto_predictor.analyzer.cyclometry import RUOTE, cyclo_dist, decade, is_valid_ambo
-from lotto_predictor.analyzer.filters.base import Candidato
+from lotto_predictor.analyzer.cyclometry import decade, is_valid_ambo
 
 
 @dataclass
@@ -29,6 +29,7 @@ class SegnaleConvergente:
         dettagli: informazioni aggiuntive per ogni filtro
         ruota: ruota target
     """
+
     ambo: tuple[int, int]
     score: int
     filtri: list[str] = field(default_factory=list)
@@ -60,9 +61,9 @@ def calcola_convergenza(
         Lista di SegnaleConvergente ordinata per score decrescente (max 10)
     """
     # Importa i filtri qui per evitare import circolari
-    from lotto_predictor.analyzer.filters.vincolo90 import Vincolo90
     from lotto_predictor.analyzer.filters.isotopismo import Isotopismo
     from lotto_predictor.analyzer.filters.somma91 import Somma91
+    from lotto_predictor.analyzer.filters.vincolo90 import Vincolo90
 
     # Passo 1: raccolta candidati dai filtri generativi
     all_pairs = defaultdict(lambda: {"score": 0, "filtri": [], "dettagli": []})
@@ -120,13 +121,15 @@ def calcola_convergenza(
     risultati = []
     for pair, info in all_pairs.items():
         if info["score"] >= min_score:
-            risultati.append(SegnaleConvergente(
-                ambo=pair,
-                score=info["score"],
-                filtri=info["filtri"],
-                dettagli=info["dettagli"],
-                ruota=ruota,
-            ))
+            risultati.append(
+                SegnaleConvergente(
+                    ambo=pair,
+                    score=info["score"],
+                    filtri=info["filtri"],
+                    dettagli=info["dettagli"],
+                    ruota=ruota,
+                )
+            )
 
     # Ordina per score decrescente, prendi i primi 10
     risultati.sort(key=lambda x: -x.score)

@@ -6,11 +6,12 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
-
 # --- Estrazioni ---
+
 
 class EstrazioneBase(BaseModel):
     """Schema base per un'estrazione."""
+
     concorso: int
     data: date
     ruota: str
@@ -23,6 +24,7 @@ class EstrazioneBase(BaseModel):
 
 class EstrazioneRead(EstrazioneBase):
     """Schema per lettura estrazione dal DB."""
+
     id: int
     created_at: datetime
 
@@ -31,8 +33,10 @@ class EstrazioneRead(EstrazioneBase):
 
 # --- Previsioni ---
 
+
 class PrevisioneBase(BaseModel):
     """Schema base per una previsione."""
+
     ruota: str
     num_a: int = Field(ge=1, le=90)
     num_b: int = Field(ge=1, le=90)
@@ -44,6 +48,7 @@ class PrevisioneBase(BaseModel):
 
 class PrevisioneRead(PrevisioneBase):
     """Schema per lettura previsione dal DB."""
+
     id: int
     data_generazione: date
     data_target_inizio: date
@@ -58,8 +63,10 @@ class PrevisioneRead(PrevisioneBase):
 
 # --- Bankroll ---
 
+
 class BankrollRead(BaseModel):
     """Schema per lettura movimento bankroll."""
+
     id: int
     data: date
     tipo: str
@@ -74,8 +81,10 @@ class BankrollRead(BaseModel):
 
 # --- Status ---
 
+
 class StatusResponse(BaseModel):
     """Risposta per il comando status."""
+
     bankroll_attuale: float
     pnl_totale: float
     previsioni_attive: int
@@ -87,8 +96,10 @@ class StatusResponse(BaseModel):
 
 # --- Health ---
 
+
 class HealthResponse(BaseModel):
     """Risposta per health check."""
+
     status: str
     database: str
     estrazioni_count: int

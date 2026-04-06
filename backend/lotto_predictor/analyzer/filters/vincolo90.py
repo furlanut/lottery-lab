@@ -5,6 +5,7 @@ ciclometriche tra coppie di posizioni vale 45.
 Se il vincolo e soddisfatto genera candidati ambo tramite
 fuori90 e diametrale.
 """
+
 from __future__ import annotations
 
 from itertools import combinations
@@ -55,7 +56,7 @@ class Vincolo90(FilterBase):
 
             # Per ogni coppia distinta di coppie-posizione
             for i, (p1, p2) in enumerate(coppie_posizioni):
-                for p3, p4 in coppie_posizioni[i + 1:]:
+                for p3, p4 in coppie_posizioni[i + 1 :]:
                     d1 = cyclo_dist(w1[p1], w2[p2])
                     d2 = cyclo_dist(w1[p3], w2[p4])
 
@@ -65,10 +66,10 @@ class Vincolo90(FilterBase):
                     # Segnale trovato — genera candidati
                     involved_numbers = [w1[p1], w2[p2], w1[p3], w2[p4]]
                     dettaglio = (
-                        f"{w1_name}[{p1+1}]={w1[p1]} "
-                        f"{w2_name}[{p2+1}]={w2[p2]} d={d1} | "
-                        f"{w1_name}[{p3+1}]={w1[p3]} "
-                        f"{w2_name}[{p4+1}]={w2[p4]} d={d2}"
+                        f"{w1_name}[{p1 + 1}]={w1[p1]} "
+                        f"{w2_name}[{p2 + 1}]={w2[p2]} d={d1} | "
+                        f"{w1_name}[{p3 + 1}]={w1[p3]} "
+                        f"{w2_name}[{p4 + 1}]={w2[p4]} d={d2}"
                     )
 
                     for num in involved_numbers:

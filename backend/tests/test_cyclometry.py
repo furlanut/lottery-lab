@@ -7,8 +7,6 @@ Verifica le proprieta matematiche fondamentali:
 - decade, cadenza, figura: valori noti
 """
 
-import pytest
-
 from lotto_predictor.analyzer.cyclometry import (
     cadenza,
     cyclo_dist,
@@ -47,7 +45,7 @@ class TestCycloDist:
         assert cyclo_dist(1, 46) == 45  # diametrali
         assert cyclo_dist(5, 80) == 15  # |5-80|=75, 90-75=15
         assert cyclo_dist(10, 20) == 10
-        assert cyclo_dist(1, 90) == 1   # |1-90|=89, 90-89=1
+        assert cyclo_dist(1, 90) == 1  # |1-90|=89, 90-89=1
         assert cyclo_dist(45, 46) == 1
 
     def test_diametrali_distanza_45(self):

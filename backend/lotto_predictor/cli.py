@@ -7,7 +7,6 @@ Usa Typer per un'interfaccia utente ricca con output Rich.
 """
 
 import logging
-import sys
 from pathlib import Path
 
 import typer
@@ -53,8 +52,7 @@ def ingest(
 
     if not any([csv_file, txt_file, archivio]):
         console.print(
-            "[red]Errore: specificare almeno una sorgente "
-            "(--csv, --txt, o --archivio)[/red]"
+            "[red]Errore: specificare almeno una sorgente (--csv, --txt, o --archivio)[/red]"
         )
         raise typer.Exit(code=1)
 
@@ -71,9 +69,7 @@ def ingest(
     if archivio:
         console.print(f"[bold]Importazione archivio:[/bold] {archivio}")
         if anno_inizio or anno_fine:
-            console.print(
-                f"  Filtro anni: {anno_inizio or '...'} — {anno_fine or '...'}"
-            )
+            console.print(f"  Filtro anni: {anno_inizio or '...'} — {anno_fine or '...'}")
         stats = importa_archivio_completo(
             archivio,
             anno_inizio=anno_inizio,
@@ -104,20 +100,21 @@ def status() -> None:
         data_max = session.scalar(select(func.max(Estrazione.data)))
 
         # Previsioni per stato
-        n_attive = session.scalar(
-            select(func.count(Previsione.id)).where(Previsione.stato == "ATTIVA")
-        ) or 0
-        n_vinte = session.scalar(
-            select(func.count(Previsione.id)).where(Previsione.stato == "VINTA")
-        ) or 0
-        n_perse = session.scalar(
-            select(func.count(Previsione.id)).where(Previsione.stato == "PERSA")
-        ) or 0
+        n_attive = (
+            session.scalar(select(func.count(Previsione.id)).where(Previsione.stato == "ATTIVA"))
+            or 0
+        )
+        n_vinte = (
+            session.scalar(select(func.count(Previsione.id)).where(Previsione.stato == "VINTA"))
+            or 0
+        )
+        n_perse = (
+            session.scalar(select(func.count(Previsione.id)).where(Previsione.stato == "PERSA"))
+            or 0
+        )
 
         # Bankroll
-        ultimo_saldo = session.scalar(
-            select(Bankroll.saldo).order_by(Bankroll.id.desc()).limit(1)
-        )
+        ultimo_saldo = session.scalar(select(Bankroll.saldo).order_by(Bankroll.id.desc()).limit(1))
 
         # Output
         console.print("\n[bold]LOTTO CONVERGENT — Status[/bold]\n")
@@ -174,11 +171,12 @@ def health() -> None:
         engine = get_engine()
         with engine.connect() as conn:
             from sqlalchemy import text
+
             conn.execute(text("SELECT 1"))
         console.print("[green]Database: OK[/green]")
     except Exception as e:
         console.print(f"[red]Database: ERRORE — {e}[/red]")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 
 
 @app.command()
@@ -188,7 +186,7 @@ def predict(
     top_n: int = typer.Option(20, "--top-n", help="Numero massimo risultati"),
 ) -> None:
     """Genera previsioni basate sull'ultima estrazione disponibile."""
-    from lotto_predictor.predictor.generator import genera_previsioni, carica_dati_csv
+    from lotto_predictor.predictor.generator import carica_dati_csv, genera_previsioni
 
     if csv_file:
         dati = carica_dati_csv(csv_file)
@@ -199,8 +197,10 @@ def predict(
     previsioni = genera_previsioni(dati, min_score=min_score, top_n=top_n)
 
     if not previsioni:
-        console.print("\n[yellow]Nessun segnale con score >= {min_score}. "
-                      "NON giocare questo turno.[/yellow]\n")
+        console.print(
+            "\n[yellow]Nessun segnale con score >= {min_score}. "
+            "NON giocare questo turno.[/yellow]\n"
+        )
         return
 
     table = Table(title=f"Previsioni (score >= {min_score})")
@@ -237,8 +237,9 @@ def backtest(
         raise typer.Exit(code=1)
 
     console.print(f"[bold]Backtesting su {len(dati)} estrazioni...[/bold]\n")
-    report = esegui_backtest(dati, min_score=min_score, max_colpi=max_colpi,
-                             train_ratio=train_ratio)
+    report = esegui_backtest(
+        dati, min_score=min_score, max_colpi=max_colpi, train_ratio=train_ratio
+    )
     console.print(formatta_report(report))
     console.print()
 

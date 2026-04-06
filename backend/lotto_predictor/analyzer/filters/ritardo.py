@@ -5,6 +5,7 @@ in base al ritardo (numero di estrazioni dall'ultima apparizione
 della coppia sulla ruota target).
 Piu alto il ritardo, piu alto il peso.
 """
+
 from __future__ import annotations
 
 from lotto_predictor.analyzer.filters.base import Candidato, FilterBase
@@ -46,9 +47,7 @@ class RitardoCritico(FilterBase):
         scored: list[Candidato] = []
 
         for cand in candidati:
-            delay = self._calcola_ritardo(
-                dati, indice_estrazione, ruota, cand.num_a, cand.num_b
-            )
+            delay = self._calcola_ritardo(dati, indice_estrazione, ruota, cand.num_a, cand.num_b)
 
             if delay >= self._soglia:
                 # Peso normalizzato: ritardo / soglia (minimo 1.0)
@@ -58,10 +57,7 @@ class RitardoCritico(FilterBase):
                         num_a=cand.num_a,
                         num_b=cand.num_b,
                         filtro=self.nome,
-                        dettaglio=(
-                            f"ritardo={delay} soglia={self._soglia} "
-                            f"origine={cand.filtro}"
-                        ),
+                        dettaglio=(f"ritardo={delay} soglia={self._soglia} origine={cand.filtro}"),
                         peso=weight,
                     )
                 )

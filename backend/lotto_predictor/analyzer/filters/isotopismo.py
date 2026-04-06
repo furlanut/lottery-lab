@@ -5,6 +5,7 @@ numero corrente e lo stesso slot nelle estrazioni precedenti.
 Se la stessa distanza si ripete 2+ volte, proietta il prossimo
 numero sommando/sottraendo la distanza ripetuta.
 """
+
 from __future__ import annotations
 
 from collections import Counter
@@ -83,7 +84,7 @@ class Isotopismo(FilterBase):
                 projected_minus = fuori90(base - dist)
 
                 dettaglio = (
-                    f"pos={pos+1} base={base} dist={dist} "
+                    f"pos={pos + 1} base={base} dist={dist} "
                     f"ripetizioni={count} lookback={self._lookback}"
                 )
 

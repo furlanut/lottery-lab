@@ -8,15 +8,31 @@ La distanza ciclometrica e la distanza minima sull'arco (0-45).
 """
 
 RUOTE = [
-    "BARI", "CAGLIARI", "FIRENZE", "GENOVA", "MILANO",
-    "NAPOLI", "PALERMO", "ROMA", "TORINO", "VENEZIA",
+    "BARI",
+    "CAGLIARI",
+    "FIRENZE",
+    "GENOVA",
+    "MILANO",
+    "NAPOLI",
+    "PALERMO",
+    "ROMA",
+    "TORINO",
+    "VENEZIA",
 ]
 
 COPPIE_RUOTE = [
-    ("BARI", "CAGLIARI"), ("BARI", "MILANO"), ("CAGLIARI", "FIRENZE"),
-    ("FIRENZE", "GENOVA"), ("GENOVA", "MILANO"), ("MILANO", "NAPOLI"),
-    ("NAPOLI", "PALERMO"), ("PALERMO", "ROMA"), ("ROMA", "TORINO"),
-    ("TORINO", "VENEZIA"), ("BARI", "NAPOLI"), ("FIRENZE", "ROMA"),
+    ("BARI", "CAGLIARI"),
+    ("BARI", "MILANO"),
+    ("CAGLIARI", "FIRENZE"),
+    ("FIRENZE", "GENOVA"),
+    ("GENOVA", "MILANO"),
+    ("MILANO", "NAPOLI"),
+    ("NAPOLI", "PALERMO"),
+    ("PALERMO", "ROMA"),
+    ("ROMA", "TORINO"),
+    ("TORINO", "VENEZIA"),
+    ("BARI", "NAPOLI"),
+    ("FIRENZE", "ROMA"),
 ]
 
 

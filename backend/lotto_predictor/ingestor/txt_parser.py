@@ -26,8 +26,17 @@ logger = logging.getLogger(__name__)
 
 # Mapping colonne header -> nome ruota
 COLONNE_RUOTE = [
-    "BARI", "CAGLIARI", "FIRENZE", "GENOVA", "MILANO",
-    "NAPOLI", "PALERMO", "ROMA", "TORINO", "VENEZIA", "NAZIONALE",
+    "BARI",
+    "CAGLIARI",
+    "FIRENZE",
+    "GENOVA",
+    "MILANO",
+    "NAPOLI",
+    "PALERMO",
+    "ROMA",
+    "TORINO",
+    "VENEZIA",
+    "NAZIONALE",
 ]
 
 
@@ -104,19 +113,24 @@ def parse_file_txt(filepath: Path) -> list[dict]:
                     if len(numeri) != 5:
                         logger.warning(
                             "File %s, riga %d, ruota %s: %d numeri invece di 5",
-                            filepath.name, line_num, nome_ruota, len(numeri),
+                            filepath.name,
+                            line_num,
+                            nome_ruota,
+                            len(numeri),
                         )
                         continue
 
                     valida_numeri(numeri)
                     ruota = valida_ruota(nome_ruota)
 
-                    risultati.append({
-                        "concorso": concorso,
-                        "data": data_estrazione,
-                        "ruota": ruota,
-                        "numeri": numeri,
-                    })
+                    risultati.append(
+                        {
+                            "concorso": concorso,
+                            "data": data_estrazione,
+                            "ruota": ruota,
+                            "numeri": numeri,
+                        }
+                    )
                 except ValidationError as e:
                     errori.append(f"Riga {line_num}, {nome_ruota}: {e}")
 
@@ -126,14 +140,17 @@ def parse_file_txt(filepath: Path) -> list[dict]:
     if errori:
         logger.warning(
             "File %s: %d errori su %d righe processate",
-            filepath.name, len(errori), len(data_lines),
+            filepath.name,
+            len(errori),
+            len(data_lines),
         )
         for err in errori[:10]:
             logger.debug("  %s", err)
 
     logger.info(
         "File %s: %d estrazioni valide estratte",
-        filepath.name, len(risultati),
+        filepath.name,
+        len(risultati),
     )
     return risultati
 
