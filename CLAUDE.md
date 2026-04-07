@@ -167,6 +167,20 @@ Seguile SEMPRE. Priorita: **Sicurezza > Pulizia > Resilienza > Test.**
 | `docs/adr/` | Architecture Decision Records |
 | `runbooks/incident-response.md` | Protocollo incidenti |
 | `runbooks/rollback.md` | Procedura rollback |
+| `docs/RESEARCH_PAPER.md` | Paper di ricerca completo |
+
+## Regola — Aggiornamento Paper di Ricerca (OBBLIGATORIO)
+
+Ogni volta che viene eseguita una nuova analisi statistica, test, backtest,
+o ricerca sui dati del Lotto, il paper `docs/RESEARCH_PAPER.md` DEVE essere
+aggiornato con:
+1. **Motivazione**: perche si e deciso di fare questo test
+2. **Metodo**: come e stato condotto (dataset, split, metriche)
+3. **Risultati**: numeri esatti (segnali, hit, ratio, p-value)
+4. **Conclusione**: cosa significa il risultato per il progetto
+
+Il paper e il documento vivente che traccia l'intero percorso di ricerca.
+Senza aggiornamento, le scoperte vengono perse e i test ripetuti inutilmente.
 
 ---
 
