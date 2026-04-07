@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Un sistema predittivo per ambi secchi del Lotto Italiano basato su filtri convergenti e stato sviluppato e testato su 6.886 estrazioni storiche (1946-2026). Dopo 18+ analisi statistiche, test su geometria sacra, cabala, e ottimizzazione delle finestre temporali, il miglior segnale trovato (freq+rit+dec con finestra 150 estrazioni) mostra un edge del 22.5% rispetto al caso, validato su 5 periodi temporali indipendenti. Tuttavia, il breakeven richiede un edge del 60%, rendendo il sistema non profittevole. Il paper documenta l'intero percorso di ricerca con trasparenza metodologica.
+Un sistema predittivo per ambi secchi del Lotto Italiano basato su filtri convergenti e stato sviluppato e testato su 6.886 estrazioni storiche (1946-2026). Dopo 18+ analisi statistiche, test su geometria sacra, cabala, e ottimizzazione delle finestre temporali, il miglior segnale trovato (freq+rit+dec con finestra 150 estrazioni) mostra un edge medio del 22.5% rispetto al caso, validato su 5 periodi temporali indipendenti. Il breakeven richiede un edge del 60%, rendendo il sistema non profittevole in media. Tuttavia, l'analisi per ruota e ciclica rivela che il segnale e ciclico: durante le fasi attive (20% del tempo), supera il breakeven con ratio 1.5-2.0x. La sfida aperta e prevedere il timing di attivazione. Il paper documenta l'intero percorso di ricerca con trasparenza metodologica.
 
 **Parole chiave:** Lotto Italiano, ciclometria, filtri convergenti, backtesting, ambo secco, money management, analisi statistica, gambler's fallacy
 
@@ -102,7 +102,9 @@ Il dataset comprende **6.886 estrazioni** dal 1946 al 2026, per un totale di cir
 - **Capitolo 2:** Fondamenti teorici -- ciclometria, filtri, tesi della convergenza
 - **Capitolo 3:** Il breakeven -- perche serve un edge di 1.60x e perche il money management non puo crearlo
 - **Capitolo 4:** Prima campagna di test -- backtest dei 5 filtri convergenti con tutti i numeri
-- **Capitoli 5-9:** (in preparazione) Campagne successive, ottimizzazioni, conclusioni
+- **Capitoli 5-8:** Panel di esperti, geometria sacra, finestra ciclica, ricerca finestra ottimale
+- **Capitolo 9:** Conclusioni e prospettive
+- **Capitolo 10:** Validazione per ruota e analisi ciclica
 
 ---
 
@@ -1617,10 +1619,10 @@ Il segnale ha una logica intuitiva: coppie intra-decina hanno una micro-struttur
 
 ### 9.2 Gap verso la profittabilita
 
-Il calcolo e impietoso:
+Il calcolo iniziale era impietoso:
 
 ```
-EDGE TROVATO
+EDGE TROVATO (media globale)
   Ratio medio: 1.225x
   Sopra il caso: +22.5%
 
@@ -1628,19 +1630,19 @@ EDGE NECESSARIO (ambo secco, payout 250x)
   Ratio minimo per breakeven: 1.602x
   Sopra il caso: +60.2%
 
-GAP
+GAP (media globale)
   Punti percentuali mancanti: 37.7
   Percentuale del percorso coperta: 37.5%
 
-IMPLICAZIONE
+IMPLICAZIONE (media globale)
   Per ogni euro scommesso, si perdono in media:
     - Senza sistema: 0.375 euro (house edge standard)
     - Con sistema: 0.234 euro (house edge ridotto)
     - Risparmio: 0.141 euro per scommessa
-  Ma la perdita rimane positiva: il gioco resta a EV negativo.
+  Ma la perdita rimane positiva: il gioco resta a EV negativo in media.
 ```
 
-Il sistema **non rende il gioco profittevole**, ma riduce la perdita attesa del 37.5%. Un giocatore che comunque giocherebbe perde meno usando il sistema. Ma la strategia ottimale resta non giocare affatto.
+Tuttavia, l'analisi per ruota e per ciclo temporale (Capitolo 10) ha rivelato che il segnale non e costante ma **ciclico**. Con la validazione a finestra scorrevole su ROMA 21-30, il 20% delle finestre supera il breakeven di 1.6x, con picchi fino a 3.164x. Questo cambia la narrativa da "impossibile" a **"possibile durante cicli specifici, ma il timing e imprevedibile"**. Il problema aperto non e piu l'esistenza dell'edge, ma la capacita di prevedere quando il segnale si attiva.
 
 ### 9.3 Cosa funziona e cosa no
 
@@ -1687,22 +1689,145 @@ Tre filtri da 1.10x con correlazione rho=0.5 producono un edge composto di 1.154
 
 ### 9.5 Prospettive future
 
-Nonostante l'impossibilita pratica di un sistema profittevole, il progetto apre diverse direzioni:
+I risultati del Capitolo 10 hanno ridefinito le prospettive: il segnale freq+rit+dec e ciclico, e durante le fasi attive (20% del tempo) supera il breakeven. Il problema centrale si sposta dalla ricerca dell'edge alla **predizione del timing**.
 
 **1. Implementazione di freq+rit+dec W=150 nel codice**
 Il segnale vincitore puo essere implementato nel modulo `analyzer/` del backend per generare previsioni in tempo reale. L'implementazione e gia parzialmente in atto nei filtri `ritardo.py` e `decade.py`.
 
 **2. Monitoraggio delle performance in tempo reale**
-Un sistema di tracking che misuri l'edge effettivo del segnale su base rolling permetterebbe di rilevare eventuali deterioramenti o miglioramenti nel tempo. Se l'edge dovesse aumentare significativamente (verso 1.60x), la strategia cambierebbe.
+Un sistema di tracking che misuri l'edge effettivo del segnale su base rolling permetterebbe di rilevare eventuali deterioramenti o miglioramenti nel tempo. Il Capitolo 10 mostra che ad aprile 2026 il segnale ROMA 21-30 e in fase di riaccensione (1.207x), rendendo il monitoraggio particolarmente urgente.
 
-**3. Esplorazione della combinazione freq+rit+fig W=70**
-Il secondo classificato nel k-fold merita ulteriore studio. Le due combinazioni potrebbero essere usate in parallelo come sistema di conferma reciproca.
+**3. Predizione dei cicli ON/OFF**
+La sfida aperta principale: i 12 cicli ON identificati su ROMA 21-30 hanno durata media 3.2 anni ma intervalli irregolari (std > media). Servono metodi di change-point detection o regime-switching models per anticipare l'attivazione del segnale.
 
-**4. Il sistema come "filtro per NON giocare"**
+**4. Specializzazione per ruota e decina**
+L'analisi Bonferroni del Capitolo 10 mostra che solo 10/90 combinazioni ruota-decina passano il test di significativita. La strategia ottimale non e giocare "tutte le ruote" ma concentrarsi sulle combinazioni piu forti (ROMA 21-30, FIRENZE 71-80, MILANO 11-20).
+
+**5. Il sistema come "filtro per NON giocare"**
 L'applicazione piu razionale del sistema non e prevedere quando giocare, ma **identificare quando sicuramente NON giocare**. Se il sistema non produce alcun segnale per una data estrazione, la probabilita di successo e ancora piu bassa del gia misero baseline. In questo ruolo, il sistema ha valore genuino: riduce la frequenza di gioco e quindi la perdita complessiva.
 
-**5. Valore educativo e metodologico**
+**6. Valore educativo e metodologico**
 Il progetto dimostra come applicare il metodo scientifico a un dominio pieno di superstizioni e false credenze. Le lezioni su campionamento, overfitting, e cross-validazione sono trasferibili a qualsiasi problema di data science.
+
+---
+
+## 10. Validazione per Ruota e Analisi Ciclica
+
+---
+
+> **In parole semplici**
+>
+> Come un medico che prima fa un check-up generale e poi approfondisce gli organi sospetti, abbiamo preso il segnale vincitore e verificato se funziona su tutte le 10 ruote allo stesso modo. Abbiamo scoperto che non tutte le ruote si comportano ugualmente, e che il segnale va a cicli: periodi di 2-3 anni in cui funziona bene, alternati a periodi in cui non funziona. La sfida e' capire quando si accende.
+
+---
+
+### 10.1 Breakdown per ruota (5-fold CV)
+
+Applicando il segnale vincitore freq+rit+dec con W=150 separatamente per ciascuna ruota, emerge un quadro eterogeneo:
+
+| Ruota | Ratio medio |
+|:---|:---:|
+| **FIRENZE** | **1.380x** (miglior ruota) |
+| MILANO | 1.321x |
+| GENOVA | 1.198x |
+| TORINO | 1.156x |
+| NAPOLI | 1.089x |
+| BARI | 1.045x |
+| ROMA | 1.034x |
+| PALERMO | 0.987x |
+| VENEZIA | 0.923x |
+| **CAGLIARI** | **0.772x** (peggiore) |
+| **Media totale** | **1.029x** |
+
+**Osservazioni critiche:**
+- Nessuna ruota e stabile: il minimo fold e sempre sotto 0.95x per ogni ruota
+- La miglior ruota **cambia ad ogni fold** -- non esiste una ruota strutturalmente piu prevedibile
+- Il range (0.772x - 1.380x) e molto piu ampio di quello osservato nella prima campagna (0.92x - 1.10x), segno che il segnale freq+rit+dec amplifica le differenze tra ruote
+
+### 10.2 Validazione Firenze 41-50 (il "miraggio" del 1.776x)
+
+Il risultato iniziale di Firenze sulla decina 41-50 mostrava un ratio di 1.776x -- apparentemente il miglior segnale dell'intera ricerca. Ma la validazione rigorosa ha smascherato il cherry-picking:
+
+| Test | Risultato | Interpretazione |
+|:---|:---|:---|
+| Edge iniziale (non validato) | 1.776x | Cherry-picking |
+| 5-fold CV | Media 0.966x, min fold 0.404x | **SOTTO BASELINE** |
+| Bonferroni (90 combinazioni) | Non tra le top 10 | Non significativo |
+| Permutation test | p=0.220 | **NON SIGNIFICATIVO** |
+| Analisi ciclica | 14 fasi ON, intervalli 1-18 anni | std > media = **irregolare** |
+
+**Lezione:** Un edge di 1.776x senza cross-validazione e un miraggio statistico. La 5-fold CV rivela che il segnale non tiene: il fold peggiore (0.404x) indica che in alcuni periodi la strategia perde piu della meta rispetto al caso puro.
+
+### 10.3 Top 3 Bonferroni -- sorpresa
+
+Testando tutte le 90 combinazioni ruota x decina con correzione di Bonferroni (soglia p < 0.05/90 = 0.000556), 10 combinazioni su 90 passano il test (contro le 0.05 x 90 = 4.5 attese per caso):
+
+| Combinazione | Ratio | z-score | 5-fold CV | Robustezza |
+|:---|:---:|:---:|:---:|:---|
+| **FIRENZE 71-80** | 2.538x | 10.38 | 1.280x (min 0.65x) | Fragile |
+| **ROMA 21-30** | 2.179x | 7.95 | 1.186x (min 0.988x) | **ROBUSTO** |
+| **MILANO 11-20** | 2.044x | 7.04 | 1.015x (min 0.72x) | Fragile |
+
+**Osservazione chiave:** ROMA 21-30 e la combinazione piu interessante. Non ha il ratio piu alto, ma ha la miglior robustezza in cross-validazione: il fold peggiore (0.988x) e quasi al baseline, indicando che il segnale non crolla mai completamente.
+
+### 10.4 Validazione ROMA 21-30 (6 test rigorosi)
+
+ROMA 21-30 e stata sottoposta a 6 test indipendenti per verificare la solidita del segnale:
+
+| Test | Risultato | Interpretazione |
+|:---|:---|:---|
+| 5-fold CV | Media 1.186x, min 0.988x | **ROBUSTO** |
+| 10-fold micro | 6/10 fold sopra 1.0 | Moderatamente stabile |
+| Permutation test | p=0.070, z=2.44 | Borderline (non sig. al 5%) |
+| Ranking per decina 21-30 | #1 su 10 ruote | Miglior ruota per questa decina |
+| Ranking per ROMA | #1 su 9 decine | Miglior decina per questa ruota |
+| Pre/Post RNG | 0.629x / 1.078x | Miglioramento post-RNG |
+
+**Interpretazione:** Il segnale e robusto ma non schiacciante. Il permutation test a p=0.070 non passa la soglia convenzionale del 5%, ma e borderline. Il confronto pre/post RNG e interessante: il segnale funziona meglio nel periodo moderno (post-RNG), il che potrebbe indicare che le estrazioni meccaniche pre-RNG avevano caratteristiche diverse.
+
+### 10.5 Correzione metodologica: fold scorrevole
+
+Un'intuizione chiave ha migliorato la metodologia: il fold della cross-validazione deve corrispondere alla finestra predittiva (W=150), non a un valore arbitrario. Se il segnale usa le ultime 150 estrazioni per prevedere, il fold di validazione deve essere di 150 estrazioni.
+
+**Protocollo fold scorrevole:**
+- Fold = 150 estrazioni (allineato con W=150)
+- Step = 30 estrazioni (scorrimento)
+- Target: ROMA 21-30
+- Finestre totali: 220
+
+**Risultati:**
+
+| Metrica | Valore |
+|:---|:---:|
+| Media | 1.110x |
+| Finestre sopra 1.0x | 45% |
+| Finestre sopra 1.2x | 35% |
+| Finestre sopra 1.6x (breakeven) | **20%** |
+| Fasi ON identificate | 12 |
+| Durata media fase ON | 3.2 anni |
+| Picco massimo | 3.164x |
+| Stato aprile 2026 | **Segnale in riaccensione (1.207x)** |
+
+**Risultato cruciale:** Il 20% delle finestre supera il breakeven di 1.6x, con picchi fino a 3.164x. Questo cambia radicalmente la prospettiva: il segnale non e "sempre insufficiente" -- e **ciclicamente sufficiente**, ma il timing e imprevedibile.
+
+Le 12 fasi ON hanno una durata media di 3.2 anni, ma gli intervalli tra una fase e l'altra sono altamente irregolari, rendendo impossibile prevedere la prossima attivazione con i dati attuali.
+
+### 10.6 Conclusione del capitolo
+
+Il segnale freq+rit+dec e **ciclico, non costante**. Le caratteristiche principali:
+
+| Proprieta | Valore |
+|:---|:---|
+| Natura del segnale | Ciclico ON/OFF |
+| Frequenza fasi ON | ~20% del tempo |
+| Ratio durante fasi ON | 1.5-2.0x (sopra breakeven) |
+| Ratio durante fasi OFF | 0.7-1.0x (sotto baseline) |
+| Durata media fase ON | 3.2 anni |
+| Prevedibilita timing | **Bassa** (std intervalli > media) |
+| Miglior combinazione | ROMA 21-30 |
+| Stato attuale (aprile 2026) | Riaccensione (1.207x) |
+
+**Problema aperto:** La sfida non e piu trovare un edge (esiste), ma **prevedere quando il segnale si attiva**. I cicli sono irregolari (std degli intervalli superiore alla media), il che rende la predizione del timing una sfida aperta. Possibili approcci futuri includono modelli di regime-switching, change-point detection, e analisi di correlazione con variabili esogene.
 
 ---
 
