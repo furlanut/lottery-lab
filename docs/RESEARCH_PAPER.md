@@ -1829,6 +1829,36 @@ Il segnale freq+rit+dec e **ciclico, non costante**. Le caratteristiche principa
 
 **Problema aperto:** La sfida non e piu trovare un edge (esiste), ma **prevedere quando il segnale si attiva**. I cicli sono irregolari (std degli intervalli superiore alla media), il che rende la predizione del timing una sfida aperta. Possibili approcci futuri includono modelli di regime-switching, change-point detection, e analisi di correlazione con variabili esogene.
 
+### Schema riassuntivo della metodologia
+
+```
++---------------------------------------------------+
+|          LA METODOLOGIA IN 4 PUNTI                |
++---------------------------------------------------+
+|                                                   |
+|  1. FINESTRA = 150 estrazioni (~1 anno)           |
+|     Il "contesto" in cui cercare pattern.         |
+|     Troppo corta = rumore. Troppo lunga =         |
+|     tutto si appiattisce all'equilibrio.          |
+|                                                   |
+|  2. SEGNALE = 3 condizioni simultanee:            |
+|     - Coppia uscita nella finestra (frequenza)    |
+|     - Non uscita di recente (ritardo >= W/3)      |
+|     - Stessa decina (struttura numerica)          |
+|                                                   |
+|  3. FOLD SCORREVOLE = la finestra stessa          |
+|     NON dividere in blocchi arbitrari.            |
+|     Scorri la finestra di 150 estrazioni          |
+|     lungo tutto il dataset per vedere i CICLI.    |
+|                                                   |
+|  4. IL SEGNALE E' CICLICO:                        |
+|     ON (2-3 anni) -> ratio 1.5-2.0x (profitto!)  |
+|     OFF (variabile) -> ratio 0.3-0.8x (perdita)  |
+|                                                   |
+|  SFIDA APERTA: prevedere quando si accende        |
++---------------------------------------------------+
+```
+
 ---
 
 ## Appendice A: Stack Tecnologico
