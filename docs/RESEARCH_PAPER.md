@@ -1861,6 +1861,83 @@ Il segnale freq+rit+dec e **ciclico, non costante**. Le caratteristiche principa
 
 ---
 
+## 11. Engine V3 — Correzione Metodologica e Nuova Classifica
+
+### In parole semplici
+Immagina di avere 6 strumenti diversi per prevedere il meteo: un barometro, un igrometro, un anemometro, ecc. Finora li usavamo tutti guardando lo stesso periodo (150 giorni). Ma abbiamo scoperto che ogni strumento funziona meglio con un periodo diverso: il barometro funziona meglio guardando 75 giorni, l'igrometro 100 giorni. Usare il periodo giusto per ogni strumento cambia completamente la classifica di chi e' piu' preciso.
+
+### 11.1 La correzione metodologica
+
+Il test precedente (5-fold con fold da 600) aveva un difetto: il fold era 4 volte piu' grande della finestra predittiva. Questo mescolava periodi ON e OFF, gonfiando artificialmente certi segnali. Il metodo corretto usa fold = finestra (scorrevole), dove ogni singola misura corrisponde esattamente a una finestra predittiva.
+
+Questo e' analogo alla differenza tra "temperatura media annuale" (poco utile) e "temperatura di oggi" (utile per decidere come vestirsi).
+
+### 11.2 Nuova classifica segnali (fold scorrevole)
+
+| # | Segnale | Finestra ottimale | Media ratio | % sopra breakeven (1.6x) |
+|---|---------|-------------------|-------------|------------------------|
+| 1 | freq_rit_fib | W=75 | 1.159x | 30% |
+| 2 | somma72 | W=100 | 1.081x | 25% |
+| 3 | freq_rit_dec | W=125 | 1.024x | 13% |
+| 4 | hot_cold | W=100 | 1.020x | 19% |
+| 5 | freq_rit_fig | W=200 | 1.032x | 12% |
+| 6 | fib_dist | W=50 | 1.016x | 8% |
+
+Cambio piu' importante: freq_rit_fib (scartato come "fragile" nel test precedente) e' in realta' il migliore. Era fragile nel 5-fold con fold=600 perche' il fold era troppo grande — con fold=finestra (75) e' il piu' forte e consistente, con il 30% delle finestre sopra breakeven.
+
+### 11.3 Combinazioni testate
+
+| Combinazione | Media | % sopra 1.0 | % sopra 1.6 | Note |
+|-------------|-------|-------------|-------------|------|
+| dec AND somma72 | 1.205x | 23% | 22% | Raro ma forte (mediana 0) |
+| dec AND fib_dist | 1.005x | 47% | 12% | Neutro |
+| dec OR fig | 1.011x | 47% | 9% | Neutro |
+
+La combo dec AND somma72 ha la media piu' alta (1.205x) ma genera segnali solo nel 23% delle finestre. Quando genera segnali, sono forti.
+
+### 11.4 Finestra ottimale per ROMA 21-30
+
+Confermata W=150 come migliore per ROMA 21-30 (media 1.110x, 20% sopra breakeven). Le finestre piu' corte (50-75) non funzionano per questa combinazione specifica.
+
+### 11.5 Engine V3
+
+L'engine V3 implementa ogni segnale con la sua finestra ottimale:
+- freq_rit_fib (W=75): coppia uscita >=2 volte, in ritardo, distanza Fibonacci
+- somma72 (W=100): coppia con somma 72, frequente e in ritardo
+- freq_rit_dec (W=125): coppia stessa decina, frequente e in ritardo
+- hot_cold (W=100): un numero caldo + un numero freddo
+- combo dec+somma72 (W=125): stessa decina AND somma 72 (raro)
+
+### 11.6 Lezione metodologica
+
+La scelta del fold nel cross-validation non e' neutra. Un fold troppo grande rispetto alla finestra predittiva:
+- Media insieme periodi ON e OFF
+- Gonfia i segnali che hanno lunghe fasi ON
+- Penalizza i segnali con cicli corti ma intensi (come freq_rit_fib)
+
+Il fold deve corrispondere alla finestra predittiva. Questa correzione ha ribaltato completamente la classifica dei segnali.
+
+### Schema riassuntivo V3
+
+```
++---------------------------------------------------+
+|            ENGINE V3 — FINESTRE OTTIMALI          |
++---------------------------------------------------+
+|                                                   |
+|  SEGNALE         FINESTRA   MEDIA   % >BREAKEVEN  |
+|  freq_rit_fib    W=75       1.159x  30%  <-- #1   |
+|  somma72         W=100      1.081x  25%  <-- #2   |
+|  combo dec+s72   W=125      1.205x  22%  <-- raro |
+|  freq_rit_dec    W=125      1.024x  13%            |
+|  hot_cold        W=100      1.020x  19%            |
+|                                                    |
+|  OGNI SEGNALE HA LA SUA FINESTRA OTTIMALE          |
+|  Non esiste una finestra "universale"              |
++---------------------------------------------------+
+```
+
+---
+
 ## Appendice A: Stack Tecnologico
 
 Il sistema Lotto Convergent e costruito su uno stack moderno ottimizzato per analisi dati e API:
