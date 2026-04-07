@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 """CLI — Lotto Convergent.
 
 Entry point per tutti i comandi del sistema.
@@ -30,11 +32,11 @@ logging.basicConfig(
 
 @app.command()
 def ingest(
-    csv_file: Path | None = typer.Option(None, "--csv", help="Percorso file CSV da importare"),
-    txt_file: Path | None = typer.Option(None, "--txt", help="Percorso file TXT da importare"),
-    archivio: Path | None = typer.Option(None, "--archivio", help="Directory archivio TXT"),
-    anno_inizio: int | None = typer.Option(None, "--anno-inizio", help="Anno di partenza"),
-    anno_fine: int | None = typer.Option(None, "--anno-fine", help="Anno di fine"),
+    csv_file: Optional[Path] = typer.Option(None, "--csv", help="Percorso file CSV da importare"),
+    txt_file: Optional[Path] = typer.Option(None, "--txt", help="Percorso file TXT da importare"),
+    archivio: Optional[Path] = typer.Option(None, "--archivio", help="Directory archivio TXT"),
+    anno_inizio: Optional[int] = typer.Option(None, "--anno-inizio", help="Anno di partenza"),
+    anno_fine: Optional[int] = typer.Option(None, "--anno-fine", help="Anno di fine"),
     init_db: bool = typer.Option(False, "--init-db", help="Inizializza il database prima"),
 ) -> None:
     """Importa estrazioni nel database da CSV, TXT, o archivio completo."""
@@ -181,7 +183,7 @@ def health() -> None:
 
 @app.command()
 def predict(
-    csv_file: Path | None = typer.Option(None, "--csv", help="File CSV sorgente dati"),
+    csv_file: Optional[Path] = typer.Option(None, "--csv", help="File CSV sorgente dati"),
     min_score: int = typer.Option(3, "--min-score", help="Score minimo"),
     top_n: int = typer.Option(20, "--top-n", help="Numero massimo risultati"),
 ) -> None:
@@ -221,7 +223,7 @@ def predict(
 
 @app.command()
 def backtest(
-    csv_file: Path | None = typer.Option(None, "--csv", help="File CSV sorgente dati"),
+    csv_file: Optional[Path] = typer.Option(None, "--csv", help="File CSV sorgente dati"),
     min_score: int = typer.Option(2, "--min-score", help="Score minimo"),
     max_colpi: int = typer.Option(9, "--max-colpi", help="Colpi massimi per ciclo"),
     train_ratio: float = typer.Option(0.7, "--train-ratio", help="Ratio train/test"),
@@ -260,6 +262,96 @@ def notify(
             raise typer.Exit(code=1)
     else:
         console.print("[yellow]Usa --test per inviare una notifica di prova.[/yellow]")
+
+
+@app.command(name="predict-v2")
+def predict_v2(
+    archivio: Optional[Path] = typer.Option(None, "--archivio", help="Directory archivio TXT"),
+    csv_file: Optional[Path] = typer.Option(None, "--csv", help="File CSV sorgente dati"),
+    top_n: int = typer.Option(20, "--top-n", help="Numero massimo risultati"),
+    finestra_dec: int = typer.Option(150, "--w-dec", help="Finestra freq+rit+dec"),
+    finestra_fig: int = typer.Option(70, "--w-fig", help="Finestra freq+rit+fig"),
+) -> None:
+    """Previsioni V2 — segnale validato freq+rit+dec (W=150) + freq+rit+fig (W=70)."""
+    from lotto_predictor.analyzer.convergence_v2 import genera_segnali_v2
+
+    dati = _carica_dati(archivio, csv_file)
+    if dati is None:
+        raise typer.Exit(code=1)
+
+    console.print(
+        f"\n[bold]PREDICT V2[/bold] — {len(dati)} estrazioni, "
+        f"W_dec={finestra_dec}, W_fig={finestra_fig}\n"
+    )
+
+    segnali = genera_segnali_v2(
+        dati, top_n=top_n, finestra_dec=finestra_dec, finestra_fig=finestra_fig
+    )
+
+    if not segnali:
+        console.print("[yellow]Nessun segnale. NON giocare questo turno.[/yellow]\n")
+        return
+
+    table = Table(title=f"Previsioni V2 (top {top_n})")
+    table.add_column("#", style="bold")
+    table.add_column("Ruota")
+    table.add_column("Ambo")
+    table.add_column("Score")
+    table.add_column("Metodo")
+    table.add_column("Freq")
+    table.add_column("Ritardo")
+    table.add_column("Dettagli")
+
+    for i, s in enumerate(segnali, 1):
+        a, b = s["ambo"]
+        table.add_row(
+            str(i),
+            s["ruota"],
+            f"{a:2d}-{b:2d}",
+            str(s["score"]),
+            s["metodo"],
+            str(s["frequenza"]),
+            str(s["ritardo"]),
+            s["dettagli"],
+        )
+
+    console.print(table)
+
+    # Riepilogo
+    dec_count = sum(1 for s in segnali if s["metodo"] == "freq+rit+dec")
+    fig_count = sum(1 for s in segnali if s["metodo"] == "freq+rit+fig")
+    console.print(
+        f"\n[bold]Riepilogo:[/bold] {dec_count} segnali freq+rit+dec (W={finestra_dec}), "
+        f"{fig_count} segnali freq+rit+fig (W={finestra_fig})\n"
+    )
+
+
+def _carica_dati(archivio=None, csv_file=None):
+    """Carica dati da archivio TXT o CSV."""
+    if archivio:
+        from collections import defaultdict
+        from datetime import datetime
+
+        from lotto_predictor.ingestor.txt_parser import parse_file_txt, scan_archivio_txt
+
+        console.print(f"[bold]Caricamento archivio:[/bold] {archivio}")
+        files = [f for f in scan_archivio_txt(archivio) if int(f.stem.split("-")[-1]) >= 1946]
+        all_records = []
+        for fp in files:
+            all_records.extend(parse_file_txt(fp))
+        by_date = defaultdict(dict)
+        for r in all_records:
+            by_date[r["data"].strftime("%d/%m/%Y")][r["ruota"]] = r["numeri"]
+        dati = sorted(by_date.items(), key=lambda x: datetime.strptime(x[0], "%d/%m/%Y"))
+        console.print(f"  Caricate {len(dati)} estrazioni")
+        return dati
+    elif csv_file:
+        from lotto_predictor.predictor.generator import carica_dati_csv
+
+        return carica_dati_csv(csv_file)
+    else:
+        console.print("[red]Specificare --archivio o --csv[/red]")
+        return None
 
 
 def _mostra_stats(stats: dict) -> None:
