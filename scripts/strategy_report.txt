@@ -1,0 +1,745 @@
+======================================================================
+SECTION 1: BET TYPE ANALYSIS
+======================================================================
+
+--- ambo_secco (edge=1.06x) ---
+  Base prob: 0.002497 (400.5:1)
+  Eff prob (with edge): 0.002647
+  Payout: 250x
+  EV per EUR bet: 0.6617
+  Profit/EUR: -0.3383
+  Breakeven edge needed: 1.6020x
+  PROFITABLE: NO
+
+--- ambo_secco (edge=1.10x) ---
+  Base prob: 0.002497 (400.5:1)
+  Eff prob (with edge): 0.002747
+  Payout: 250x
+  EV per EUR bet: 0.6866
+  Profit/EUR: -0.3134
+  Breakeven edge needed: 1.6020x
+  PROFITABLE: NO
+
+--- ambo_secco (edge=1.20x) ---
+  Base prob: 0.002497 (400.5:1)
+  Eff prob (with edge): 0.002996
+  Payout: 250x
+  EV per EUR bet: 0.7491
+  Profit/EUR: -0.2509
+  Breakeven edge needed: 1.6020x
+  PROFITABLE: NO
+
+--- ambo_secco (edge=1.50x) ---
+  Base prob: 0.002497 (400.5:1)
+  Eff prob (with edge): 0.003745
+  Payout: 250x
+  EV per EUR bet: 0.9363
+  Profit/EUR: -0.0637
+  Breakeven edge needed: 1.6020x
+  PROFITABLE: NO
+
+--- ambo_tutte (edge=1.06x) ---
+  Base prob: 0.002497 (400.5:1)
+  Eff prob (with edge): 0.026154
+  Payout: 25x
+  EV per EUR bet: 0.6538
+  Profit/EUR: -0.3462
+  Breakeven edge needed: 1.6201x
+  PROFITABLE: NO
+
+--- ambo_tutte (edge=1.10x) ---
+  Base prob: 0.002497 (400.5:1)
+  Eff prob (with edge): 0.027129
+  Payout: 25x
+  EV per EUR bet: 0.6782
+  Profit/EUR: -0.3218
+  Breakeven edge needed: 1.6201x
+  PROFITABLE: NO
+
+--- ambo_tutte (edge=1.20x) ---
+  Base prob: 0.002497 (400.5:1)
+  Eff prob (with edge): 0.029562
+  Payout: 25x
+  EV per EUR bet: 0.7390
+  Profit/EUR: -0.2610
+  Breakeven edge needed: 1.6201x
+  PROFITABLE: NO
+
+--- ambo_tutte (edge=1.50x) ---
+  Base prob: 0.002497 (400.5:1)
+  Eff prob (with edge): 0.036828
+  Payout: 25x
+  EV per EUR bet: 0.9207
+  Profit/EUR: -0.0793
+  Breakeven edge needed: 1.6201x
+  PROFITABLE: NO
+
+--- estratto (edge=1.06x) ---
+  Base prob: 0.055556 (18.0:1)
+  Eff prob (with edge): 0.058889
+  Payout: 11.23x
+  EV per EUR bet: 0.6613
+  Profit/EUR: -0.3387
+  Breakeven edge needed: 1.6028x
+  PROFITABLE: NO
+
+--- estratto (edge=1.10x) ---
+  Base prob: 0.055556 (18.0:1)
+  Eff prob (with edge): 0.061111
+  Payout: 11.23x
+  EV per EUR bet: 0.6863
+  Profit/EUR: -0.3137
+  Breakeven edge needed: 1.6028x
+  PROFITABLE: NO
+
+--- estratto (edge=1.20x) ---
+  Base prob: 0.055556 (18.0:1)
+  Eff prob (with edge): 0.066667
+  Payout: 11.23x
+  EV per EUR bet: 0.7487
+  Profit/EUR: -0.2513
+  Breakeven edge needed: 1.6028x
+  PROFITABLE: NO
+
+--- estratto (edge=1.50x) ---
+  Base prob: 0.055556 (18.0:1)
+  Eff prob (with edge): 0.083333
+  Payout: 11.23x
+  EV per EUR bet: 0.9358
+  Profit/EUR: -0.0642
+  Breakeven edge needed: 1.6028x
+  PROFITABLE: NO
+
+--- estratto_det (edge=1.06x) ---
+  Base prob: 0.011111 (90.0:1)
+  Eff prob (with edge): 0.011778
+  Payout: 55x
+  EV per EUR bet: 0.6478
+  Profit/EUR: -0.3522
+  Breakeven edge needed: 1.6364x
+  PROFITABLE: NO
+
+--- estratto_det (edge=1.10x) ---
+  Base prob: 0.011111 (90.0:1)
+  Eff prob (with edge): 0.012222
+  Payout: 55x
+  EV per EUR bet: 0.6722
+  Profit/EUR: -0.3278
+  Breakeven edge needed: 1.6364x
+  PROFITABLE: NO
+
+--- estratto_det (edge=1.20x) ---
+  Base prob: 0.011111 (90.0:1)
+  Eff prob (with edge): 0.013333
+  Payout: 55x
+  EV per EUR bet: 0.7333
+  Profit/EUR: -0.2667
+  Breakeven edge needed: 1.6364x
+  PROFITABLE: NO
+
+--- estratto_det (edge=1.50x) ---
+  Base prob: 0.011111 (90.0:1)
+  Eff prob (with edge): 0.016667
+  Payout: 55x
+  EV per EUR bet: 0.9167
+  Profit/EUR: -0.0833
+  Breakeven edge needed: 1.6364x
+  PROFITABLE: NO
+
+--- terno_secco (edge=1.06x) ---
+  Base prob: 0.000085 (11748.0:1)
+  Eff prob (with edge): 0.000090
+  Payout: 4500x
+  EV per EUR bet: 0.4060
+  Profit/EUR: -0.5940
+  Breakeven edge needed: 2.6107x
+  PROFITABLE: NO
+
+--- terno_secco (edge=1.10x) ---
+  Base prob: 0.000085 (11748.0:1)
+  Eff prob (with edge): 0.000094
+  Payout: 4500x
+  EV per EUR bet: 0.4213
+  Profit/EUR: -0.5787
+  Breakeven edge needed: 2.6107x
+  PROFITABLE: NO
+
+--- terno_secco (edge=1.20x) ---
+  Base prob: 0.000085 (11748.0:1)
+  Eff prob (with edge): 0.000102
+  Payout: 4500x
+  EV per EUR bet: 0.4597
+  Profit/EUR: -0.5403
+  Breakeven edge needed: 2.6107x
+  PROFITABLE: NO
+
+--- terno_secco (edge=1.50x) ---
+  Base prob: 0.000085 (11748.0:1)
+  Eff prob (with edge): 0.000128
+  Payout: 4500x
+  EV per EUR bet: 0.5746
+  Profit/EUR: -0.4254
+  Breakeven edge needed: 2.6107x
+  PROFITABLE: NO
+
+
+--- BREAKEVEN EDGE REQUIREMENTS ---
+  ambo_secco          : needs 1.6020x edge to break even (base EV=0.6242)
+  ambo_tutte          : needs 1.6201x edge to break even (base EV=0.6173)
+  estratto            : needs 1.6028x edge to break even (base EV=0.6239)
+  estratto_det        : needs 1.6364x edge to break even (base EV=0.6111)
+  terno_secco         : needs 2.6107x edge to break even (base EV=0.3830)
+
+======================================================================
+SECTION 2: SELECTIVE PLAY STRATEGY
+======================================================================
+
+Setup: 156 draws, bankroll=600.0 EUR, stake=1.0 EUR/draw
+Bet: ambo secco (payout=250x, base_prob=0.002497)
+Simulations: 50,000
+
+--- Play ALL draws, 1.06x edge ---
+  Draws played: 156, EV/bet: -0.3383
+  Total EV: -52.78 EUR
+  P(profit): 33.6%
+  P(ruin): 0.0%
+  Mean profit: -53.54 EUR
+  Median profit: -156.00 EUR
+  Std dev: 160.04
+  5th percentile (worst likely): -156.00 EUR
+
+--- Play ALL draws, 1.10x edge ---
+  Draws played: 156, EV/bet: -0.3134
+  Total EV: -48.88 EUR
+  P(profit): 35.0%
+  P(ruin): 0.0%
+  Mean profit: -49.51 EUR
+  Median profit: -156.00 EUR
+  Std dev: 161.59
+  5th percentile (worst likely): -156.00 EUR
+
+--- Play 50% draws, 1.15x edge ---
+  Draws played: 78, EV/bet: -0.2821
+  Total EV: -22.01 EUR
+  P(profit): 20.4%
+  P(ruin): 0.0%
+  Mean profit: -21.16 EUR
+  Median profit: -78.00 EUR
+  Std dev: 118.72
+  5th percentile (worst likely): -78.00 EUR
+
+--- Play 30% draws, 1.20x edge ---
+  Draws played: 46, EV/bet: -0.2509
+  Total EV: -11.54 EUR
+  P(profit): 13.0%
+  P(ruin): 0.0%
+  Mean profit: -11.11 EUR
+  Median profit: -46.00 EUR
+  Std dev: 93.37
+  5th percentile (worst likely): -46.00 EUR
+
+--- Play 20% draws, 1.25x edge ---
+  Draws played: 31, EV/bet: -0.2197
+  Total EV: -6.81 EUR
+  P(profit): 9.4%
+  P(ruin): 0.0%
+  Mean profit: -6.51 EUR
+  Median profit: -31.00 EUR
+  Std dev: 77.89
+  5th percentile (worst likely): -31.00 EUR
+
+--- Play 20% draws, 1.30x edge ---
+  Draws played: 31, EV/bet: -0.1885
+  Total EV: -5.84 EUR
+  P(profit): 9.4%
+  P(ruin): 0.0%
+  Mean profit: -6.24 EUR
+  Median profit: -31.00 EUR
+  Std dev: 78.52
+  5th percentile (worst likely): -31.00 EUR
+
+--- Play 10% draws, 1.40x edge ---
+  Draws played: 15, EV/bet: -0.1261
+  Total EV: -1.89 EUR
+  P(profit): 5.1%
+  P(ruin): 0.0%
+  Mean profit: -1.96 EUR
+  Median profit: -15.00 EUR
+  Std dev: 57.02
+  5th percentile (worst likely): -15.00 EUR
+
+--- Play 10% draws, 1.50x edge ---
+  Draws played: 15, EV/bet: -0.0637
+  Total EV: -0.96 EUR
+  P(profit): 5.4%
+  P(ruin): 0.0%
+  Mean profit: -1.10 EUR
+  Median profit: -15.00 EUR
+  Std dev: 58.58
+  5th percentile (worst likely): -15.00 EUR
+
+--- Play 5% draws, 2.00x edge ---
+  Draws played: 7, EV/bet: +0.2484
+  Total EV: +1.74 EUR
+  P(profit): 3.4%
+  P(ruin): 0.0%
+  Mean profit: +1.63 EUR
+  Median profit: -7.00 EUR
+  Std dev: 46.45
+  5th percentile (worst likely): -7.00 EUR
+
+
+======================================================================
+SECTION 3: PORTFOLIO / DIVERSIFICATION
+======================================================================
+
+All strategies with 1.1x edge, 156 draws, bankroll=600.0
+Simulations: 50,000
+
+--- A: 1 ambo secco, 1 EUR/draw ---
+  Cost/draw: 1.0 EUR, Total cost: 156
+  Mean net: -48.73 EUR
+  Median net: -156.00 EUR
+  P(profit): 34.9%
+  P(ruin): 0.0%
+  Sharpe ratio: -0.2979
+  Std dev: 163.54
+
+--- B: 3 ambi secco, 1 EUR each/draw ---
+  Cost/draw: 3.0 EUR, Total cost: 468
+  Mean net: -146.81 EUR
+  Median net: -218.00 EUR
+  P(profit): 36.8%
+  P(ruin): 0.0%
+  Sharpe ratio: -0.5181
+  Std dev: 283.34
+
+--- C: 1 ambo secco + 2 estratti, 1 EUR each ---
+  Cost/draw: 3.0 EUR, Total cost: 468
+  Mean net: -146.05 EUR
+  Median net: -220.94 EUR
+  P(profit): 19.5%
+  P(ruin): 0.0%
+  Sharpe ratio: -0.8595
+  Std dev: 169.92
+
+--- D: 1 ambo tutte ruote, 1 EUR/draw ---
+  Cost/draw: 1.0 EUR, Total cost: 156
+  Mean net: -49.78 EUR
+  Median net: -56.00 EUR
+  P(profit): 13.6%
+  P(ruin): 0.0%
+  Sharpe ratio: -0.9786
+  Std dev: 50.87
+
+--- E: 2 estratti only, 1 EUR each ---
+  Cost/draw: 2.0 EUR, Total cost: 312
+  Mean net: -97.86 EUR
+  Median net: -98.63 EUR
+  P(profit): 2.8%
+  P(ruin): 0.0%
+  Sharpe ratio: -2.0587
+  Std dev: 47.53
+
+
+======================================================================
+SECTION 4: PROGRESSIVE BETTING STRATEGIES
+======================================================================
+
+=== Edge: 1.06x (prob=0.002647) ===
+
+  Flat (1 EUR):
+    Mean final BR: 548.65
+    Median final BR: 444.00
+    P(profit): 34.2%
+    P(ruin): 0.0%
+    Mean profit: -51.35
+    Max drawdown (mean): 0.00
+    Mean total wagered: 156
+
+  D'Alembert (base=1, inc=0.50):
+    Mean final BR: 275.64
+    Median final BR: 0.00
+    P(profit): 2.5%
+    P(ruin): 96.5%
+    Mean profit: -324.36
+    Max drawdown (mean): 958.93
+    Mean total wagered: 1020
+
+  Fibonacci (base=1):
+    Mean final BR: 250.65
+    Median final BR: 0.00
+    P(profit): 1.0%
+    P(ruin): 99.0%
+    Mean profit: -349.35
+    Max drawdown (mean): 898.37
+    Mean total wagered: 926
+
+  Oscar's Grind (base=1):
+    Mean final BR: 547.86
+    Median final BR: 444.00
+    P(profit): 34.1%
+    P(ruin): 0.0%
+    Mean profit: -52.14
+    Max drawdown (mean): 140.98
+    Mean total wagered: 156
+
+  Half-Kelly proportional:
+    Mean final BR: 569.42
+    Median final BR: 513.30
+    P(profit): 34.0%
+    P(ruin): 0.0%
+    Mean profit: -30.58
+    Max drawdown (mean): 81.52
+    Mean total wagered: 91
+
+
+=== Edge: 1.1x (prob=0.002747) ===
+
+  Flat (1 EUR):
+    Mean final BR: 552.36
+    Median final BR: 444.00
+    P(profit): 35.2%
+    P(ruin): 0.0%
+    Mean profit: -47.64
+    Max drawdown (mean): 0.00
+    Mean total wagered: 156
+
+  D'Alembert (base=1, inc=0.50):
+    Mean final BR: 260.13
+    Median final BR: 0.00
+    P(profit): 2.4%
+    P(ruin): 96.6%
+    Mean profit: -339.87
+    Max drawdown (mean): 977.35
+    Mean total wagered: 1039
+
+  Fibonacci (base=1):
+    Mean final BR: 320.60
+    Median final BR: 0.00
+    P(profit): 1.1%
+    P(ruin): 98.9%
+    Mean profit: -279.40
+    Max drawdown (mean): 903.68
+    Mean total wagered: 941
+
+  Oscar's Grind (base=1):
+    Mean final BR: 550.77
+    Median final BR: 444.00
+    P(profit): 34.8%
+    P(ruin): 0.0%
+    Mean profit: -49.23
+    Max drawdown (mean): 140.46
+    Mean total wagered: 156
+
+  Half-Kelly proportional:
+    Mean final BR: 571.73
+    Median final BR: 513.30
+    P(profit): 34.8%
+    P(ruin): 0.0%
+    Mean profit: -28.27
+    Max drawdown (mean): 81.49
+    Mean total wagered: 91
+
+
+=== Edge: 1.2x (prob=0.002996) ===
+
+  Flat (1 EUR):
+    Mean final BR: 560.58
+    Median final BR: 444.00
+    P(profit): 37.5%
+    P(ruin): 0.0%
+    Mean profit: -39.42
+    Max drawdown (mean): 0.00
+    Mean total wagered: 156
+
+  D'Alembert (base=1, inc=0.50):
+    Mean final BR: 373.38
+    Median final BR: 0.00
+    P(profit): 3.2%
+    P(ruin): 95.9%
+    Mean profit: -226.62
+    Max drawdown (mean): 991.15
+    Mean total wagered: 1069
+
+  Fibonacci (base=1):
+    Mean final BR: 359.67
+    Median final BR: 0.00
+    P(profit): 1.2%
+    P(ruin): 98.8%
+    Mean profit: -240.33
+    Max drawdown (mean): 940.26
+    Mean total wagered: 984
+
+  Oscar's Grind (base=1):
+    Mean final BR: 560.19
+    Median final BR: 444.00
+    P(profit): 37.1%
+    P(ruin): 0.0%
+    Mean profit: -39.81
+    Max drawdown (mean): 139.21
+    Mean total wagered: 156
+
+  Half-Kelly proportional:
+    Mean final BR: 576.38
+    Median final BR: 513.30
+    P(profit): 37.0%
+    P(ruin): 0.0%
+    Mean profit: -23.62
+    Max drawdown (mean): 81.08
+    Mean total wagered: 92
+
+
+--- MATHEMATICAL PROOF: PROGRESSIONS AND EDGE ---
+  Theorem: No betting system can create an edge where none exists.
+  With edge E per bet, progression systems:
+  - DO amplify both expected profit AND variance
+  - DO NOT change the edge percentage per euro wagered
+  - Flat betting EV = sum(stake_i) * (p*payout - 1)
+  - Progressive EV = sum(stake_i) * (p*payout - 1) [same edge/EUR]
+  - But variance = sum(stake_i^2) * p*(1-p)*payout^2
+  - Progressive systems increase sum(stake_i^2) disproportionately
+  - Result: same edge/EUR but HIGHER variance = HIGHER ruin risk
+  - Conclusion: progressions HURT with a weak edge due to ruin risk
+
+======================================================================
+SECTION 5: BANKROLL SURVIVAL ANALYSIS
+======================================================================
+
+Bankroll: 600.0 EUR, stake: 1.0 EUR, ambo secco
+Simulations: 50,000
+
+
+=== Edge: 1.06x (EV/bet=-0.3383, Kelly=0.000000) ===
+  1yr (156 draws): P(profit)=33.8%, P(ruin)=0.0%, Mean=-52.7, Median=-156.0
+  2yr (312 draws): P(profit)=20.0%, P(ruin)=0.0%, Mean=-105.6, Median=-62.0
+  3yr (468 draws): P(profit)=35.0%, P(ruin)=0.0%, Mean=-159.0, Median=-218.0
+  4yr (624 draws): P(profit)=22.8%, P(ruin)=19.2%, Mean=-213.0, Median=-374.0
+  6yr (936 draws): P(profit)=24.1%, P(ruin)=29.3%, Mean=-315.6, Median=-436.0
+  10yr (1560 draws): P(profit)=12.4%, P(ruin)=40.7%, Mean=-527.7, Median=-560.0
+
+=== Edge: 1.1x (EV/bet=-0.3134, Kelly=0.000000) ===
+  1yr (156 draws): P(profit)=35.4%, P(ruin)=0.0%, Mean=-47.2, Median=-156.0
+  2yr (312 draws): P(profit)=21.5%, P(ruin)=0.0%, Mean=-97.6, Median=-62.0
+  3yr (468 draws): P(profit)=36.9%, P(ruin)=0.0%, Mean=-144.2, Median=-218.0
+  4yr (624 draws): P(profit)=24.7%, P(ruin)=18.0%, Mean=-195.9, Median=-124.0
+  6yr (936 draws): P(profit)=26.0%, P(ruin)=27.2%, Mean=-289.3, Median=-436.0
+  10yr (1560 draws): P(profit)=14.2%, P(ruin)=37.8%, Mean=-487.6, Median=-560.0
+
+=== Edge: 1.2x (EV/bet=-0.2509, Kelly=0.000000) ===
+  1yr (156 draws): P(profit)=37.4%, P(ruin)=0.0%, Mean=-39.2, Median=-156.0
+  2yr (312 draws): P(profit)=24.3%, P(ruin)=0.0%, Mean=-76.5, Median=-62.0
+  3yr (468 draws): P(profit)=41.0%, P(ruin)=0.0%, Mean=-117.3, Median=-218.0
+  4yr (624 draws): P(profit)=28.8%, P(ruin)=15.4%, Mean=-157.8, Median=-124.0
+  6yr (936 draws): P(profit)=31.1%, P(ruin)=23.1%, Mean=-234.5, Median=-186.0
+  10yr (1560 draws): P(profit)=18.9%, P(ruin)=31.0%, Mean=-391.6, Median=-310.0
+
+=== Edge: 1.5x (EV/bet=-0.0637, Kelly=0.000000) ===
+  1yr (156 draws): P(profit)=44.2%, P(ruin)=0.0%, Mean=-10.2, Median=-156.0
+  2yr (312 draws): P(profit)=32.2%, P(ruin)=0.0%, Mean=-20.1, Median=-62.0
+  3yr (468 draws): P(profit)=52.1%, P(ruin)=0.0%, Mean=-30.6, Median=+32.0
+  4yr (624 draws): P(profit)=41.1%, P(ruin)=9.8%, Mean=-41.3, Median=-124.0
+  6yr (936 draws): P(profit)=46.1%, P(ruin)=13.5%, Mean=-59.4, Median=-186.0
+  10yr (1560 draws): P(profit)=36.4%, P(ruin)=16.9%, Mean=-104.7, Median=-60.0
+
+=== Edge: 1.66x (EV/bet=+0.0362, Kelly=0.000145) ===
+  1yr (156 draws): P(profit)=47.8%, P(ruin)=0.0%, Mean=+6.2, Median=-156.0
+  2yr (312 draws): P(profit)=36.9%, P(ruin)=0.0%, Mean=+10.8, Median=-62.0
+  3yr (468 draws): P(profit)=57.9%, P(ruin)=0.0%, Mean=+18.6, Median=+32.0
+  4yr (624 draws): P(profit)=48.0%, P(ruin)=7.6%, Mean=+22.9, Median=-124.0
+  6yr (936 draws): P(profit)=54.5%, P(ruin)=10.0%, Mean=+34.8, Median=+64.0
+  10yr (1560 draws): P(profit)=47.0%, P(ruin)=11.2%, Mean=+60.1, Median=-60.0
+
+
+--- DRAWS NEEDED FOR 95% CONFIDENCE OF PROFIT ---
+  Edge 1.06x: NEVER (negative EV)
+  Edge 1.1x: NEVER (negative EV)
+  Edge 1.2x: NEVER (negative EV)
+  Edge 1.5x: NEVER (negative EV)
+  Edge 1.66x: ~532577 draws (~3414.0 years)
+
+
+--- STOP-LOSS IMPACT (1 year, 1.10x edge) ---
+       No SL: P(profit)=34.4%, Mean=-50.8, Stopped=0.0%, P(ruin)=0.0%
+     SL=-100: P(profit)=24.2%, Mean=-35.0, Stopped=75.8%, P(ruin)=0.0%
+     SL=-200: P(profit)=35.2%, Mean=-47.9, Stopped=0.0%, P(ruin)=0.0%
+     SL=-300: P(profit)=34.5%, Mean=-50.0, Stopped=0.0%, P(ruin)=0.0%
+     SL=-500: P(profit)=35.1%, Mean=-48.3, Stopped=0.0%, P(ruin)=0.0%
+     SL=-750: P(profit)=35.0%, Mean=-48.6, Stopped=0.0%, P(ruin)=0.0%
+
+======================================================================
+SECTION 6: THE KEY QUESTION
+Can bet_type + selectivity + sizing make 1.10x profitable?
+======================================================================
+
+1-year horizon (156 total draws), bankroll=600.0
+Simulations: 30,000
+
+--- S1: Baseline flat ambo secco ---
+  Draws played: 156, Cost: 156 EUR
+  P(profit): 34.7%
+  P(ruin): 0.0%
+  Mean profit: -49.30 EUR
+  Median profit: -156.00 EUR
+  Sharpe: -0.3015
+
+--- S2: Selective ambo secco (20% draws, 1.25x) ---
+  Draws played: 31, Cost: 31 EUR
+  P(profit): 9.2%
+  P(ruin): 0.0%
+  Mean profit: -6.92 EUR
+  Median profit: -31.00 EUR
+  Sharpe: -0.0892
+
+--- S3: Selective ambo secco (10% draws, 1.40x) ---
+  Draws played: 15, Cost: 15 EUR
+  P(profit): 5.3%
+  P(ruin): 0.0%
+  Mean profit: -1.43 EUR
+  Median profit: -15.00 EUR
+  Sharpe: -0.0244
+
+--- S4: Selective estratto (20% draws, 1.25x) ---
+  Draws played: 31, Cost: 62 EUR
+  P(profit): 26.5%
+  P(ruin): 0.0%
+  Mean profit: -13.43 EUR
+  Median profit: -17.08 EUR
+  Sharpe: -0.5988
+
+--- S5: Selective estratto (10% draws, 1.40x) ---
+  Draws played: 15, Cost: 60 EUR
+  P(profit): 41.7%
+  P(ruin): 0.0%
+  Mean profit: -7.39 EUR
+  Median profit: -15.08 EUR
+  Sharpe: -0.2233
+
+--- S6: Mixed - 1 ambo + 2 estratti selective (20%, 1.25x) ---
+  Draws played: 31, Cost: 93 EUR
+  P(profit): 11.7%
+  P(ruin): 0.0%
+  Mean profit: -20.19 EUR
+  Median profit: -48.08 EUR
+  Sharpe: -0.2483
+
+--- S7: Ambo tutte ruote selective (20%, 1.25x) ---
+  Draws played: 31, Cost: 31 EUR
+  P(profit): 25.0%
+  P(ruin): 0.0%
+  Mean profit: -6.97 EUR
+  Median profit: -6.00 EUR
+  Sharpe: -0.2906
+
+--- S8: High selectivity ambo secco (5%, 2.0x edge) ---
+  Draws played: 7, Cost: 14 EUR
+  P(profit): 3.2%
+  P(ruin): 0.0%
+  Mean profit: +2.10 EUR
+  Median profit: -14.00 EUR
+  Sharpe: 0.0236
+
+--- S9: Estratto-only, all draws, 1.10x ---
+  Draws played: 156, Cost: 312 EUR
+  P(profit): 2.7%
+  P(ruin): 0.0%
+  Mean profit: -98.15 EUR
+  Median profit: -98.63 EUR
+  Sharpe: -2.0562
+
+--- S10: Estratto-only selective (30%, 1.20x) ---
+  Draws played: 46, Cost: 92 EUR
+  P(profit): 16.1%
+  P(ruin): 0.0%
+  Mean profit: -22.94 EUR
+  Median profit: -24.62 EUR
+  Sharpe: -0.8512
+
+
+======================================================================
+FINAL STRATEGIC RECOMMENDATIONS
+======================================================================
+
+1. BET TYPE SELECTION:
+   - Ambo secco (250x) requires 1.66x edge to break even -- TOO HIGH
+   - Estratto (11.23x) requires 1.60x edge to break even -- ALSO TOO HIGH
+   - Ambo tutte ruote (25x) requires 1.60x edge -- same house edge problem
+   - ALL Italian Lotto bets have ~37.6% house edge (except terno at 61.7%)
+   - With 1.06-1.10x edge: NO BET TYPE IS PROFITABLE
+   - Minimum viable edge: ~1.60x for any bet type
+
+2. SELECTIVE PLAY:
+   - Selectivity helps IF it genuinely increases edge on played draws
+   - Playing 20% of draws at 1.25x is better than 100% at 1.06x
+   - But 1.25x is still far below the 1.60x breakeven threshold
+   - Even 10% at 1.40x is not enough
+   - Need: play <5% of draws with >2x edge to approach profitability
+
+3. PORTFOLIO / DIVERSIFICATION:
+   - Diversification across bet types reduces variance but does NOT improve EV
+   - The house edge is identical (~37.6%) across all standard bet types
+   - Adding more bets = more exposure to negative EV = faster loss
+   - EXCEPTION: if different bet types have different edge levels
+
+4. PROGRESSIVE BETTING:
+   - Mathematically proven: progressions cannot overcome negative EV
+   - With positive EV: progressions increase variance without improving edge/EUR
+   - D'Alembert/Fibonacci/Oscar: all increase ruin risk vs flat betting
+   - Kelly criterion: optimal for positive EV, but edge must exceed house edge first
+   - VERDICT: Flat betting is optimal for weak-edge scenarios
+
+5. BANKROLL SURVIVAL:
+   - At 1.10x edge (still -EV): ruin is certain given enough time
+   - At 1.66x edge (breakeven): 50/50 long-term, high variance
+   - At 2.0x edge: finally viable, but needs ~2000 draws for 95% confidence
+   - Stop-loss: protects capital but reduces opportunity if edge is real
+
+6. THE BOTTOM LINE:
+   A 1.06x-1.10x prediction edge is NOT ENOUGH for ANY Italian Lotto bet.
+   The house edge is 37.6%, meaning you need to predict 1.60x better than
+   random to merely break even. Your 1.10x edge recovers only:
+   (1.10 - 1.00) / (1.60 - 1.00) = 16.7% of the house edge.
+
+   TO BECOME PROFITABLE, you need ONE of:
+   a) Improve prediction to >1.60x edge (very difficult)
+   b) Find draws where your edge exceeds 1.60x and ONLY play those
+   c) Switch to a game with lower house edge (not Italian Lotto)
+   d) Accept this as entertainment with controlled losses
+
+   RECOMMENDED CONFIGURATION for the current system:
+   - Bet type: ambo secco (highest upside for rare correct predictions)
+   - Play only score >= 4 signals (current rule is correct)
+   - Stake: 1 EUR flat (never increase)
+   - Max 3 ambi per draw (current config)
+   - Stop-loss: -750 EUR (current config is reasonable)
+   - Expected outcome: slow, steady loss of ~0.37 EUR per EUR wagered
+   - Best realistic scenario: lucky variance producing occasional wins
+     that offset losses temporarily
+
+
+======================================================================
+SECTION 7: ESTRATTO DEEP DIVE
+What if single-number prediction is better than pair prediction?
+======================================================================
+
+Logic: Predicting 1 number is easier than predicting a pair.
+If pair edge is 1.10x, single-number edge could plausibly be 1.15-1.30x
+Estratto: payout 11.23x, prob 1/18 = 0.0556
+EV = edge * 0.0556 * 11.23 = edge * 0.6244
+Breakeven: edge = 1/0.6244 = 1.602x
+
+  Edge 1.10x: EV/bet=-0.3137, P(profit)=2.8%, Mean=-97.9, P(ruin)=0.0%
+  Edge 1.20x: EV/bet=-0.2513, P(profit)=6.8%, Mean=-78.6, P(ruin)=0.0%
+  Edge 1.30x: EV/bet=-0.1889, P(profit)=14.1%, Mean=-58.7, P(ruin)=0.0%
+  Edge 1.40x: EV/bet=-0.1266, P(profit)=24.1%, Mean=-39.5, P(ruin)=0.0%
+  Edge 1.50x: EV/bet=-0.0642, P(profit)=36.7%, Mean=-20.2, P(ruin)=0.0%
+  Edge 1.60x: EV/bet=-0.0018, P(profit)=50.8%, Mean=-0.5, P(ruin)=0.0%
+  Edge 1.70x: EV/bet=+0.0606, P(profit)=63.9%, Mean=+18.7, P(ruin)=0.0%
+  Edge 1.80x: EV/bet=+0.1230, P(profit)=75.8%, Mean=+38.8, P(ruin)=0.0%
+  Edge 2.00x: EV/bet=+0.2478, P(profit)=90.4%, Mean=+76.9, P(ruin)=0.0%
+
+Key finding: Even estratto needs 1.60x+ edge.
+The house edge is the same ~37.6% regardless of bet type.
+Only the VARIANCE profile changes, not the breakeven point.
+
+[Simulation completed in 17.2s, 50,000 sims/section]
