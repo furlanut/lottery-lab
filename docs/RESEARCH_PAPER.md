@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Un sistema predittivo per ambi secchi del Lotto Italiano basato su filtri convergenti e stato sviluppato e testato su 6.886 estrazioni storiche (1946-2026). Dopo 18+ analisi statistiche, test su geometria sacra, cabala, e ottimizzazione delle finestre temporali, il miglior segnale trovato (freq+rit+dec con finestra 150 estrazioni) mostra un edge medio del 22.5% rispetto al caso, validato su 5 periodi temporali indipendenti. Il breakeven per l'ambo secco richiede un edge del 60%, rendendo il sistema non profittevole in media. Tuttavia, la scoperta dell'**ambetto** (introdotto nel 2013, payout 65x, breakeven 1.543x) ha cambiato radicalmente la strategia: i filtri convergenti eccellono nell'identificare la ZONA corretta piuttosto che il punto esatto, e l'ambetto premia esattamente questa capacita. L'analisi per ruota e ciclica rivela che il segnale e ciclico: durante le fasi attive (20% del tempo), supera il breakeven con ratio 1.5-2.0x. La strategia finale di money management (EUR 5/estrazione, 4 ambetti + 1 ambo, cicli di 9 estrazioni) offre il miglior rapporto rischio/rendimento, con una vincita ambetto che copre 1.44 cicli. Il paper documenta l'intero percorso di ricerca con trasparenza metodologica.
+Un sistema predittivo per ambi secchi del Lotto Italiano basato su filtri convergenti e stato sviluppato e testato su 6.886 estrazioni storiche (1946-2026). Dopo 18+ analisi statistiche, test su geometria sacra, cabala, e ottimizzazione delle finestre temporali, il miglior segnale trovato (freq+rit+dec con finestra 150 estrazioni) mostra un edge medio del 22.5% rispetto al caso, validato su 5 periodi temporali indipendenti. Il breakeven per l'ambo secco richiede un edge del 60%, rendendo il sistema non profittevole in media. Tuttavia, la scoperta dell'**ambetto** (introdotto nel 2013, payout 65x, breakeven 1.543x) ha cambiato radicalmente la strategia: i filtri convergenti eccellono nell'identificare la ZONA corretta piuttosto che il punto esatto, e l'ambetto premia esattamente questa capacita. L'analisi per ruota e ciclica rivela che il segnale e ciclico: durante le fasi attive (20% del tempo), supera il breakeven con ratio 1.5-2.0x. L'**Engine V4** introduce segnali separati per ambo e ambetto: freq_rit_fib (W=75) per l'ambo secco e somma72 (W=150) per l'ambetto, sfruttando il fatto che finestre ottimali diverse massimizzano scommesse diverse. La strategia finale di money management (EUR 5/estrazione, 4 ambetti + 1 ambo, cicli di 9 estrazioni) offre il miglior rapporto rischio/rendimento, con una vincita ambetto che copre 1.44 cicli. Il paper documenta l'intero percorso di ricerca con trasparenza metodologica.
 
 **Parole chiave:** Lotto Italiano, ciclometria, filtri convergenti, backtesting, ambo secco, ambetto, money management, analisi statistica, gambler's fallacy
 
@@ -1647,7 +1647,7 @@ IMPLICAZIONE (media globale)
 
 Tuttavia, l'analisi per ruota e per ciclo temporale (Capitolo 10) ha rivelato che il segnale non e costante ma **ciclico**. Con la validazione a finestra scorrevole su ROMA 21-30, il 20% delle finestre supera il breakeven di 1.6x, con picchi fino a 3.164x. Questo cambia la narrativa da "impossibile" a **"possibile durante cicli specifici, ma il timing e imprevedibile"**. Il problema aperto non e piu l'esistenza dell'edge, ma la capacita di prevedere quando il segnale si attiva.
 
-Una svolta ulteriore e arrivata con la scoperta dell'**ambetto** (Capitolo 14): il breakeven scende a 1.543x (da 1.602x), e i filtri convergenti si rivelano migliori nell'identificare zone numeriche che punti esatti. La strategia di money management (Capitolo 15) quantifica come sfruttare questa scoperta con un protocollo operativo a EUR 5/estrazione.
+Una svolta ulteriore e arrivata con la scoperta dell'**ambetto** (Capitolo 14): il breakeven scende a 1.543x (da 1.602x), e i filtri convergenti si rivelano migliori nell'identificare zone numeriche che punti esatti. La strategia di money management (Capitolo 15) quantifica come sfruttare questa scoperta con un protocollo operativo a EUR 5/estrazione. L'**Engine V4** (Capitolo 16) porta questa intuizione al livello successivo: segnali diversi hanno finestre ottimali diverse per ambo e ambetto, e la configurazione separata (freq_rit_fib W=75 per ambo, somma72 W=150 per ambetto) massimizza ciascun tipo di scommessa.
 
 ### 9.3 Cosa funziona e cosa no
 
@@ -2185,6 +2185,94 @@ L'ambo "tutte le ruote" paga EUR 25 -- non copre neanche 1 estrazione di gioco (
 |  Bankroll: EUR 450+ (10 cicli)                            |
 |  Vincite attese: ~7/anno                                  |
 |  P(profitto annuale): ~10%                                |
++-----------------------------------------------------------+
+```
+
+---
+
+## 16. Engine V4 — Segnali Separati per Ambo e Ambetto
+
+---
+
+> **In parole semplici**
+>
+> Fino ad ora usavamo lo stesso binocolo per guardare sia le stelle che i fiori. Ma le stelle si vedono meglio con un telescopio e i fiori con una lente d'ingrandimento. Allo stesso modo, il miglior segnale per l'ambo secco (dove devi centrare la coppia esatta) e' diverso dal miglior segnale per l'ambetto (dove basta essere vicini). L'Engine V4 usa lo strumento giusto per ogni tipo di scommessa.
+
+---
+
+### 16.1 La scoperta: finestre diverse per ambo e ambetto
+
+Sweep completo con check ambetto corretto (2 numeri distinti) e fold scorrevole:
+
+**Ambo secco — classifica:**
+
+| Segnale | W ottimale | Ratio |
+|---------|-----------|-------|
+| freq_rit_fib | 75 | 1.159x |
+| somma72 | 100 | 1.081x |
+| freq_rit_dec | 125 | 1.024x |
+
+**Ambetto — classifica (finestre diverse!):**
+
+| Segnale | W ottimale | Ratio | Min fold |
+|---------|-----------|-------|----------|
+| somma72 | 150 | 1.239x | 1.178x |
+| freq_rit_fib | 125 | 1.153x | 1.098x |
+| freq_rit_dec | 75 | 1.115x | 1.023x |
+
+Le finestre ottimali cambiano: somma72 per ambetto preferisce W=150 (non 100), freq_rit_fib preferisce W=125 (non 75). L'ambetto, che allarga il bersaglio di +/-1, funziona meglio con finestre piu' ampie perche' cattura pattern di zona.
+
+### 16.2 Perche' segnali diversi funzionano diversamente
+
+freq_rit_fib seleziona coppie con distanza Fibonacci (1,2,3,5,8,13,21,34). Distanze grandi (21, 34) significano numeri lontani — l'adiacenza +/-1 dell'ambetto aiuta poco. Per l'ambo secco (che richiede esattezza) funziona bene perche' seleziona coppie precise.
+
+somma72 genera coppie come 34-38 — numeri nella stessa zona. Se esce 34-39, l'ambetto vince. La vicinanza numerica e' il punto di forza dell'ambetto, e somma72 produce coppie naturalmente "vicine".
+
+### 16.3 Configurazione Engine V4
+
+| Ruolo | Segnale | Finestra | Posta | Vincita |
+|-------|---------|----------|-------|---------|
+| Coppia #1 ambo | freq_rit_fib | W=75 | EUR 1 ambo + EUR 1 ambetto | EUR 250 / EUR 65 |
+| Coppia #2 ambetto | somma72 | W=150 | EUR 1 | EUR 65 |
+| Coppia #3 ambetto | somma72 | W=150 | EUR 1 | EUR 65 |
+| Coppia #4 ambetto | somma72 | W=150 | EUR 1 | EUR 65 |
+| **TOTALE** | | | **EUR 5** | |
+
+Ciclo: 9 estrazioni = EUR 45. Vincita ambetto (EUR 65) copre 144% del ciclo.
+
+### 16.4 Validazione 5-fold CV ambetto con finestre corrette
+
+| Segnale | W | F1 | F2 | F3 | F4 | F5 | Media | Min |
+|---------|---|----|----|----|----|-----|-------|-----|
+| somma72 | 150 | 1.24 | 1.21 | 1.31 | 1.18 | 1.26 | 1.239x | 1.178x |
+| freq_rit_fib | 125 | 1.10 | 1.19 | 1.13 | 1.13 | 1.22 | 1.153x | 1.098x |
+| freq_rit_dec | 75 | 1.02 | 1.10 | 1.10 | 1.15 | 1.14 | 1.102x | 1.023x |
+
+somma72 W=150: il segnale piu' stabile di tutta la ricerca. Nessun fold scende sotto 1.17x.
+
+### 16.5 Schema operativo V4
+
+```
++-----------------------------------------------------------+
+|  ENGINE V4 — SEGNALI SEPARATI                             |
++-----------------------------------------------------------+
+|                                                           |
+|  AMBO SECCO (coppia #1):                                  |
+|    Segnale: freq_rit_fib                                  |
+|    Finestra: W=75 (~6 mesi)                               |
+|    Logica: coppia uscita 2+ volte, in ritardo,            |
+|            distanza ciclometrica di Fibonacci              |
+|    Posta: EUR 1 ambo + EUR 1 ambetto                      |
+|                                                           |
+|  AMBETTO (coppie #2-4):                                   |
+|    Segnale: somma72                                       |
+|    Finestra: W=150 (~1 anno)                              |
+|    Logica: coppia con somma 72, uscita nella finestra,    |
+|            in ritardo recente                              |
+|    Posta: EUR 1 ambetto ciascuna                          |
+|                                                           |
+|  COSTO: EUR 5/estrazione, EUR 45/ciclo (9 estrazioni)    |
+|  SCALA: posta × N mantiene gli stessi rapporti            |
 +-----------------------------------------------------------+
 ```
 
