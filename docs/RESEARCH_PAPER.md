@@ -1938,6 +1938,91 @@ Il fold deve corrispondere alla finestra predittiva. Questa correzione ha ribalt
 
 ---
 
+## 12. Dieci Metodi Avanzati — La Prova Definitiva
+
+### In parole semplici
+Immagina di aver provato 13 chiavi diverse su un lucchetto senza riuscire ad aprirlo. Invece di arrenderti, provi altre 10 chiavi ancora piu' sofisticate: chiavi a infrarossi, chiavi magnetiche, chiavi quantistiche. Le provi tutte, una per una, con la massima cura. Nessuna apre il lucchetto. A questo punto puoi dire con ragionevole certezza: il lucchetto non ha fori nascosti. E' davvero chiuso.
+
+### 12.1 I metodi testati
+
+| # | Metodo | Cosa misura | Risultato |
+|---|--------|-------------|-----------|
+| 1 | Conditional Entropy | Dipendenze non-lineari tra estrazioni | 0.44% riduzione entropia. NEGATIVO |
+| 2 | Runs Test (Wald-Wolfowitz) | Clustering nelle apparizioni delle coppie | 199 significativi vs 200 attesi MC. NEGATIVO |
+| 3 | Analisi spettrale (FFT) | Periodicita' nei ritardi delle coppie | Nessuna componente periodica. NEGATIVO |
+| 4 | Copula (delay congiunti) | Struttura di dipendenza tra coppie | Falso positivo da troncamento. NEGATIVO |
+| 5 | RQA (Recurrence Quantification) | Struttura deterministica nelle sequenze | Ricorrenza 0.943x vs random. NEGATIVO |
+| 6 | Markov Chain (transizioni decine) | Probabilita' condizionali tra decine | Falso positivo intra-estrazione. NEGATIVO |
+| 7 | EWMA vs Fixed Window | Pesatura esponenziale vs finestra fissa | EWMA 1.08x vs fixed 1.11x. Finestra fissa migliore |
+| 8 | Bayesian Changepoint Detection | Cambiamenti nel regime probabilistico | 3.0% changepoint vs 4.1% falsi positivi. NEGATIVO |
+| 9 | Mutual Information (ruote, lag 0-5) | Informazione condivisa tra ruote a diversi ritardi | Max MI 0.011 bits vs 0.012 soglia. NEGATIVO |
+| 10 | Variance Ratio Test | Prevedibilita' a diversi orizzonti | VR(20) = 0.989 ≈ 1.0. Random walk perfetto |
+
+### 12.2 Lezioni dai falsi positivi
+
+Tre metodi hanno inizialmente mostrato risultati "interessanti" che sono poi collassati:
+
+**Markov Chain**: concatenare i 5 numeri di un'estrazione come sequenza temporale crea anti-correlazione meccanica dal campionamento senza reimmissione. Testato correttamente (solo transizioni tra estrazioni): zero segnale.
+
+**Runs Test**: 20 coppie per ruota mostravano clustering 2.7x, ma su 4.005 coppie totali con Monte Carlo il risultato e' perfettamente casuale.
+
+**Copula**: troncare sequenze di lunghezze diverse a lunghezza uguale introduce correlazione spuria.
+
+### 12.3 Il Bayesian Changepoint — la speranza delusa
+
+Il metodo piu' promettente dalla ricerca web (BOCPD) avrebbe dovuto rilevare i cambiamenti di regime ON/OFF nel nostro segnale. Risultato: 3.0% di coppie mostra changepoint vs 4.1% atteso per falsi positivi. I cicli ON/OFF che osserviamo sono varianza statistica, non cambiamenti reali del regime sottostante.
+
+### 12.4 Bilancio complessivo
+
+Con 23 metodi testati (13 precedenti + 10 nuovi), il Lotto Italiano non mostra struttura sfruttabile a nessun livello: lineare, non-lineare, spettrale, entropico, o congiunto.
+
+---
+
+## 13. Ricerca Web e Stato dell'Arte
+
+### In parole semplici
+Abbiamo chiesto a internet: "qualcuno ha trovato un modo per battere il Lotto?" Abbiamo esaminato paper accademici, forum italiani, sistemi AI, e le tecniche dei giocatori professionisti. La risposta unanime: nessuno ha dimostrato un vantaggio riproducibile. Ma abbiamo trovato un'idea interessante per il nostro prossimo passo.
+
+### 13.1 Paper accademici
+- Modello CDM (Compound-Dirichlet-Multinomial): 2/6 numeri ogni 12 estrazioni. Non applicabile ad ambo secco.
+- Nessun paper dimostra edge robusto out-of-sample su lotterie.
+
+### 13.2 Metodi specifici Lotto italiano
+- Forum LottoCED (2025): sistema AI+Markov+Monte Carlo, essenzialmente il nostro approccio convergente. Riportato un ambo al primo colpo (aneddotico, non validato).
+- I metodi ciclometrici di Fabarri sono gia' nel nostro Engine V1.
+- Nessun metodo documentato con track record verificabile.
+
+### 13.3 Machine Learning
+- LSTM: 4 layer bidirezionali. Nessun paper mostra accuratezza superiore al caso per numeri. Potenzialmente utile per regime ON/OFF.
+- Random Forest: 8.33% vs 8-9% baseline. Marginale.
+- Insight chiave: features statistiche (frequenze, ritardi) come input funzionano meglio dei numeri grezzi.
+
+### 13.4 Change-point detection e HMM
+- HMM per regime detection: usato da Renaissance Technologies in finanza.
+- BOCPD (Adams & MacKay 2007): il piu' promettente in teoria, ma il nostro test (metodo 8 nel cap. 12) non trova changepoint reali.
+- Il problema: i cicli ON/OFF nel nostro segnale sono probabilmente varianza statistica.
+
+### 13.5 Metodi non applicabili
+- Benford's Law: non applicabile (numeri uniformi 1-90, non distribuiti su ordini di grandezza).
+- Exploiting RNG: il Lotto italiano usa estrazione meccanica certificata (non RNG software).
+- Caso Eddie Tipton (Hot Lotto USA): rootkit su RNG software, non applicabile.
+
+### 13.6 Prima verifica previsioni reali
+
+Il 07/04/2026 abbiamo confrontato le previsioni Engine V3 con l'estrazione #56:
+- 10 previsioni generate (5 V3 + 5 V2)
+- 0 ambi centrati
+- 2 "mezzo-centro" (1 numero su 2 presente)
+- Risultato coerente con le aspettative: P(almeno 1 hit su 10 ambi) ≈ 2.5%
+
+Prossima estrazione: giovedi 09/04/2026.
+
+### 13.7 Conclusione
+
+Lo stato dell'arte conferma che il Lotto e' un gioco a informazione nulla. Il nostro approccio (convergenza + finestre ottimali) e' allineato con le migliori pratiche trovate online. L'unico gap non colmato resta il timing dei cicli ON/OFF.
+
+---
+
 ## Appendice A: Stack Tecnologico
 
 Il sistema Lotto Convergent e costruito su uno stack moderno ottimizzato per analisi dati e API:
