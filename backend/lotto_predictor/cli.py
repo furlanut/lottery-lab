@@ -326,6 +326,309 @@ def predict_v2(
     )
 
 
+@app.command()
+def update(
+    verifica: bool = typer.Option(True, "--verifica/--no-verifica", help="Verifica previsioni"),
+    notifica: bool = typer.Option(True, "--notifica/--no-notifica", help="Invia notifica"),
+    salva_db: bool = typer.Option(False, "--salva-db", help="Salva estrazione nel DB"),
+) -> None:
+    """Scarica ultima estrazione, verifica previsioni, notifica esiti.
+
+    Workflow completo post-estrazione:
+    1. Scarica l'ultima estrazione dal sito
+    2. Verifica le previsioni attive (se presenti nel DB)
+    3. Invia notifica con i risultati
+    """
+    from lotto_predictor.ingestor.schedule import prossima_estrazione, ultima_estrazione_passata
+    from lotto_predictor.ingestor.scraper import ScraperError, scarica_ultima_estrazione
+
+    # Mostra info sul calendario estrazioni
+    info_prossima = prossima_estrazione()
+    info_ultima = ultima_estrazione_passata()
+    console.print(
+        f"\n[bold]Ultima estrazione:[/bold] {info_ultima['giorno']} {info_ultima['data']}"
+    )
+    console.print(
+        f"[bold]Prossima estrazione:[/bold] {info_prossima['giorno']} {info_prossima['data']} "
+        f"(tra {info_prossima['ore_mancanti']:.1f} ore)\n"
+    )
+
+    # 1. Scarica estrazione
+    console.print("[bold]Scaricamento ultima estrazione...[/bold]")
+    try:
+        estrazione = scarica_ultima_estrazione()
+    except ScraperError as e:
+        console.print(f"[red]Errore scraping: {e}[/red]")
+        raise typer.Exit(code=1) from e
+
+    # Mostra estrazione
+    table = Table(title=f"Estrazione #{estrazione['concorso']} del {estrazione['data_str']}")
+    table.add_column("Ruota", style="bold")
+    table.add_column("N1")
+    table.add_column("N2")
+    table.add_column("N3")
+    table.add_column("N4")
+    table.add_column("N5")
+
+    for ruota in sorted(estrazione["ruote"]):
+        numeri = estrazione["ruote"][ruota]
+        table.add_row(ruota, *[str(n) for n in numeri])
+
+    console.print(table)
+    console.print()
+
+    # 2. Salva nel DB (se richiesto)
+    if salva_db:
+        _salva_estrazione_db(estrazione)
+
+    # 3. Verifica previsioni
+    esiti: list[dict] = []
+    if verifica:
+        esiti = _verifica_previsioni_attive(estrazione)
+
+    # 4. Notifica
+    if notifica:
+        _invia_notifica_esiti(estrazione, esiti)
+
+
+@app.command()
+def calendario(
+    n: int = typer.Option(5, "--n", help="Numero estrazioni da mostrare"),
+) -> None:
+    """Mostra il calendario delle prossime estrazioni."""
+    from lotto_predictor.ingestor.schedule import (
+        ieri_era_estrazione,
+        ore_alla_prossima_estrazione,
+        prossime_n_estrazioni,
+        ultima_estrazione_passata,
+    )
+
+    console.print("\n[bold]CALENDARIO ESTRAZIONI[/bold]\n")
+
+    # Info su ieri
+    if ieri_era_estrazione():
+        console.print("[green]Ieri c'e stata un'estrazione[/green] — controlla i risultati!\n")
+
+    # Ultima passata
+    ultima = ultima_estrazione_passata()
+    console.print(f"[dim]Ultima estrazione:[/dim] {ultima['giorno']} {ultima['data']}")
+
+    # Ore mancanti
+    ore = ore_alla_prossima_estrazione()
+    if ore <= 0:
+        console.print("[yellow]Estrazione in corso o appena conclusa![/yellow]")
+    elif ore < 6:
+        console.print(f"[yellow]Prossima estrazione tra {ore:.1f} ore[/yellow]")
+    else:
+        console.print(f"Prossima estrazione tra {ore:.1f} ore")
+
+    console.print()
+
+    # Tabella prossime estrazioni
+    prossime = prossime_n_estrazioni(n)
+    table = Table(title=f"Prossime {n} estrazioni")
+    table.add_column("#", style="bold")
+    table.add_column("Data")
+    table.add_column("Giorno")
+    table.add_column("Ora")
+    table.add_column("Tra")
+
+    for i, info in enumerate(prossime, 1):
+        ore_str = f"{info['ore_mancanti']:.1f}h"
+        table.add_row(
+            str(i),
+            str(info["data"]),
+            info["giorno"],
+            info["ora_prevista"],
+            ore_str,
+        )
+
+    console.print(table)
+    console.print()
+
+
+@app.command()
+def scrape(
+    ultime: int = typer.Option(1, "--ultime", help="Numero estrazioni da scaricare"),
+    salva: bool = typer.Option(False, "--salva", help="Salva nel database"),
+) -> None:
+    """Scarica le ultime estrazioni dal sito web."""
+    from lotto_predictor.ingestor.scraper import (
+        ScraperError,
+        scarica_ultima_estrazione,
+        scarica_ultime_n_estrazioni,
+    )
+
+    console.print(f"\n[bold]Scaricamento ultime {ultime} estrazioni...[/bold]\n")
+
+    try:
+        if ultime == 1:
+            estrazioni = [scarica_ultima_estrazione()]
+        else:
+            estrazioni = scarica_ultime_n_estrazioni(n=ultime)
+    except ScraperError as e:
+        console.print(f"[red]Errore scraping: {e}[/red]")
+        raise typer.Exit(code=1) from e
+
+    for est in estrazioni:
+        table = Table(title=f"Concorso #{est['concorso']} del {est['data_str']}")
+        table.add_column("Ruota", style="bold")
+        table.add_column("N1")
+        table.add_column("N2")
+        table.add_column("N3")
+        table.add_column("N4")
+        table.add_column("N5")
+
+        for ruota in sorted(est["ruote"]):
+            numeri = est["ruote"][ruota]
+            table.add_row(ruota, *[str(n) for n in numeri])
+
+        console.print(table)
+        console.print()
+
+    if salva:
+        for est in estrazioni:
+            _salva_estrazione_db(est)
+
+    console.print(f"[green]Scaricate {len(estrazioni)} estrazioni.[/green]\n")
+
+
+def _salva_estrazione_db(estrazione: dict) -> None:
+    """Salva un'estrazione nel database."""
+    from lotto_predictor.models.database import Estrazione, get_session
+
+    session = get_session()
+    try:
+        for ruota, numeri in estrazione["ruote"].items():
+            est = Estrazione(
+                concorso=estrazione["concorso"],
+                data=estrazione["data"],
+                ruota=ruota,
+                n1=numeri[0],
+                n2=numeri[1],
+                n3=numeri[2],
+                n4=numeri[3],
+                n5=numeri[4],
+            )
+            session.merge(est)
+        session.commit()
+        console.print(f"[green]Estrazione #{estrazione['concorso']} salvata nel DB.[/green]")
+    except Exception as e:
+        session.rollback()
+        console.print(f"[red]Errore salvataggio DB: {e}[/red]")
+    finally:
+        session.close()
+
+
+def _verifica_previsioni_attive(estrazione: dict) -> list[dict]:
+    """Verifica le previsioni attive contro l'estrazione scaricata."""
+    from lotto_predictor.models.database import get_session
+    from lotto_predictor.predictor.verifier import (
+        riepilogo_verifica,
+        verifica_previsioni_db,
+    )
+
+    session = get_session()
+    try:
+        esiti = verifica_previsioni_db(
+            session,
+            estrazione["ruote"],
+            data_estrazione=estrazione["data"],
+        )
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        console.print(f"[red]Errore verifica previsioni: {e}[/red]")
+        return []
+    finally:
+        session.close()
+
+    if not esiti:
+        console.print("[dim]Nessuna previsione attiva da verificare.[/dim]\n")
+        return []
+
+    # Mostra esiti
+    table = Table(title="Esiti Verifica")
+    table.add_column("Ruota", style="bold")
+    table.add_column("Ambo")
+    table.add_column("Score")
+    table.add_column("Colpo")
+    table.add_column("Stato")
+    table.add_column("Vincita")
+
+    for e in esiti:
+        a, b = e["ambo"]
+        stato_style = {
+            "VINTA": "[bold green]VINTA[/bold green]",
+            "PERSA": "[red]PERSA[/red]",
+            "IN_CORSO": "[yellow]IN CORSO[/yellow]",
+        }
+        vincita_str = f"E{e['vincita']:.0f}" if e["vincita"] > 0 else "-"
+        table.add_row(
+            e["ruota"],
+            f"{a:2d}-{b:2d}",
+            str(e["score"]),
+            f"{e['colpo']}/{e.get('max_colpi', '?')}",
+            stato_style.get(e["stato"], e["stato"]),
+            vincita_str,
+        )
+
+    console.print(table)
+
+    # Riepilogo
+    riep = riepilogo_verifica(esiti)
+    console.print(
+        f"\n[bold]Riepilogo:[/bold] {riep['vinte']} vinte, "
+        f"{riep['perse']} perse, {riep['in_corso']} in corso — "
+        f"Hit rate: {riep['hit_rate']:.1f}%\n"
+    )
+
+    return esiti
+
+
+def _invia_notifica_esiti(estrazione: dict, esiti: list[dict]) -> None:
+    """Invia notifica con i risultati."""
+    from lotto_predictor.notifier.ntfy import invia_notifica
+
+    # Costruisci messaggio
+    lines = [
+        f"Estrazione #{estrazione['concorso']} del {estrazione['data_str']}",
+        "",
+    ]
+
+    for ruota in sorted(estrazione["ruote"]):
+        numeri = estrazione["ruote"][ruota]
+        nums_str = " ".join(f"{n:2d}" for n in numeri)
+        lines.append(f"{ruota}: {nums_str}")
+
+    if esiti:
+        lines.append("")
+        vinte = [e for e in esiti if e["stato"] == "VINTA"]
+        if vinte:
+            for e in vinte:
+                a, b = e["ambo"]
+                lines.append(
+                    f"VINCITA: ambo {a}-{b} su {e['ruota']} "
+                    f"(score {e['score']}, colpo {e['colpo']})"
+                )
+        else:
+            lines.append("Nessun ambo centrato.")
+
+    messaggio = "\n".join(lines)
+    ha_vincita = any(e["stato"] == "VINTA" for e in esiti) if esiti else False
+
+    ok = invia_notifica(
+        messaggio,
+        titolo="VINCITA Lotto!" if ha_vincita else "Estrazione Lotto",
+        priorita=5 if ha_vincita else 3,
+    )
+
+    if ok:
+        console.print("[green]Notifica inviata.[/green]")
+    else:
+        console.print("[yellow]Notifica non inviata (NTFY_TOPIC non configurato?).[/yellow]")
+
+
 def _carica_dati(archivio=None, csv_file=None):
     """Carica dati da archivio TXT o CSV."""
     if archivio:
