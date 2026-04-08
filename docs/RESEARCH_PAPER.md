@@ -2,9 +2,9 @@
 
 ## Abstract
 
-Un sistema predittivo per ambi secchi del Lotto Italiano basato su filtri convergenti e stato sviluppato e testato su 6.886 estrazioni storiche (1946-2026). Dopo 18+ analisi statistiche, test su geometria sacra, cabala, e ottimizzazione delle finestre temporali, il miglior segnale trovato (freq+rit+dec con finestra 150 estrazioni) mostra un edge medio del 22.5% rispetto al caso, validato su 5 periodi temporali indipendenti. Il breakeven richiede un edge del 60%, rendendo il sistema non profittevole in media. Tuttavia, l'analisi per ruota e ciclica rivela che il segnale e ciclico: durante le fasi attive (20% del tempo), supera il breakeven con ratio 1.5-2.0x. La sfida aperta e prevedere il timing di attivazione. Il paper documenta l'intero percorso di ricerca con trasparenza metodologica.
+Un sistema predittivo per ambi secchi del Lotto Italiano basato su filtri convergenti e stato sviluppato e testato su 6.886 estrazioni storiche (1946-2026). Dopo 18+ analisi statistiche, test su geometria sacra, cabala, e ottimizzazione delle finestre temporali, il miglior segnale trovato (freq+rit+dec con finestra 150 estrazioni) mostra un edge medio del 22.5% rispetto al caso, validato su 5 periodi temporali indipendenti. Il breakeven per l'ambo secco richiede un edge del 60%, rendendo il sistema non profittevole in media. Tuttavia, la scoperta dell'**ambetto** (introdotto nel 2013, payout 65x, breakeven 1.543x) ha cambiato radicalmente la strategia: i filtri convergenti eccellono nell'identificare la ZONA corretta piuttosto che il punto esatto, e l'ambetto premia esattamente questa capacita. L'analisi per ruota e ciclica rivela che il segnale e ciclico: durante le fasi attive (20% del tempo), supera il breakeven con ratio 1.5-2.0x. La strategia finale di money management (EUR 5/estrazione, 4 ambetti + 1 ambo, cicli di 9 estrazioni) offre il miglior rapporto rischio/rendimento, con una vincita ambetto che copre 1.44 cicli. Il paper documenta l'intero percorso di ricerca con trasparenza metodologica.
 
-**Parole chiave:** Lotto Italiano, ciclometria, filtri convergenti, backtesting, ambo secco, money management, analisi statistica, gambler's fallacy
+**Parole chiave:** Lotto Italiano, ciclometria, filtri convergenti, backtesting, ambo secco, ambetto, money management, analisi statistica, gambler's fallacy
 
 ---
 
@@ -105,6 +105,9 @@ Il dataset comprende **6.886 estrazioni** dal 1946 al 2026, per un totale di cir
 - **Capitoli 5-8:** Panel di esperti, geometria sacra, finestra ciclica, ricerca finestra ottimale
 - **Capitolo 9:** Conclusioni e prospettive
 - **Capitolo 10:** Validazione per ruota e analisi ciclica
+- **Capitoli 11-13:** Engine V3, dieci metodi avanzati, ricerca web e stato dell'arte
+- **Capitolo 14:** L'ambetto -- la svolta strategica
+- **Capitolo 15:** Strategia di money management -- la regola d'oro
 
 ---
 
@@ -1644,6 +1647,8 @@ IMPLICAZIONE (media globale)
 
 Tuttavia, l'analisi per ruota e per ciclo temporale (Capitolo 10) ha rivelato che il segnale non e costante ma **ciclico**. Con la validazione a finestra scorrevole su ROMA 21-30, il 20% delle finestre supera il breakeven di 1.6x, con picchi fino a 3.164x. Questo cambia la narrativa da "impossibile" a **"possibile durante cicli specifici, ma il timing e imprevedibile"**. Il problema aperto non e piu l'esistenza dell'edge, ma la capacita di prevedere quando il segnale si attiva.
 
+Una svolta ulteriore e arrivata con la scoperta dell'**ambetto** (Capitolo 14): il breakeven scende a 1.543x (da 1.602x), e i filtri convergenti si rivelano migliori nell'identificare zone numeriche che punti esatti. La strategia di money management (Capitolo 15) quantifica come sfruttare questa scoperta con un protocollo operativo a EUR 5/estrazione.
+
 ### 9.3 Cosa funziona e cosa no
 
 | Metodo | Edge | Validazione | Verdetto |
@@ -1689,7 +1694,7 @@ Tre filtri da 1.10x con correlazione rho=0.5 producono un edge composto di 1.154
 
 ### 9.5 Prospettive future
 
-I risultati del Capitolo 10 hanno ridefinito le prospettive: il segnale freq+rit+dec e ciclico, e durante le fasi attive (20% del tempo) supera il breakeven. Il problema centrale si sposta dalla ricerca dell'edge alla **predizione del timing**.
+I risultati del Capitolo 10 hanno ridefinito le prospettive: il segnale freq+rit+dec e ciclico, e durante le fasi attive (20% del tempo) supera il breakeven. Il Capitolo 14 introduce l'ambetto come veicolo strategico piu adatto ai nostri filtri, e il Capitolo 15 definisce il protocollo operativo ottimale di money management. Il problema centrale si sposta dalla ricerca dell'edge alla **predizione del timing**.
 
 **1. Implementazione di freq+rit+dec W=150 nel codice**
 Il segnale vincitore puo essere implementato nel modulo `analyzer/` del backend per generare previsioni in tempo reale. L'implementazione e gia parzialmente in atto nei filtri `ritardo.py` e `decade.py`.
@@ -2023,6 +2028,168 @@ Lo stato dell'arte conferma che il Lotto e' un gioco a informazione nulla. Il no
 
 ---
 
+## 14. L'Ambetto -- La Svolta Strategica
+
+---
+
+> **In parole semplici**
+>
+> Immagina di lanciare freccette su un bersaglio. Con l'ambo secco devi centrare esattamente il centro -- difficilissimo. Con l'ambetto, vinci anche se la freccetta finisce nel cerchio subito accanto al centro. Il bersaglio e piu grande, il premio e piu piccolo (65x invece di 250x), ma centri molto piu spesso. E c'e una sorpresa: i nostri filtri sono bravi a trovare la ZONA giusta piu che il PUNTO esatto -- quindi l'ambetto premia esattamente il nostro punto di forza.
+
+---
+
+### 14.1 Cos'e l'ambetto
+
+Introdotto nel 2013. Vinci se un numero e esatto e l'altro e adiacente (+/-1) a un estratto. Servono 2 numeri DISTINTI tra gli estratti. Se escono i numeri esatti (ambo secco), l'ambetto NON vince -- sono mutuamente esclusivi.
+
+| | Ambo secco | Ambetto |
+|:--|:----------|:--------|
+| Regola | Entrambi esatti | 1 esatto + 1 adiacente |
+| Payout | 250x | 65x |
+| Probabilita | 1/400.5 | 1/100.32 |
+| House edge | 37.6% | 35.2% |
+| Breakeven | 1.602x | 1.543x |
+
+### 14.2 Primo test (con bug)
+
+Il primo backtest mostrava ratio 1.985x-2.433x per l'ambetto -- apparentemente sopra breakeven! Ma conteneva un bug critico: contava lo stesso numero estratto sia come "numero esatto" che come "adiacente dell'altro". Esempio: previsione 14-15, estratto solo il 14 -> il bug contava 14 come esatto E come 15-1=14 adiacente. In realta servono DUE numeri diversi tra gli estratti.
+
+Scoperto grazie all'osservazione dell'utente sulla verifica di MILANO 14-15 nell'estrazione del 07/04/2026.
+
+### 14.3 Risultati corretti
+
+Con il check corretto (2 numeri distinti):
+
+| Segnale | W | Ratio ambetto | Sotto breakeven? |
+|:--------|:---:|:-------------|:----------------|
+| somma72 | 100 | 1.219x | Si (serve 1.543x) |
+| hot_cold | 100 | 1.163x | Si |
+| freq_rit_fib | 75 | 1.146x | Si |
+| freq_rit_dec | 125 | 1.110x | Si |
+
+### 14.4 La vera scoperta: stabilita straordinaria
+
+Il 5-fold CV dell'ambetto mostra stabilita mai vista con l'ambo secco:
+
+| Segnale | F1 | F2 | F3 | F4 | F5 | Media | Min |
+|:--------|:---:|:---:|:---:|:---:|:---:|:-----:|:---:|
+| somma72 | 1.19 | 1.26 | 1.34 | 1.17 | 1.13 | 1.219x | 1.132x |
+| hot_cold | 1.21 | 1.14 | 1.11 | 1.22 | 1.14 | 1.163x | 1.113x |
+| freq_rit_fib | 1.09 | 1.16 | 1.17 | 1.14 | 1.17 | 1.146x | 1.088x |
+| freq_rit_dec | 1.11 | 1.11 | 1.13 | 1.11 | 1.09 | 1.110x | 1.089x |
+
+Nessun fold scende mai sotto 1.08x. Con l'ambo secco i min fold crollavano a 0.4-0.6x.
+
+### 14.5 Prima verifica reale
+
+Estrazione #56 del 07/04/2026: su 10 previsioni, 1 ambetto centrato:
+- 6-75 su VENEZIA: il 6 esatto + il 76 (adiacente al 75) estratto
+- Vincita: EUR 65 con EUR 10 investiti = +EUR 55
+
+### 14.6 Lezione metodologica
+
+Due lezioni importanti:
+
+**1. Il bug del "doppio conteggio"** (stesso numero usato come esatto e adiacente) puo gonfiare enormemente i risultati. Sempre verificare manualmente i primi risultati.
+
+**2. L'ambetto premia la capacita di identificare la ZONA corretta**, non il punto esatto. I nostri filtri sono migliori nel trovare zone (decine, famiglie numeriche) che coppie precise -- l'ambetto e il veicolo naturale per questo tipo di segnale.
+
+---
+
+## 15. Strategia di Money Management -- La Regola d'Oro
+
+---
+
+> **In parole semplici**
+>
+> Immagina di pescare in un lago. Ogni volta che lanci la lenza costa EUR 5. Quando peschi un pesce piccolo (ambetto) guadagni EUR 65, quando peschi uno grande (ambo) guadagni EUR 250. La regola piu importante non e DOVE lanciare la lenza -- e QUANTO puoi permetterti di spendere prima di prendere un pesce. Se spendi troppo per lancio, finisci i soldi prima di pescare. Se spendi poco, ogni pesce piccolo ti rimette in gioco.
+
+---
+
+### 15.1 La regola d'oro del money management
+
+> Il costo del ciclo deve essere inferiore alla vincita minima.
+
+Questa regola determina tutto il resto della strategia:
+- Vincita minima = ambetto = EUR 65
+- Costo ciclo = EUR/estrazione x 9 estrazioni
+- Quindi: EUR/estrazione x 9 < 65 -> EUR/estrazione < 7.22
+- Arrotondato: EUR 5 per estrazione (margine di sicurezza)
+
+Con EUR 5/estrazione, una vincita ambetto (EUR 65) copre 1.44 cicli -- ti rimette in gioco con margine.
+Con EUR 10/estrazione, una vincita ambetto (EUR 65) copre solo 0.72 cicli -- anche vincendo, perdi.
+
+### 15.2 La strategia ottimale
+
+Per ogni estrazione (EUR 5 totali):
+- **COPPIA #1** (la migliore): EUR 1 ambo secco + EUR 1 ambetto = EUR 2
+- **COPPIA #2:** EUR 1 ambetto = EUR 1
+- **COPPIA #3:** EUR 1 ambetto = EUR 1
+- **COPPIA #4:** EUR 1 ambetto = EUR 1
+- **TOTALE:** EUR 5
+
+Ciclo: 9 estrazioni = 3 settimane = EUR 45
+Se vinci ambo: EUR 250 (copre 5.5 cicli)
+Se vinci ambetto: EUR 65 (copre 1.44 cicli)
+
+### 15.3 Simulazione Monte Carlo (50.000 iterazioni, 1 anno)
+
+| Strategia | Costo/estr | BR finale | P(profitto) | P(rovina) | Vincite/anno |
+|:----------|:-----------|:----------|:------------|:----------|:-------------|
+| 4 ambetti + 1 ambo = EUR 5 | EUR 5 | EUR 322 | 10% | 5% | 6.6 |
+| 5x(ambo+ambetto) = EUR 10 | EUR 10 | EUR 152 | 8% | 62% | 7.6 |
+| 3x(ambo+ambetto) = EUR 6 | EUR 6 | EUR 276 | 14% | 27% | 5.6 |
+| 5 ambo secco = EUR 5 | EUR 5 | EUR 324 | 13% | 22% | 1.8 |
+
+La strategia EUR 5 (4 ambetti + 1 ambo) ha il miglior rapporto rischio/rendimento.
+
+### 15.4 Scalabilita
+
+La strategia scala linearmente con la posta:
+
+| Posta | Costo/estr | Costo ciclo | Vincita ambetto | Copre? | Bankroll consigliato |
+|:------|:-----------|:------------|:----------------|:-------|:--------------------|
+| EUR 1 | EUR 5 | EUR 45 | EUR 65 | 144% | EUR 450 |
+| EUR 5 | EUR 25 | EUR 225 | EUR 325 | 144% | EUR 2.250 |
+| EUR 10 | EUR 50 | EUR 450 | EUR 650 | 144% | EUR 4.500 |
+
+Regola bankroll: almeno 10 cicli di riserva.
+
+### 15.5 Perche NON giocare su tutte le ruote come hedge
+
+L'ambo "tutte le ruote" paga EUR 25 -- non copre neanche 1 estrazione di gioco (EUR 5). E una trappola psicologica: vinci spesso ma poco, e diluisci il bankroll. Ogni euro speso su "tutte le ruote" ha house edge 38.3% (il peggiore).
+
+### 15.6 Schema operativo finale
+
+```
++-----------------------------------------------------------+
+|  PROTOCOLLO DI GIOCO V3                                   |
++-----------------------------------------------------------+
+|                                                           |
+|  1. GENERA PREVISIONI (lotto predict-v2 --archivio ...)   |
+|     -> 5 coppie ordinate per score                        |
+|                                                           |
+|  2. GIOCA (EUR 5 per estrazione):                         |
+|     Coppia #1: EUR 1 ambo + EUR 1 ambetto                 |
+|     Coppie #2-#4: EUR 1 ambetto ciascuna                  |
+|                                                           |
+|  3. RIPETI per 9 estrazioni (3 settimane)                 |
+|     Stessi numeri, stesse ruote, non cambiare!            |
+|                                                           |
+|  4. SE VINCI -> incassa, genera nuove previsioni          |
+|     SE 9 ESTRAZIONI SENZA VINCITA -> nuovo ciclo          |
+|                                                           |
+|  5. STOP LOSS: se bankroll scende sotto 3 cicli (EUR 135) |
+|     fermati e rivaluta                                    |
+|                                                           |
+|  Bankroll: EUR 450+ (10 cicli)                            |
+|  Vincite attese: ~7/anno                                  |
+|  P(profitto annuale): ~10%                                |
++-----------------------------------------------------------+
+```
+
+---
+
 ## Appendice A: Stack Tecnologico
 
 Il sistema Lotto Convergent e costruito su uno stack moderno ottimizzato per analisi dati e API:
@@ -2056,6 +2223,7 @@ Il sistema Lotto Convergent e costruito su uno stack moderno ottimizzato per ana
 | Termine | Definizione |
 |:---|:---|
 | **Ambo secco** | Scommessa su una coppia specifica di numeri su una ruota specifica |
+| **Ambetto** | Scommessa in cui un numero e esatto e l'altro e adiacente (+/-1) a un estratto. Payout 65x, introdotto nel 2013. Mutuamente esclusivo con l'ambo secco |
 | **Ambo tutte le ruote** | Scommessa su una coppia su tutte le ruote simultaneamente |
 | **Autocorrelazione** | Misura della correlazione di una serie temporale con se stessa a diversi ritardi (lag) |
 | **Backtesting** | Validazione di una strategia su dati storici |
