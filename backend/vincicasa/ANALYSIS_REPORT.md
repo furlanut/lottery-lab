@@ -482,3 +482,246 @@ Same-decade pairs with freq+rit filter.
 > Re-run Phase 3 after full real data ingestion.
 
 *Phase 3 completed in 18.3s*
+
+
+
+---
+
+## 4. RNG Certification — REAL DATA (Phase 3, N=3275)
+
+**Generated:** 2026-04-09 21:51:18
+**Dataset:** 3275 REAL VinciCasa draws (2014-2026)
+
+### 4.1 Chi-square Uniformity (Real)
+| Metric | Value |
+|--------|-------|
+| N draws | 3275 |
+| Expected per number | 409.4 |
+| Chi-square | 32.7802 |
+| df | 39 |
+| p-value | 0.748251 |
+| Min obs | 358 |
+| Max obs | 443 |
+| **Verdict** | **PASS** |
+
+### 4.2 Runs Test on Draw Sums (Real)
+| Metric | Value |
+|--------|-------|
+| Observed runs | 1602 |
+| Expected runs | 1638.5 |
+| Z | -1.2749 |
+| p-value | 0.202337 |
+| **Verdict** | **PASS** |
+
+### 4.3 Autocorrelation on Draw Sums (Real)
+| Lag | Autocorr | Z | p-value | Sig? |
+|-----|---------|---|---------|------|
+| 1 | 0.022178 | 1.2692 | 0.204381 | no |
+| 2 | 0.019689 | 1.1267 | 0.259852 | no |
+| 3 | -0.016038 | -0.9178 | 0.358710 | no |
+| 4 | -0.001238 | -0.0708 | 0.943527 | no |
+| 5 | 0.002315 | 0.1325 | 0.894606 | no |
+| 6 | -0.004537 | -0.2597 | 0.795121 | no |
+| 7 | 0.024670 | 1.4118 | 0.158008 | no |
+| 8 | -0.006927 | -0.3964 | 0.691788 | no |
+| 9 | 0.021218 | 1.2143 | 0.224646 | no |
+| 10 | 0.012166 | 0.6962 | 0.486295 | no |
+
+**Significant lags:** 0
+**Verdict:** PASS
+
+### 4.4 Delay Distribution (Real)
+| Metric | Value |
+|--------|-------|
+| N delays | 16335 |
+| Mean delay | 7.9851 |
+| Std delay | 7.4793 |
+| CV | 0.9367 |
+| Theoretical mean | 8.0 |
+| **Verdict** | **PASS** |
+
+### 4.5 Compression Test (Real)
+| Metric | Value |
+|--------|-------|
+| Real ratio | 0.59316 |
+| Random mean | 0.591136 |
+| Random std | 0.000904 |
+| Z-score | 2.2376 |
+| Percentile | 99.0% |
+| **Verdict** | **PASS** |
+
+### 4.6 RNG Summary (Real Data)
+| Test | Result |
+|------|--------|
+| Chi-square | PASS |
+| Runs (sums) | PASS |
+| Autocorrelation (sums) | PASS |
+| Delay CV | PASS |
+| Compression | PASS |
+
+---
+
+## 5. Sum x Window Sweep — REAL DATA (N=3275)
+
+### 5.1 Top 15 Sum Configurations (Discovery)
+
+| Config | Signals | Hits | Disc Ratio | Val Ratio |
+|--------|---------|------|-----------|-----------|
+| S=77,W=30 | 1020 | 19 | 1.4529 | 1.1268 |
+| S=4,W=30 | 565 | 10 | 1.3805 | 0.3861 |
+| S=4,W=200 | 1368 | 24 | 1.3684 | 0.6522 |
+| S=4,W=300 | 1337 | 23 | 1.3418 | 0.6473 |
+| S=52,W=30 | 7131 | 122 | 1.3345 | 0.8780 |
+| S=4,W=150 | 1348 | 23 | 1.3309 | 0.6806 |
+| S=10,W=75 | 4177 | 69 | 1.2885 | 1.1938 |
+| S=77,W=100 | 2068 | 34 | 1.2824 | 1.2293 |
+| S=77,W=150 | 2314 | 37 | 1.2472 | 1.2751 |
+| S=19,W=300 | 12020 | 192 | 1.2459 | 1.0029 |
+| S=10,W=100 | 4682 | 74 | 1.2328 | 1.1395 |
+| S=69,W=30 | 3301 | 52 | 1.2287 | 1.2296 |
+| S=77,W=50 | 1461 | 23 | 1.2279 | 1.1597 |
+| S=8,W=30 | 1526 | 24 | 1.2267 | 1.2032 |
+| S=4,W=100 | 1276 | 20 | 1.2226 | 0.5560 |
+
+### 5.2 5-Fold CV — Top 5 Sum Configs
+
+| Config | CV Mean | CV Std | CV Min | CV Max |
+|--------|---------|--------|--------|--------|
+| S=77,W=30 | 1.2588 | 0.3255 | 0.8966 | 1.8436 |
+| S=4,W=30 | 1.0104 | 0.7240 | 0.3562 | 2.3400 |
+| S=4,W=200 | 1.1618 | 0.4606 | 0.7027 | 2.0207 |
+| S=4,W=300 | 1.0634 | 0.5210 | 0.6592 | 1.9775 |
+| S=52,W=30 | 1.1028 | 0.1782 | 0.8629 | 1.3474 |
+
+---
+
+## 6. Proximity x Window Sweep — REAL DATA (N=3275)
+
+### 6.1 Top 15 Proximity Configurations (Discovery)
+
+| Config | Signals | Hits | Disc Ratio | Val Ratio |
+|--------|---------|------|-----------|-----------|
+| D=5,W=30 | 95832 | 1294 | 1.0532 | 1.0114 |
+| D=8,W=30 | 148432 | 1979 | 1.0400 | 1.0042 |
+| D=10,W=50 | 262883 | 3493 | 1.0364 | 1.0031 |
+| D=10,W=30 | 180358 | 2396 | 1.0362 | 1.0014 |
+| D=8,W=50 | 216291 | 2858 | 1.0307 | 1.0050 |
+| D=15,W=30 | 249714 | 3294 | 1.0289 | 1.0068 |
+| D=5,W=50 | 139666 | 1842 | 1.0287 | 1.0150 |
+| D=5,W=150 | 234778 | 3092 | 1.0273 | 1.0150 |
+| D=3,W=30 | 59149 | 777 | 1.0246 | 0.9773 |
+| D=8,W=150 | 363268 | 4772 | 1.0246 | 1.0075 |
+| D=10,W=150 | 441251 | 5793 | 1.0240 | 1.0042 |
+| D=10,W=75 | 336554 | 4418 | 1.0239 | 1.0049 |
+| D=15,W=50 | 364685 | 4780 | 1.0224 | 1.0052 |
+| D=3,W=150 | 144334 | 1891 | 1.0219 | 1.0110 |
+| D=8,W=300 | 372746 | 4881 | 1.0214 | 1.0022 |
+
+### 6.2 5-Fold CV — Top 5 Proximity Configs
+
+| Config | CV Mean | CV Std | CV Min | CV Max |
+|--------|---------|--------|--------|--------|
+| D=5,W=30 | 1.0331 | 0.0416 | 0.9963 | 1.0991 |
+| D=8,W=30 | 1.0248 | 0.0326 | 0.9920 | 1.0811 |
+| D=10,W=50 | 1.0236 | 0.0184 | 0.9912 | 1.0392 |
+| D=10,W=30 | 1.0221 | 0.0241 | 0.9836 | 1.0518 |
+| D=8,W=50 | 1.0213 | 0.0226 | 0.9920 | 1.0497 |
+
+---
+
+## 7. Decade Filter Sweep — REAL DATA (N=3275)
+
+### 7.1 Decade x Window Results
+
+| Window | Signals | Hits | Disc Ratio | Val Ratio |
+|--------|---------|------|-----------|-----------|
+| W=30 | 11250 | 153 | 1.0608 | 0.9294 |
+| W=300 | 35493 | 460 | 1.0109 | 0.8899 |
+| W=50 | 18693 | 240 | 1.0014 | 0.8981 |
+| W=150 | 33996 | 432 | 0.9912 | 0.9107 |
+| W=200 | 35630 | 452 | 0.9895 | 0.8980 |
+| W=75 | 24776 | 313 | 0.9854 | 0.8904 |
+| W=100 | 29291 | 364 | 0.9693 | 0.8974 |
+
+### 7.2 5-Fold CV — Top 5 Decade Configs
+
+| Config | CV Mean | CV Std | CV Min | CV Max |
+|--------|---------|--------|--------|--------|
+| W=30 | 1.0079 | 0.1796 | 0.8247 | 1.2769 |
+| W=300 | 0.9727 | 0.0784 | 0.8516 | 1.0804 |
+| W=50 | 0.9809 | 0.0854 | 0.8976 | 1.1068 |
+| W=150 | 0.9765 | 0.0585 | 0.9107 | 1.0526 |
+| W=200 | 0.9666 | 0.0642 | 0.8787 | 1.0690 |
+
+---
+
+## 8. Money Management & EV — REAL DATA
+
+### 8.1 VinciCasa Prize Structure
+
+| Category | Probability | Prize (EUR) | Contribution to EV |
+|----------|------------|-------------|-------------------|
+| 5/5 | 1/658008 | 200,000 | 0.3039 |
+| 4/5 | 0.000266 | 258.00 | 0.0686 |
+| 3/5 | 0.009042 | 8.50 | 0.0769 |
+| 2/5 | 0.099467 | 2.00 | 0.1989 |
+
+| Metric | Value |
+|--------|-------|
+| Ticket cost | EUR 1.00 |
+| EV (no edge) | EUR 0.6484 |
+| House edge | 35.16% |
+| EV (with best ratio 1.2588) | EUR 0.6998 |
+| Breakeven ratio needed on 2/5 | 2.7676 |
+
+### 8.2 Monte Carlo Simulation (EUR 1/day, 365 days, 10000 sims)
+
+| Metric | Value |
+|--------|-------|
+| Mean final P&L | EUR -179.89 |
+| Median final P&L | EUR -263.00 |
+| 5th pct | EUR -292.50 |
+| 95th pct | EUR -8.00 |
+| Mean max drawdown | EUR -252.53 |
+| % positive after 1y | 3.4% |
+
+---
+
+## 9. Final Comparison — VinciCasa vs Lotto
+
+| Metric | VinciCasa 5/40 | Lotto 5/90 |
+|--------|---------------|------------|
+| P(pair per draw) | 1/78 | 1/400.5 |
+| Total pairs | 780 | 4005 |
+| Pairs per draw | 10 | 10 |
+| Best filter CV mean | 1.2588 | ~1.05 (Engine V6) |
+| House edge | 35.2% | ~55% |
+| Breakeven ratio | 2.77 | ~5.0 |
+| Dataset size | 3275 real | ~8000 |
+| Daily draws | Yes | 3x/week |
+
+---
+
+## 10. Conclusions — REAL DATA Analysis
+
+### Key Finding
+
+- Best filter CV mean ratio: **1.2588**
+- Breakeven ratio needed: **2.77**
+- **Edge sufficient for breakeven: NO**
+- Gap to breakeven: 1.51x (filters would need 120% more lift)
+
+### RNG Assessment
+- 3/3 core tests PASS
+- Delay CV = 0.9367 (good)
+- VinciCasa RNG appears fair
+
+### Practical Verdict
+- With P(pair)=1/78 (5.13x Lotto), the base hit rate is much higher
+- But the house edge (35.2%) and low prizes make breakeven nearly impossible
+- Filter ratios on real data are ~1.0x (no exploitable edge)
+- The 2/5 prize (EUR 2.00) acts as bankroll cushion but cannot overcome the house edge
+- **VinciCasa is NOT beatable with statistical pair filters**
+
+*Phase 3 REAL DATA analysis completed in 8.4s*
+*3275 real draws analyzed, 2026-04-09 21:51:18*
