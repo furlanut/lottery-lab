@@ -1,0 +1,682 @@
+{
+  "combinatorics": {
+    "total_quintets_C40_5": 658008,
+    "total_pairs_C40_2": 780,
+    "pairs_per_draw_C5_2": 10,
+    "p_specific_pair_per_draw": 0.012821,
+    "p_specific_pair_fraction": "10/780 = 1/78",
+    "comparison_lotto": "Lotto 5/90: P(pair) = C(5,2)/C(90,2) = 10/4005 = 1/400.5 => VinciCasa is 5.13x more likely"
+  },
+  "chi2": {
+    "test": "Chi-square Uniformity (40 numbers)",
+    "n_draws": 4300,
+    "n_numbers": 21500,
+    "expected_per_number": 537.5,
+    "chi2_statistic": 36.8521,
+    "degrees_of_freedom": 39,
+    "p_value": 0.568238,
+    "verdict": "PASS (uniform)",
+    "min_observed": 477,
+    "max_observed": 572,
+    "observed_counts": {
+      "1": 512,
+      "2": 522,
+      "3": 538,
+      "4": 517,
+      "5": 538,
+      "6": 566,
+      "7": 568,
+      "8": 561,
+      "9": 572,
+      "10": 570,
+      "11": 542,
+      "12": 536,
+      "13": 533,
+      "14": 507,
+      "15": 499,
+      "16": 541,
+      "17": 510,
+      "18": 537,
+      "19": 548,
+      "20": 533,
+      "21": 552,
+      "22": 529,
+      "23": 477,
+      "24": 558,
+      "25": 563,
+      "26": 553,
+      "27": 526,
+      "28": 558,
+      "29": 548,
+      "30": 524,
+      "31": 541,
+      "32": 555,
+      "33": 501,
+      "34": 517,
+      "35": 538,
+      "36": 541,
+      "37": 572,
+      "38": 519,
+      "39": 560,
+      "40": 518
+    }
+  },
+  "runs": {
+    "test": "Runs Test (Wald-Wolfowitz)",
+    "n_values": 21500,
+    "n_above_median": 10750,
+    "n_below_median": 10750,
+    "observed_runs": 8148,
+    "expected_runs": 10751.0,
+    "z_statistic": -35.5055,
+    "p_value": 0.0,
+    "verdict": "FAIL (non-random)"
+  },
+  "autocorr": {
+    "test": "Autocorrelation (lag 1-10)",
+    "n_values": 21500,
+    "lags": {
+      "lag_1": {
+        "autocorrelation": 0.174586,
+        "z_statistic": 25.5994,
+        "p_value": 0.0,
+        "significant": "True"
+      },
+      "lag_2": {
+        "autocorrelation": -0.260968,
+        "z_statistic": -38.2654,
+        "p_value": 0.0,
+        "significant": "True"
+      },
+      "lag_3": {
+        "autocorrelation": -0.314667,
+        "z_statistic": -46.1392,
+        "p_value": 0.0,
+        "significant": "True"
+      },
+      "lag_4": {
+        "autocorrelation": 0.007896,
+        "z_statistic": 1.1578,
+        "p_value": 0.246962,
+        "significant": "False"
+      },
+      "lag_5": {
+        "autocorrelation": 0.697607,
+        "z_statistic": 102.2893,
+        "p_value": 0.0,
+        "significant": "True"
+      },
+      "lag_6": {
+        "autocorrelation": 0.00103,
+        "z_statistic": 0.151,
+        "p_value": 0.879961,
+        "significant": "False"
+      },
+      "lag_7": {
+        "autocorrelation": -0.346611,
+        "z_statistic": -50.8232,
+        "p_value": 0.0,
+        "significant": "True"
+      },
+      "lag_8": {
+        "autocorrelation": -0.347404,
+        "z_statistic": -50.9395,
+        "p_value": 0.0,
+        "significant": "True"
+      },
+      "lag_9": {
+        "autocorrelation": 0.000257,
+        "z_statistic": 0.0377,
+        "p_value": 0.969932,
+        "significant": "False"
+      },
+      "lag_10": {
+        "autocorrelation": 0.696331,
+        "z_statistic": 102.1022,
+        "p_value": 0.0,
+        "significant": "True"
+      }
+    },
+    "n_significant_at_005": 7,
+    "verdict": "WARN (multiple significant lags)"
+  },
+  "delays": {
+    "test": "Delay Distribution (Geometric fit)",
+    "n_delays": 21460,
+    "mean_delay": 7.9857,
+    "std_delay": 7.4482,
+    "cv": 0.9327,
+    "theoretical_mean": 8.0,
+    "theoretical_cv_approx": 0.9354,
+    "ks_statistic": 0.125,
+    "ks_p_value": 0.0,
+    "max_delay": 74,
+    "median_delay": 6.0,
+    "verdict": "CV=0.933 (~1.0 OK)"
+  },
+  "compress": {
+    "test": "Kolmogorov Compressibility (bz2)",
+    "real_ratio": 0.589256,
+    "random_mean_ratio": 0.588768,
+    "random_std_ratio": 0.00084,
+    "z_score": 0.5804,
+    "percentile_among_random": 71.5,
+    "n_random_sequences": 200,
+    "verdict": "PASS (incompressible)"
+  },
+  "decades": {
+    "decades": "1-10, 11-20, 21-30, 31-40",
+    "theoretical_p_at_least_2_same_decade": 1.0,
+    "note": "By pigeonhole principle (5 numbers, 4 decades), at least 2 MUST share a decade",
+    "observed_p": 1.0,
+    "observed_count": 4300,
+    "total_draws": 4300,
+    "decades_with_pairs": {
+      "decade_1_1-10": 1633,
+      "decade_2_11-20": 1563,
+      "decade_3_21-30": 1607,
+      "decade_4_31-40": 1558
+    }
+  },
+  "sums": {
+    "n_draws": 4300,
+    "observed_mean": 102.4381,
+    "observed_std": 24.7104,
+    "observed_min": 23,
+    "observed_max": 180,
+    "observed_median": 102.0,
+    "theoretical_mean": 102.5,
+    "theoretical_std": 24.4523,
+    "skewness": 0.0311,
+    "kurtosis": -0.2787,
+    "shapiro_p_value": 0.00055,
+    "shape": "non-normal",
+    "percentile_5": 62.0,
+    "percentile_95": 144.0
+  },
+  "gaps": {
+    "n_gaps": 17200,
+    "mean_gap": 6.8167,
+    "std_gap": 5.3248,
+    "min_gap": 1,
+    "max_gap": 35,
+    "median_gap": 5.0,
+    "theoretical_mean_gap": 6.8333,
+    "gap_histogram": {
+      "1": 2142,
+      "2": 1960,
+      "3": 1711,
+      "4": 1597,
+      "5": 1347,
+      "6": 1229,
+      "7": 1023,
+      "8": 929,
+      "9": 861,
+      "10": 700,
+      "11": 592,
+      "12": 507,
+      "13": 457,
+      "14": 412,
+      "15": 317,
+      "16": 305,
+      "17": 240,
+      "18": 207,
+      "19": 150,
+      "20": 125,
+      "21": 98,
+      "22": 86,
+      "23": 51,
+      "24": 45,
+      "25": 42,
+      "26": 20,
+      "27": 12,
+      "28": 17,
+      "29": 10,
+      "30": 2,
+      "31": 1,
+      "32": 3,
+      "33": 1,
+      "35": 1
+    }
+  },
+  "ranges": {
+    "n_draws": 4300,
+    "mean_range": 27.267,
+    "std_range": 6.7532,
+    "min_range": 4,
+    "max_range": 39,
+    "median_range": 28.0,
+    "percentile_10": 18.0,
+    "percentile_90": 36.0
+  },
+  "freqs": {
+    "n_draws": 4300,
+    "expected_per_number": 537.5,
+    "frequencies": [
+      {
+        "number": 9,
+        "observed": 572,
+        "expected": 537.5,
+        "ratio": 1.0642,
+        "deviation_pct": 6.42
+      },
+      {
+        "number": 37,
+        "observed": 572,
+        "expected": 537.5,
+        "ratio": 1.0642,
+        "deviation_pct": 6.42
+      },
+      {
+        "number": 10,
+        "observed": 570,
+        "expected": 537.5,
+        "ratio": 1.0605,
+        "deviation_pct": 6.05
+      },
+      {
+        "number": 7,
+        "observed": 568,
+        "expected": 537.5,
+        "ratio": 1.0567,
+        "deviation_pct": 5.67
+      },
+      {
+        "number": 6,
+        "observed": 566,
+        "expected": 537.5,
+        "ratio": 1.053,
+        "deviation_pct": 5.3
+      },
+      {
+        "number": 25,
+        "observed": 563,
+        "expected": 537.5,
+        "ratio": 1.0474,
+        "deviation_pct": 4.74
+      },
+      {
+        "number": 8,
+        "observed": 561,
+        "expected": 537.5,
+        "ratio": 1.0437,
+        "deviation_pct": 4.37
+      },
+      {
+        "number": 39,
+        "observed": 560,
+        "expected": 537.5,
+        "ratio": 1.0419,
+        "deviation_pct": 4.19
+      },
+      {
+        "number": 24,
+        "observed": 558,
+        "expected": 537.5,
+        "ratio": 1.0381,
+        "deviation_pct": 3.81
+      },
+      {
+        "number": 28,
+        "observed": 558,
+        "expected": 537.5,
+        "ratio": 1.0381,
+        "deviation_pct": 3.81
+      },
+      {
+        "number": 32,
+        "observed": 555,
+        "expected": 537.5,
+        "ratio": 1.0326,
+        "deviation_pct": 3.26
+      },
+      {
+        "number": 26,
+        "observed": 553,
+        "expected": 537.5,
+        "ratio": 1.0288,
+        "deviation_pct": 2.88
+      },
+      {
+        "number": 21,
+        "observed": 552,
+        "expected": 537.5,
+        "ratio": 1.027,
+        "deviation_pct": 2.7
+      },
+      {
+        "number": 19,
+        "observed": 548,
+        "expected": 537.5,
+        "ratio": 1.0195,
+        "deviation_pct": 1.95
+      },
+      {
+        "number": 29,
+        "observed": 548,
+        "expected": 537.5,
+        "ratio": 1.0195,
+        "deviation_pct": 1.95
+      },
+      {
+        "number": 11,
+        "observed": 542,
+        "expected": 537.5,
+        "ratio": 1.0084,
+        "deviation_pct": 0.84
+      },
+      {
+        "number": 16,
+        "observed": 541,
+        "expected": 537.5,
+        "ratio": 1.0065,
+        "deviation_pct": 0.65
+      },
+      {
+        "number": 31,
+        "observed": 541,
+        "expected": 537.5,
+        "ratio": 1.0065,
+        "deviation_pct": 0.65
+      },
+      {
+        "number": 36,
+        "observed": 541,
+        "expected": 537.5,
+        "ratio": 1.0065,
+        "deviation_pct": 0.65
+      },
+      {
+        "number": 3,
+        "observed": 538,
+        "expected": 537.5,
+        "ratio": 1.0009,
+        "deviation_pct": 0.09
+      },
+      {
+        "number": 5,
+        "observed": 538,
+        "expected": 537.5,
+        "ratio": 1.0009,
+        "deviation_pct": 0.09
+      },
+      {
+        "number": 35,
+        "observed": 538,
+        "expected": 537.5,
+        "ratio": 1.0009,
+        "deviation_pct": 0.09
+      },
+      {
+        "number": 18,
+        "observed": 537,
+        "expected": 537.5,
+        "ratio": 0.9991,
+        "deviation_pct": -0.09
+      },
+      {
+        "number": 12,
+        "observed": 536,
+        "expected": 537.5,
+        "ratio": 0.9972,
+        "deviation_pct": -0.28
+      },
+      {
+        "number": 13,
+        "observed": 533,
+        "expected": 537.5,
+        "ratio": 0.9916,
+        "deviation_pct": -0.84
+      },
+      {
+        "number": 20,
+        "observed": 533,
+        "expected": 537.5,
+        "ratio": 0.9916,
+        "deviation_pct": -0.84
+      },
+      {
+        "number": 22,
+        "observed": 529,
+        "expected": 537.5,
+        "ratio": 0.9842,
+        "deviation_pct": -1.58
+      },
+      {
+        "number": 27,
+        "observed": 526,
+        "expected": 537.5,
+        "ratio": 0.9786,
+        "deviation_pct": -2.14
+      },
+      {
+        "number": 30,
+        "observed": 524,
+        "expected": 537.5,
+        "ratio": 0.9749,
+        "deviation_pct": -2.51
+      },
+      {
+        "number": 2,
+        "observed": 522,
+        "expected": 537.5,
+        "ratio": 0.9712,
+        "deviation_pct": -2.88
+      },
+      {
+        "number": 38,
+        "observed": 519,
+        "expected": 537.5,
+        "ratio": 0.9656,
+        "deviation_pct": -3.44
+      },
+      {
+        "number": 40,
+        "observed": 518,
+        "expected": 537.5,
+        "ratio": 0.9637,
+        "deviation_pct": -3.63
+      },
+      {
+        "number": 4,
+        "observed": 517,
+        "expected": 537.5,
+        "ratio": 0.9619,
+        "deviation_pct": -3.81
+      },
+      {
+        "number": 34,
+        "observed": 517,
+        "expected": 537.5,
+        "ratio": 0.9619,
+        "deviation_pct": -3.81
+      },
+      {
+        "number": 1,
+        "observed": 512,
+        "expected": 537.5,
+        "ratio": 0.9526,
+        "deviation_pct": -4.74
+      },
+      {
+        "number": 17,
+        "observed": 510,
+        "expected": 537.5,
+        "ratio": 0.9488,
+        "deviation_pct": -5.12
+      },
+      {
+        "number": 14,
+        "observed": 507,
+        "expected": 537.5,
+        "ratio": 0.9433,
+        "deviation_pct": -5.67
+      },
+      {
+        "number": 33,
+        "observed": 501,
+        "expected": 537.5,
+        "ratio": 0.9321,
+        "deviation_pct": -6.79
+      },
+      {
+        "number": 15,
+        "observed": 499,
+        "expected": 537.5,
+        "ratio": 0.9284,
+        "deviation_pct": -7.16
+      },
+      {
+        "number": 23,
+        "observed": 477,
+        "expected": 537.5,
+        "ratio": 0.8874,
+        "deviation_pct": -11.26
+      }
+    ],
+    "most_frequent": {
+      "number": 9,
+      "observed": 572,
+      "expected": 537.5,
+      "ratio": 1.0642,
+      "deviation_pct": 6.42
+    },
+    "least_frequent": {
+      "number": 23,
+      "observed": 477,
+      "expected": 537.5,
+      "ratio": 0.8874,
+      "deviation_pct": -11.26
+    },
+    "max_deviation_pct": 11.26
+  },
+  "pairs": {
+    "n_draws": 4300,
+    "total_unique_pairs_possible": 780,
+    "expected_per_pair": 55.13,
+    "std_per_pair": 7.3771,
+    "top_20": [
+      {
+        "pair": "25-39",
+        "observed": 84,
+        "expected": 55.13,
+        "ratio": 1.5237
+      },
+      {
+        "pair": "9-13",
+        "observed": 81,
+        "expected": 55.13,
+        "ratio": 1.4693
+      },
+      {
+        "pair": "22-30",
+        "observed": 78,
+        "expected": 55.13,
+        "ratio": 1.4149
+      },
+      {
+        "pair": "27-36",
+        "observed": 77,
+        "expected": 55.13,
+        "ratio": 1.3967
+      },
+      {
+        "pair": "13-37",
+        "observed": 76,
+        "expected": 55.13,
+        "ratio": 1.3786
+      },
+      {
+        "pair": "8-30",
+        "observed": 73,
+        "expected": 55.13,
+        "ratio": 1.3242
+      },
+      {
+        "pair": "8-29",
+        "observed": 72,
+        "expected": 55.13,
+        "ratio": 1.306
+      },
+      {
+        "pair": "7-10",
+        "observed": 72,
+        "expected": 55.13,
+        "ratio": 1.306
+      },
+      {
+        "pair": "15-18",
+        "observed": 71,
+        "expected": 55.13,
+        "ratio": 1.2879
+      },
+      {
+        "pair": "21-25",
+        "observed": 71,
+        "expected": 55.13,
+        "ratio": 1.2879
+      },
+      {
+        "pair": "19-36",
+        "observed": 71,
+        "expected": 55.13,
+        "ratio": 1.2879
+      },
+      {
+        "pair": "2-32",
+        "observed": 71,
+        "expected": 55.13,
+        "ratio": 1.2879
+      },
+      {
+        "pair": "12-32",
+        "observed": 70,
+        "expected": 55.13,
+        "ratio": 1.2698
+      },
+      {
+        "pair": "6-9",
+        "observed": 70,
+        "expected": 55.13,
+        "ratio": 1.2698
+      },
+      {
+        "pair": "9-31",
+        "observed": 70,
+        "expected": 55.13,
+        "ratio": 1.2698
+      },
+      {
+        "pair": "10-24",
+        "observed": 69,
+        "expected": 55.13,
+        "ratio": 1.2516
+      },
+      {
+        "pair": "8-28",
+        "observed": 69,
+        "expected": 55.13,
+        "ratio": 1.2516
+      },
+      {
+        "pair": "7-35",
+        "observed": 69,
+        "expected": 55.13,
+        "ratio": 1.2516
+      },
+      {
+        "pair": "6-25",
+        "observed": 69,
+        "expected": 55.13,
+        "ratio": 1.2516
+      },
+      {
+        "pair": "7-9",
+        "observed": 69,
+        "expected": 55.13,
+        "ratio": 1.2516
+      }
+    ],
+    "threshold_2sigma": 69.88
+  }
+}
