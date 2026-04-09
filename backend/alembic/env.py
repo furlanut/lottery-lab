@@ -2,6 +2,7 @@
 
 from logging.config import fileConfig
 
+import vincicasa.models.database  # noqa: F401 — registra modelli VinciCasa nel metadata
 from alembic import context
 from lotto_predictor.models.database import Base
 from sqlalchemy import engine_from_config, pool
