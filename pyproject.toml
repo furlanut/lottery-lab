@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lotto-convergent"
-version = "0.1.0"
-description = "Sistema predittivo per ambi secchi del Lotto Italiano con filtri convergenti"
+name = "lottery-lab"
+version = "0.2.0"
+description = "Lottery Lab — Framework di analisi predittiva per lotterie italiane"
 readme = "docs/USER_MANUAL.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
@@ -37,6 +37,7 @@ dev = [
 
 [project.scripts]
 lotto = "lotto_predictor.cli:app"
+vincicasa = "vincicasa.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["backend"]
