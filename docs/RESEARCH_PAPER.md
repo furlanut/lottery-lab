@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Un sistema predittivo per ambi secchi del Lotto Italiano basato su filtri convergenti e stato sviluppato e testato su 6.886 estrazioni storiche (1946-2026). Dopo 18+ analisi statistiche, test su geometria sacra, cabala, e ottimizzazione delle finestre temporali, il miglior segnale trovato (freq+rit+dec con finestra 150 estrazioni) mostra un edge medio del 22.5% rispetto al caso, validato su 5 periodi temporali indipendenti. Il breakeven per l'ambo secco richiede un edge del 60%, rendendo il sistema non profittevole in media. Tuttavia, la scoperta dell'**ambetto** (introdotto nel 2013, payout 65x, breakeven 1.543x) ha cambiato radicalmente la strategia: i filtri convergenti eccellono nell'identificare la ZONA corretta piuttosto che il punto esatto, e l'ambetto premia esattamente questa capacita. L'analisi per ruota e ciclica rivela che il segnale e ciclico: durante le fasi attive (20% del tempo), supera il breakeven con ratio 1.5-2.0x. L'**Engine V4** introduce segnali separati per ambo e ambetto: freq_rit_fib (W=75) per l'ambo secco e somma72 (W=150) per l'ambetto, sfruttando il fatto che finestre ottimali diverse massimizzano scommesse diverse. La strategia finale di money management (EUR 5/estrazione, 4 ambetti + 1 ambo, cicli di 9 estrazioni) offre il miglior rapporto rischio/rendimento, con una vincita ambetto che copre 1.44 cicli. Il paper documenta l'intero percorso di ricerca con trasparenza metodologica.
+Un sistema predittivo per ambi secchi del Lotto Italiano basato su filtri convergenti e stato sviluppato e testato su 6.886 estrazioni storiche (1946-2026). Dopo 18+ analisi statistiche, test su geometria sacra, cabala, e ottimizzazione delle finestre temporali, il miglior segnale trovato (freq+rit+dec con finestra 150 estrazioni) mostra un edge medio del 22.5% rispetto al caso, validato su 5 periodi temporali indipendenti. Il breakeven per l'ambo secco richiede un edge del 60%, rendendo il sistema non profittevole in media. Tuttavia, la scoperta dell'**ambetto** (introdotto nel 2013, payout 65x, breakeven 1.543x) ha cambiato radicalmente la strategia: i filtri convergenti eccellono nell'identificare la ZONA corretta piuttosto che il punto esatto, e l'ambetto premia esattamente questa capacita. L'analisi per ruota e ciclica rivela che il segnale e ciclico: durante le fasi attive (20% del tempo), supera il breakeven con ratio 1.5-2.0x. L'**Engine V4** introduce segnali separati per ambo e ambetto: freq_rit_fib (W=75) per l'ambo secco e somma72 (W=150) per l'ambetto, sfruttando il fatto che finestre ottimali diverse massimizzano scommesse diverse. Una successiva campagna di **12 test laterali non convenzionali** (compressibilita, transfer entropy, regime detection, fingerprint, attacco PRNG, predizione forma) ha prodotto zero segnali sfruttabili, ma ha insegnato tre lezioni metodologiche fondamentali: la correlazione seriale delle medie mobili, il pericolo delle baseline sbagliate (40/40 significativi che diventano 1/40 con baseline corretta), e il cherry-picking sistematico. Uno **sweep esaustivo su 161 somme x 6 finestre** ha smascherato la somma 72 come artefatto di cherry-picking: non era neanche nella top 20 discovery. Il vero pattern e la **vicinanza numerica** — somme alte (120-170) che producono coppie di numeri vicini. L'**Engine V5** sostituisce somma72 con somma_alta S=160 W=100 (discovery 1.386x, validazione 1.316x, 5-fold CV media 1.203x con min fold 1.107x). La strategia finale di money management (EUR 5/estrazione, 4 ambetti + 1 ambo, cicli di 9 estrazioni) offre il miglior rapporto rischio/rendimento, con una vincita ambetto che copre 1.44 cicli. Il paper documenta l'intero percorso di ricerca con trasparenza metodologica.
 
 **Parole chiave:** Lotto Italiano, ciclometria, filtri convergenti, backtesting, ambo secco, ambetto, money management, analisi statistica, gambler's fallacy
 
@@ -108,6 +108,9 @@ Il dataset comprende **6.886 estrazioni** dal 1946 al 2026, per un totale di cir
 - **Capitoli 11-13:** Engine V3, dieci metodi avanzati, ricerca web e stato dell'arte
 - **Capitolo 14:** L'ambetto -- la svolta strategica
 - **Capitolo 15:** Strategia di money management -- la regola d'oro
+- **Capitolo 16:** Engine V4 -- segnali separati per ambo e ambetto
+- **Capitolo 17:** Test laterali -- 12 approcci non convenzionali
+- **Capitolo 18:** Il vero segnale -- vicinanza numerica, non somma sacra
 
 ---
 
@@ -2275,6 +2278,106 @@ somma72 W=150: il segnale piu' stabile di tutta la ricerca. Nessun fold scende s
 |  SCALA: posta × N mantiene gli stessi rapporti            |
 +-----------------------------------------------------------+
 ```
+
+---
+
+## 17. Test Laterali — 12 Approcci Non Convenzionali
+
+---
+
+> **In parole semplici**
+>
+> Dopo aver esplorato i metodi classici, abbiamo provato 12 approcci completamente diversi — come un detective che, dopo aver interrogato i sospetti, controlla le telecamere, analizza il DNA e consulta un medium. Alcuni sembravano promettenti all'inizio, ma una verifica rigorosa li ha smontati tutti. La lezione piu importante: ogni volta che un test sembra dare risultati straordinari, bisogna chiedersi "sto misurando il segnale o un artefatto del mio metodo?"
+
+---
+
+### 17.1 Batch 1: 6 test (lateral_tests.py)
+
+| # | Test | Risultato | Note |
+|---|------|-----------|------|
+| 1 | Compressibilita Kolmogorov | APPROFONDIRE | BARI p=0.01 ma solo prima meta dataset, effetto -0.08% |
+| 2 | Autocorrelazione meta-proprieta | NESSUN SEGNALE | 50 sig vs 60 attesi |
+| 3 | Rete negativa (esclusione) | NESSUN SEGNALE | Nessun edge |
+| 4 | Transfer entropy Schreiber | NESSUN SEGNALE | TE=0.000 su tutte le ruote |
+| 5 | Regime detection (media mobile) | ARTEFATTO | 94.6% → 38.5% su blocchi indipendenti (correlazione seriale) |
+| 6 | Differenze giorno settimana | MARGINALE | GIO +5% per somma72, effetto trascurabile |
+
+**Lezione critica dal Test 5:** la media mobile a 5 punti crea correlazione seriale artificiale. Due punti adiacenti condividono 4/5 dei dati. Il 94.6% misurava l'inerzia della media, non la predizione del futuro. Corretto con blocchi non sovrapposti: 38.5% (peggio del caso).
+
+### 17.2 Batch 2: 3 test (lateral_tests_v3.py)
+
+| # | Test | Risultato | Note |
+|---|------|-----------|------|
+| 7 | Fingerprint cinquine (MI) | APPROFONDIRE | PALERMO MI sig (p=0.04), 1/10 = caso |
+| 8 | Attacco PRNG (spectral/birthday/serial) | NESSUN SEGNALE | Nessuna firma LCG, serial r=0 |
+| 9 | Predizione forma (transizioni) | ARTEFATTO | 40/40 sig con baseline uniforme → 1/40 con baseline marginale |
+
+**Lezione critica dal Test 9:** il chi-quadro sulle transizioni di forma (parita, somma, spread) mostrava 40/40 significativi — apparentemente sensazionale. Ma il test confrontava con distribuzione UNIFORME tra stati, mentre gli stati non sono equidistribuiti (2-3 pari coprono il 66% delle estrazioni, 0 e 5 pari solo il 2%). Corretto con baseline marginale: 1/40 significativi = caso.
+
+### 17.3 Batch 3: 2 test corretti (lateral_tests_v4.py)
+
+| # | Test | Risultato | Note |
+|---|------|-----------|------|
+| 9B | Forma con MI + baseline marginale | NESSUN SEGNALE | Chi2: 2/40 sig (attesi 2.0), MI: 3/40 sig (attesi 2.0) |
+| 10 | Sweep 161 somme x 6 finestre | Cherry-picking smascherato | Somma72 NON nella top 20 |
+
+### 17.4 Le 3 lezioni metodologiche dai test laterali
+
+1. **Correlazione seriale della media mobile**: qualsiasi test di "accuracy" su punti adiacenti in una serie filtrata dara risultati alti. Usare sempre blocchi NON sovrapposti.
+2. **Baseline sbagliata**: confrontare transizioni con distribuzione uniforme quando gli stati sono non-equidistribuiti produce falsi positivi massicci (40/40 → 1/40).
+3. **Cherry-picking**: testare UN numero (somma 72) e trovare un buon ratio non significa nulla. Bisogna fare sweep sistematico su TUTTE le alternative e usare discovery/validazione separata.
+
+---
+
+## 18. Il Vero Segnale: Vicinanza Numerica, Non Somma Sacra
+
+---
+
+> **In parole semplici**
+>
+> Pensavamo che il "72" fosse un numero magico. Come un alchimista che crede nella pietra filosofale, avevamo attribuito poteri speciali a una somma specifica. Ma quando abbiamo testato TUTTE le 161 somme possibili (da 10 a 170), abbiamo scoperto che il 72 non era neanche nella top 20. Il vero pattern era molto piu semplice: le coppie di numeri VICINI tra loro (somme alte come 130-170 = entrambi i numeri nel range 60-90) funzionano tutte allo stesso modo. La somma 72 era solo un proxy accidentale per la vicinanza numerica.
+
+---
+
+### 18.1 Lo sweep 161 somme x 6 finestre (Test 10)
+
+Discovery su prima meta, validazione su seconda meta:
+
+- 966 combinazioni testate
+- Somma72 W=150: NON nella top 20 discovery
+- Top discovery: S=152 W=75 (1.399x), S=170 W=100 (1.393x), S=160 W=100 (1.386x)
+- Le somme vincenti sono SPARSE (range 10-170, span 160)
+- Ma la heatmap mostra una BANDA calda: somme 120-170 con ratio ~1.20x consistente
+
+**Validazione top 5:**
+
+| Somma | W | Discovery | Validazione |
+|-------|---|-----------|-------------|
+| 160 | 100 | 1.386x | 1.316x |
+| 10 | 50 | 1.363x | 1.275x |
+| 19 | 50 | 1.334x | 1.218x |
+| 127 | 200 | 1.327x | 1.207x |
+| 160 | 50 | 1.317x | 1.316x |
+
+5-fold CV: S=160 W=100 media 1.203x, min fold 1.107x — tutti i fold sopra 1.1x.
+
+### 18.2 Engine V5
+
+Basato sui risultati dello sweep:
+
+- **Ambo secco:** freq_rit_fib W=75 (invariato, ratio 1.159x)
+- **Ambetto:** somma_alta S=160 W=100 (discovery 1.386x, validazione 1.316x)
+- Banda 120-170 con priorita al target 160
+- EUR 5/estrazione, EUR 45/ciclo
+
+### 18.3 Test in corso
+
+Al momento della scrittura, due test aggiuntivi sono in esecuzione:
+
+- Sweep somme x finestre per AMBO SECCO (non solo ambetto)
+- Test 11: filtro vicinanza pura (|a-b| <= D) per verificare se la somma e solo un proxy per la prossimita numerica
+
+I risultati di questi test determineranno se l'Engine V5 sara aggiornato ulteriormente.
 
 ---
 
