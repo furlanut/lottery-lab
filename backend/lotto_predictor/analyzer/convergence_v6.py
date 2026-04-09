@@ -9,10 +9,10 @@ AMBO SECCO (coppia #1):
   5-fold CV: media 1.095x, min fold 0.996x.
 
 AMBETTO (coppie #2-4):
-  Segnale: vicinanza pura |a-b| <= 20 (W=125)
-  Scoperta dal Test 11: batte tutte le somme (72, 160, banda 120-170).
-  5-fold CV: media 1.353x, min fold 1.229x — miglior risultato assoluto.
-  Tutti i fold sopra 1.22x.
+  Segnale: vicinanza cross-decina |a-b| <= 20, decine diverse (W=125)
+  Scoperta: Test 11 (vicinanza batte somme) + analisi pre-V6 (cross > intra).
+  Cross-decina 5-fold CV: media 1.184x, min fold 1.144x — il piu' stabile.
+  Coppie al confine tra decine (es. 29-31) dove l'ambetto +-1 e' piu' efficace.
 
 STRATEGIA:
   Coppia #1: EUR 1 ambo + EUR 1 ambetto (freq_rit_fib W=75)
@@ -96,11 +96,21 @@ def segnale_fib(dati, idx, ruota, finestra=W_AMBO, max_n=5):
     return risultati[:max_n]
 
 
-def segnale_vicinanza(dati, idx, ruota, finestra=W_AMBETTO, max_dist=MAX_DIST, max_n=5):
-    """Vicinanza pura: |a-b| <= D, freq>=1, ritardo nella finestra.
+def segnale_vicinanza(
+    dati,
+    idx,
+    ruota,
+    finestra=W_AMBETTO,
+    max_dist=MAX_DIST,
+    cross_decina=True,
+    max_n=5,
+):
+    """Vicinanza cross-decina: |a-b| <= D, decine diverse, freq>=1, ritardo.
 
-    Scoperta dal Test 11: batte tutte le somme.
-    Il segnale non e' nella somma specifica ma nella prossimita' numerica.
+    Scoperta dal Test 11 + analisi pre-V6:
+    - Le coppie vicine ma cross-decina (es. 29-31) battono le intra-decina
+    - Cross-decina ratio 1.184x vs intra-decina 1.091x (5-fold CV)
+    - Al confine tra decine l'ambetto (+/-1) copre una zona piu' ricca
     """
     if idx < finestra:
         return []
@@ -113,11 +123,15 @@ def segnale_vicinanza(dati, idx, ruota, finestra=W_AMBETTO, max_dist=MAX_DIST, m
         a, b = pair
         if abs(a - b) > max_dist:
             continue
+        # Filtro cross-decina: decine diverse
+        same_dec = (a - 1) // 10 == (b - 1) // 10
+        if cross_decina and same_dec:
+            continue
         last = pl.get(pair, finestra)
         if last < soglia:
             continue
         # Score: frequenza + ritardo relativo + bonus vicinanza
-        proximity = 1.0 - abs(a - b) / max_dist  # 0 a 1, piu' vicini = meglio
+        proximity = 1.0 - abs(a - b) / max_dist
         score = freq + last / soglia + proximity
         risultati.append((pair, score, freq, last))
     risultati.sort(key=lambda x: -x[1])
