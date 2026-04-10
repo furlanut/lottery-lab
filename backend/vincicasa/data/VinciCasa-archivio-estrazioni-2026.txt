@@ -1,6 +1,7 @@
 VinciCasa
 Archivio estrazioni VinciCasa anno 2026 aggiornato al 08/04/2026
 Concorso	Data	N.1	N.2	N.3	N.4	N.5	
+99	09/04/2026	7	15	16	28	39	
 98	08/04/2026	2	10	24	31	38	
 97	07/04/2026	2	9	12	16	29	
 96	06/04/2026	16	20	22	34	38	
