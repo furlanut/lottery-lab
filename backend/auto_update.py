@@ -114,8 +114,8 @@ def update_diecielotto():
             session.close()
             return
 
-        # Find extractions without predictions (last 20)
-        recent = all_estr[-20:]
+        # Find extractions without predictions (last 50)
+        recent = all_estr[-50:]
         new_preds = 0
 
         for estr in recent:
