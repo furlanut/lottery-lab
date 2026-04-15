@@ -24,6 +24,7 @@ services:
       DATABASE_URL: postgresql://lotto:LotteryLab2026!@db:5432/lotto_convergent
       API_HOST: 0.0.0.0
       API_PORT: "8000"
+    command: ["/entrypoint.sh"]
     ports:
       - "8881:8000"
     depends_on:

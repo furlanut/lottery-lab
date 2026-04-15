@@ -12,7 +12,7 @@ import subprocess, time, threading
 def run_update():
     while True:
         try:
-            subprocess.run(['python', 'backend/auto_update.py'], cwd='/app', timeout=120,
+            subprocess.run(['python3', 'backend/auto_update.py'], cwd='/app', timeout=120,
                          capture_output=True, text=True)
         except Exception:
             pass
