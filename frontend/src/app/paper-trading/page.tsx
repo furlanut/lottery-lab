@@ -4,20 +4,8 @@ import {
   PaperTradingRecord,
   GamePnL,
 } from "@/lib/api";
-import NumberBall from "@/components/NumberBall";
-import GameFilter from "@/components/GameFilter";
-import { format, parseISO } from "date-fns";
-import { it } from "date-fns/locale";
+import PaperTradingHistory from "@/components/PaperTradingHistory";
 import { TrendingUp } from "lucide-react";
-
-function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return "N/D";
-  try {
-    return format(parseISO(dateStr), "dd/MM/yyyy HH:mm", { locale: it });
-  } catch {
-    return dateStr;
-  }
-}
 
 function formatCurrency(value: number): string {
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)} EUR`;
@@ -105,174 +93,7 @@ export default async function PaperTradingPage() {
           {storico.length > 0 && (
             <section className="fade-up-3">
               <SectionHeader label="Storico giocate — dettaglio per estrazione" />
-              <GameFilter>
-                {(selectedGame) => {
-                  const filteredGames =
-                    selectedGame === "all"
-                      ? ["lotto", "vincicasa", "diecielotto"]
-                      : [selectedGame];
-
-                  return (
-                    <div className="space-y-8">
-                      {filteredGames.map((gameKey) => {
-                        const gameRecords = storico.filter((r) => r.gioco === gameKey);
-                        if (gameRecords.length === 0) return null;
-                        const config = GAME_CONFIG[gameKey] ?? GAME_CONFIG.lotto;
-                        let cumPnl = 0;
-                        return (
-                          <div key={gameKey}>
-                            {selectedGame === "all" && (
-                              <div className="flex items-center gap-3 mb-3">
-                                <span className={`text-xs font-bold uppercase tracking-widest ${config.colorClass}`}>
-                                  {config.label}
-                                </span>
-                                <div className="flex-1 h-px bg-[rgba(255,255,255,0.06)]" />
-                              </div>
-                            )}
-                            <div className="space-y-3">
-                              {gameRecords.map((r, idx) => {
-                                const net = r.vincita - r.costo;
-                                cumPnl += net;
-                                const isWin = r.stato === "VINTA";
-                                return (
-                                  <div
-                                    key={idx}
-                                    className={`glass p-4 relative overflow-hidden ${
-                                      isWin ? "border-lotto-green/20" : ""
-                                    }`}
-                                  >
-                                    {/* Top accent bar */}
-                                    <div
-                                      className={`absolute top-0 left-0 right-0 h-0.5 ${
-                                        isWin
-                                          ? "bg-gradient-to-r from-lotto-green to-lotto-teal"
-                                          : "bg-[rgba(255,255,255,0.06)]"
-                                      }`}
-                                    />
-                                    {/* Header row: date + game + stato + P&L */}
-                                    <div className="flex items-center justify-between mb-3">
-                                      <div className="flex items-center gap-3">
-                                        <span className="text-xs font-mono text-lotto-muted">
-                                          {formatDate(r.data)}
-                                          {r.ora ? ` ${r.ora}` : ""}
-                                        </span>
-                                        <span
-                                          className={`text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${config.bgClass} ${config.colorClass} ${config.borderClass}`}
-                                        >
-                                          {config.label}
-                                        </span>
-                                        <StatoBadge stato={r.stato} />
-                                      </div>
-                                      <div className="flex items-center gap-4">
-                                        <span className="text-xs text-lotto-muted">
-                                          Costo: {r.costo.toFixed(2)} EUR
-                                        </span>
-                                        <span
-                                          className={`text-sm font-black ${
-                                            net >= 0 ? "text-lotto-green" : "text-lotto-red"
-                                          }`}
-                                        >
-                                          {net >= 0 ? "+" : ""}
-                                          {net.toFixed(2)} EUR
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    {/* Body: previsione vs estrazione */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      {/* Previsione */}
-                                      <div>
-                                        <p className="text-[11px] text-lotto-muted uppercase tracking-widest mb-2">
-                                          Previsione
-                                          {r.previsione.ruota ? ` · ${r.previsione.ruota}` : ""}
-                                          {r.previsione.metodo ? ` · ${r.previsione.metodo}` : ""}
-                                        </p>
-                                        <div className="flex gap-1.5 flex-wrap">
-                                          {r.previsione.numeri.map((n, i) => (
-                                            <NumberBall key={i} number={n} size="md" glow={isWin} />
-                                          ))}
-                                        </div>
-                                      </div>
-
-                                      {/* Estrazione reale */}
-                                      <div>
-                                        <p className="text-[11px] text-lotto-muted uppercase tracking-widest mb-2">
-                                          Estrazione reale
-                                          {r.estrazione.ruota ? ` · ${r.estrazione.ruota}` : ""}
-                                        </p>
-                                        <div className="flex gap-1 flex-wrap">
-                                          {(r.estrazione.numeri ?? []).map((n, i) => {
-                                            const isMatch = r.previsione.numeri.includes(n);
-                                            return (
-                                              <span
-                                                key={i}
-                                                className={isMatch ? "ring-2 ring-lotto-green rounded-full" : ""}
-                                              >
-                                                <NumberBall number={n} size="sm" />
-                                              </span>
-                                            );
-                                          })}
-                                        </div>
-                                        {/* Extra info for 10eLotto */}
-                                        {r.estrazione.numero_oro && (
-                                          <div className="mt-2 flex items-center gap-3 text-xs">
-                                            <span className="text-lotto-amber">
-                                              Oro: <b>{r.estrazione.numero_oro}</b>
-                                            </span>
-                                            <span className="text-lotto-amber/70">
-                                              Doppio Oro: <b>{r.estrazione.doppio_oro}</b>
-                                            </span>
-                                          </div>
-                                        )}
-                                        {r.estrazione.numeri_extra && r.estrazione.numeri_extra.length > 0 && (
-                                          <div className="mt-1">
-                                            <span className="text-[11px] text-lotto-muted">Extra: </span>
-                                            <span className="text-[11px] text-lotto-muted/60">
-                                              {r.estrazione.numeri_extra.join(", ")}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* Footer: match details + vincita */}
-                                    <div className="mt-3 pt-2 border-t border-[rgba(255,255,255,0.07)] flex items-center justify-between text-xs">
-                                      <div className="flex gap-4 text-lotto-muted">
-                                        <span>
-                                          Match base: <b className="text-lotto-text">{r.match}</b>
-                                        </span>
-                                        {r.match_extra !== undefined && (
-                                          <span>
-                                            Match extra: <b className="text-lotto-text">{r.match_extra}</b>
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="flex gap-4">
-                                        {r.vincita > 0 && (
-                                          <span className="text-lotto-green font-bold">
-                                            Vincita: +{r.vincita.toFixed(2)} EUR
-                                          </span>
-                                        )}
-                                        <span
-                                          className={`font-bold ${
-                                            cumPnl >= 0 ? "text-lotto-green" : "text-lotto-red"
-                                          }`}
-                                        >
-                                          Cum: {cumPnl >= 0 ? "+" : ""}{cumPnl.toFixed(2)} EUR
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                }}
-              </GameFilter>
+              <PaperTradingHistory records={storico} />
             </section>
           )}
 
@@ -422,25 +243,6 @@ function TotalCard({
         </div>
       </div>
     </div>
-  );
-}
-
-/* HistoryTable removed — replaced by per-game detailed card blocks */
-
-function StatoBadge({ stato }: { stato: string }) {
-  const config =
-    stato === "VINTA"
-      ? "bg-lotto-green/10 text-lotto-green border-lotto-green/20"
-      : stato === "PERSA"
-      ? "bg-lotto-red/10 text-lotto-red border-lotto-red/20"
-      : "bg-lotto-amber/10 text-lotto-amber border-lotto-amber/20";
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${config}`}
-    >
-      {stato}
-    </span>
   );
 }
 
