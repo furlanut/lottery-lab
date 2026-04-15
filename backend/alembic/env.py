@@ -2,6 +2,7 @@
 
 from logging.config import fileConfig
 
+import diecielotto.models.database  # noqa: F401 — registra modelli 10eLotto nel metadata
 import vincicasa.models.database  # noqa: F401 — registra modelli VinciCasa nel metadata
 from alembic import context
 from lotto_predictor.models.database import Base

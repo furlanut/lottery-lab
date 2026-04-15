@@ -38,6 +38,7 @@ dev = [
 [project.scripts]
 lotto = "lotto_predictor.cli:app"
 vincicasa = "vincicasa.cli:app"
+diecielotto = "diecielotto.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["backend"]

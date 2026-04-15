@@ -3,6 +3,7 @@ from __future__ import annotations
 """Pydantic schemas per validazione e serializzazione dati."""
 
 from datetime import date, datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -53,9 +54,9 @@ class PrevisioneRead(PrevisioneBase):
     data_generazione: date
     data_target_inizio: date
     stato: str
-    colpo_esito: int | None = None
-    data_esito: date | None = None
-    vincita: float | None = None
+    colpo_esito: Optional[int] = None
+    data_esito: Optional[date] = None
+    vincita: Optional[float] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -72,8 +73,8 @@ class BankrollRead(BaseModel):
     tipo: str
     importo: float
     saldo: float
-    previsione_id: int | None = None
-    note: str | None = None
+    previsione_id: Optional[int] = None
+    note: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

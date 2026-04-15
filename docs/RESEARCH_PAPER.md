@@ -2,9 +2,17 @@
 
 ## Abstract
 
-Un sistema predittivo per ambi secchi del Lotto Italiano basato su filtri convergenti e stato sviluppato e testato su 6.886 estrazioni storiche (1946-2026). Dopo 18+ analisi statistiche, test su geometria sacra, cabala, e ottimizzazione delle finestre temporali, il miglior segnale trovato (freq+rit+dec con finestra 150 estrazioni) mostra un edge medio del 22.5% rispetto al caso, validato su 5 periodi temporali indipendenti. Il breakeven per l'ambo secco richiede un edge del 60%, rendendo il sistema non profittevole in media. Tuttavia, la scoperta dell'**ambetto** (introdotto nel 2013, payout 65x, breakeven 1.543x) ha cambiato radicalmente la strategia: i filtri convergenti eccellono nell'identificare la ZONA corretta piuttosto che il punto esatto, e l'ambetto premia esattamente questa capacita. L'analisi per ruota e ciclica rivela che il segnale e ciclico: durante le fasi attive (20% del tempo), supera il breakeven con ratio 1.5-2.0x. L'**Engine V4** introduce segnali separati per ambo e ambetto: freq_rit_fib (W=75) per l'ambo secco e somma72 (W=150) per l'ambetto, sfruttando il fatto che finestre ottimali diverse massimizzano scommesse diverse. Una successiva campagna di **12 test laterali non convenzionali** (compressibilita, transfer entropy, regime detection, fingerprint, attacco PRNG, predizione forma) ha prodotto zero segnali sfruttabili, ma ha insegnato tre lezioni metodologiche fondamentali: la correlazione seriale delle medie mobili, il pericolo delle baseline sbagliate (40/40 significativi che diventano 1/40 con baseline corretta), e il cherry-picking sistematico. Uno **sweep esaustivo su 161 somme x 6 finestre** ha smascherato la somma 72 come artefatto di cherry-picking: non era neanche nella top 20 discovery. Il vero pattern e la **vicinanza numerica** — somme alte (120-170) che producono coppie di numeri vicini. L'**Engine V5** sostituisce somma72 con somma_alta S=160 W=100 (discovery 1.386x, validazione 1.316x, 5-fold CV media 1.203x con min fold 1.107x). La strategia finale di money management (EUR 5/estrazione, 4 ambetti + 1 ambo, cicli di 9 estrazioni) offre il miglior rapporto rischio/rendimento, con una vincita ambetto che copre 1.44 cicli. Il paper documenta l'intero percorso di ricerca con trasparenza metodologica.
+**Lottery Lab** e un progetto di ricerca sistematica sulla predittivita delle lotterie italiane. Tre giochi analizzati: Lotto Italiano (6.886 estrazioni, urne fisiche), VinciCasa (3.279 estrazioni, 5/40 giornaliero), e 10eLotto ogni 5 minuti (33.431 estrazioni, RNG elettronico ADM).
 
-**Parole chiave:** Lotto Italiano, ciclometria, filtri convergenti, backtesting, ambo secco, ambetto, money management, analisi statistica, gambler's fallacy
+Sul **Lotto**, dopo 18+ test statistici e 12 test laterali non convenzionali, il miglior segnale e la vicinanza numerica (D=20, W=125): ratio 1.18x su ambetto, validato 5-fold CV. Il breakeven (1.60x) non e raggiunto, ma il segnale riduce il house edge. L'Engine V6 combina vicinanza (ambetto) e freq_rit_fib (ambo secco).
+
+Su **VinciCasa**, il segnale top 5 frequenti nelle ultime 5 estrazioni produce +22% sulla categoria 2/5 (p=0.01). Anche qui, sotto breakeven ma statisticamente significativo.
+
+Sul **10eLotto**, la scoperta principale e strutturale, non predittiva: la configurazione 6 numeri + Extra ha house edge 9.94% (il piu basso d'Italia), ridotto al 6.30% durante Special Time. Tuttavia, 8 test predittivi con 60+ configurazioni non producono alcun segnale significativo dopo Bonferroni (miglior p-value: 0.054). L'RNG elettronico e perfetto.
+
+La lezione fondamentale: le lotterie con urne fisiche (Lotto) mostrano micro-pattern misurabili; quelle con RNG elettronico (10eLotto) no. Ma nessun pattern trovato supera il breakeven per profitto sistematico.
+
+**Parole chiave:** Lotto Italiano, VinciCasa, 10eLotto, ciclometria, filtri convergenti, backtesting, ambetto, expected value, house edge, RNG, permutation test, Bonferroni, money management
 
 ---
 
@@ -2496,5 +2504,324 @@ Il sistema Lotto Convergent e costruito su uno stack moderno ottimizzato per ana
 
 ---
 
-*Documento generato dal sistema Lotto Convergent -- Aprile 2026*
-*Dati: archivio estrazioni Lotto Italiano 2007-2026 (6886 estrazioni)*
+## 19. VinciCasa — Secondo Gioco del Lottery Lab
+
+### 19.1 Regole e struttura
+
+VinciCasa: 5 numeri su 40, estrazione giornaliera (tutti i giorni alle 20:00). Premi: 5/5 = 500.000 EUR (di cui 300K vincolati a immobile), 4/5 = 200 EUR, 3/5 = 20 EUR, 2/5 = 2.60 EUR. Costo giocata: 2 EUR.
+
+Dataset: 3.279 estrazioni (luglio 2014 — aprile 2026) da archivio xamig.com, importate in PostgreSQL.
+
+### 19.2 Certificazione RNG
+
+5 test standard (chi-quadro, runs, autocorrelazione, gap CV, compressibilita): tutti PASS. L'RNG di VinciCasa e indistinguibile dal random.
+
+### 19.3 Percorso di ricerca (V1-V14)
+
+- **V1-V5 (struttura, wheeling, Hamming, persistenza, hot numbers)**: nessun segnale per predire quintine esatte
+- **V6-V9 (singoli numeri)**: hot numbers (top 5 piu frequenti in finestra N=5) producono +22% sulla categoria 2/5 (p=0.01, permutation test)
+- **V10-V14 (dispersione, pool extension, frequenza vs recency, quintette ancorate)**: la dispersione non amplifica il segnale; la concentrazione (top 5 puri) resta la strategia migliore
+
+### 19.4 Segnale confermato
+
+**Top 5 numeri piu frequenti nelle ultime 5 estrazioni**: +22% sulla categoria 2/5 (2.60 EUR). Validato con permutation test (p=0.01) e split temporale.
+
+EV: non sufficiente per profitto (house edge 37.3%, breakeven 1.60x, segnale 1.22x). Riduce il house edge ma non lo supera.
+
+---
+
+## 20. Engine V6 — Consolidamento Lotto
+
+L'Engine V6 consolida i risultati di 18 capitoli di ricerca in un singolo motore predittivo con due segnali separati:
+
+1. **Ambo secco**: freq_rit_fib (W=75) — numeri la cui frequenza e il cui ritardo seguono rapporti Fibonacci
+2. **Ambetto**: vicinanza cross-decina |a-b| <= 20 (W=125) — coppie di numeri vicini con alta frequenza recente
+
+Il V6 genera giocate quotidiane con costo EUR 5/estrazione (4 ambetti a EUR 1 + 1 ambo secco a EUR 1). La "golden rule" del money management: costo ciclo (9 estrazioni x EUR 5 = EUR 45) < vincita minima ambetto (EUR 65).
+
+Ratio validato 5-fold CV: vicinanza 1.18x (ambetto), freq_rit_fib 1.16x (ambo).
+
+---
+
+## 21. 10eLotto Ogni 5 Minuti — Terzo Gioco del Lottery Lab
+
+### 21.1 Regole del gioco
+
+- 90 numeri, 20 estratti per estrazione
+- Giocatore sceglie 1-10 numeri
+- 288 estrazioni/giorno (ogni 5 minuti, 24/7)
+- RNG elettronico certificato ADM
+- Opzioni: Numero Oro (1° estratto), Doppio Oro (2° estratto), Extra (15 numeri aggiuntivi dai 70 rimanenti), GONG
+
+### 21.2 Calcolo EV — Scoperta della configurazione ottimale
+
+Calcolo analitico ipergeometrico per tutte le 116 configurazioni (1-10 numeri x opzioni base/Oro/DoppioOro/Extra/GONG). Verificato con Monte Carlo (1M simulazioni, convergenza 0.84%).
+
+**Risultato chiave — Tabella top 5:**
+
+| # | Config | Costo | EV/EUR | House Edge |
+|---|--------|-------|--------|------------|
+| 1 | **6 numeri + Extra** | **EUR 2** | **0.9006** | **9.94%** |
+| 2 | 6 numeri + Oro + Extra | EUR 3 | 0.8783 | 12.17% |
+| 3 | 6 numeri + Extra + GONG | EUR 3 | 0.8412 | 15.88% |
+| 4 | 8 numeri + Oro | EUR 2 | 0.7387 | 26.13% |
+| 5 | GONG solo | EUR 2 | 0.7222 | 27.78% |
+
+La configurazione 6+Extra (9.94% HE) e il gioco con il house edge piu basso di tutte le lotterie italiane analizzate. Breakeven: solo 1.11x.
+
+L'Extra contribuisce il 65% dell'EV totale (1.176 su 1.801 EUR). Il 67.7% delle giocate vince qualcosa nell'Extra.
+
+**Peggiori configurazioni**: Doppio Oro con pochi numeri (HE 45-50%). L'opzione Doppio Oro e una trappola.
+
+### 21.3 Ingestione dati
+
+Fonte: API JSON di lottologia.com (`/api/metalotto/data/lottery/10elotto5minuti/draw/bydate`). 288 estrazioni/giorno con 20 numeri + Oro + Doppio Oro + 15 Extra.
+
+Dataset: **33.431 estrazioni** (15 dicembre 2025 — 13 aprile 2026), ~120 giorni.
+
+---
+
+## 22. 10eLotto — Certificazione RNG e Analisi Statistica
+
+### 22.1 RNG Certification (5/5 PASS)
+
+| Test | Risultato | Dettaglio |
+|------|-----------|-----------|
+| Chi-quadro uniformita | PASS (z=-0.45) | freq attesa 7437, min 7221, max 7606 |
+| Runs test (somme) | PASS (z=0.28) | runs osservati = attesi |
+| Autocorrelazione somme | PASS (max r=0.013) | nessuna correlazione fino a lag 20 |
+| Gap CV | PASS (CV=0.882) | distribuzione geometrica confermata |
+| Compressibilita | PASS (z=1.14) | identico a random |
+| Overlap consecutivo | PASS (4.46 vs 4.44 atteso) | nessuna memoria |
+
+### 22.2 Analisi Deep (D1-D5)
+
+**D1 — Numero Oro e Doppio Oro:**
+- Distribuzione Oro: PASS (uniforme, chi2 z=-0.67)
+- Distribuzione Doppio Oro: PASS (z=1.73)
+- Autocorrelazione Oro: PASS (max r=0.008)
+- Distanza |Oro-DoppioOro|: z=3.08 — unico segnale borderline. Media 30.35 vs 29.99 atteso. Il bias e stabile (split: z=2.31 + z=2.05) ma non sfruttabile (P(DoppioOro) non dipende dalla distanza)
+
+**D2 — Sequenze PRNG:** N/A (dati ordinati nel DB, ordine originale perso)
+
+**D3 — Dipendenza Extra|Base:** Correlazione negativa r=-0.24 per decina (strutturale e atteso). Autocorrelazione tra estrazioni: ZERO.
+
+**D4 — Lag 288 (ciclo giornaliero):** Nessun picco. Il PRNG non viene reseedato giornalmente. Tutte le autocorrelazioni sotto z=2.0.
+
+**D5 — Numeri spia (8.010 coppie + Bonferroni):** 1 coppia (64,56) a z=-4.38 — direzione negativa, non sfruttabile. Con 8.010 test, ~0.5 falsi positivi attesi a questa soglia.
+
+### 22.3 Pattern orari (Fase 5)
+
+Nessun bias temporale. Overlap medio uniforme per tutte le 24 ore (range 4.34-4.56, varianza 0.002). L'RNG si comporta identicamente alle 3:00 e alle 18:00.
+
+---
+
+## 23. 10eLotto — Prediction Lab (8 Test Predittivi)
+
+### 23.1 Framework di giocata virtuale
+
+Per ogni estrazione t nel test set: seleziona 6 numeri col metodo in test, confronta con i 20 base e i 15 Extra, calcola EV reale (premio base + premio Extra). Costo EUR 2, baseline EV 1.8013.
+
+Discovery su prima meta (16.700 estr.), validazione su seconda meta (16.700 estr.).
+
+### 23.2 Risultati
+
+| # | Metodo | Config | EV val | Ratio | Supera BE ST? |
+|---|--------|--------|--------|-------|---------------|
+| 1 | P2 vicinanza | W=100 D=5 | 1.9655 | 1.091x | SI |
+| 2 | P3 top-freq | W=576 | 1.9339 | 1.074x | SI |
+| 3 | P2 vicinanza | W=50 D=5 | 1.9323 | 1.073x | SI |
+| 4 | P5 mix caldi+freddi | W=288 | 1.9288 | 1.071x | SI |
+| 5 | P1 freq+rit+dec | W=50 | 1.8649 | 1.035x | no |
+| 6 | P6 overlap scoring | W=10 | 1.7817 | 0.989x | no |
+| 7 | P7 somma regressione | W=288 | 1.8516 | 1.028x | no |
+| 8 | P4 freddi | W=288 | 1.8752 | 1.041x | no |
+
+P8 (ML ensemble) non eseguito (sklearn non installato).
+
+4 segnali superano il breakeven Special Time (1.067x) in validazione grezza. Ma serviva la validazione rigorosa.
+
+### 23.3 Validazione rigorosa (Step 1-4)
+
+**Step 1 — Permutation test (10.000 shuffle + Bonferroni p < 0.001):**
+
+| Segnale | EV val | Ratio | p-value | Soglia | Risultato |
+|---------|--------|-------|---------|--------|-----------|
+| P2 vicinanza W=100 D=5 | 1.965 | 1.091x | **0.054** | 0.001 | **FAIL** |
+| P3 top-freq W=576 | 1.934 | 1.074x | 0.108 | 0.001 | FAIL |
+| P2 vicinanza W=50 D=5 | 1.931 | 1.072x | 0.087 | 0.001 | FAIL |
+| P5 mix W=288 | 1.928 | 1.071x | 0.095 | 0.001 | FAIL |
+
+**Nessun segnale passa Bonferroni.** Il p-value migliore (0.054) non e significativo nemmeno senza correzione per test multipli. I ratio 1.07-1.09x erano varianza campionaria amplificata dalla selezione di ~60 configurazioni.
+
+Step 2, 3, 4 non eseguiti (prerequisito Step 1 non superato).
+
+### 23.4 Special Time
+
+Special Time: 6 estrazioni random nella fascia 16:05-18:00 con premi maggiorati. Dalla tabella ufficiale (10elotto5.it):
+
+| Numeri vincenti | Base normale | Base ST | Extra normale | Extra ST |
+|-----------------|-------------|---------|---------------|----------|
+| 6/6 | 1000 | 1300 (+30%) | 2000 | 3000 (+50%) |
+| 5/6 | 100 | 110 (+10%) | 200 | 210 (+5%) |
+| 4/6 | 10 | 11 (+10%) | 20 | 21 (+5%) |
+| 3/6 | 2 | 2 (0%) | 7 | 7 (0%) |
+
+I premi bassi (alta probabilita) sono quasi invariati. Solo i premi alti (bassa probabilita) sono maggiorati.
+
+| Config | EV | House Edge |
+|--------|-----|-----------|
+| 6+Extra normale | 1.801 | 9.94% |
+| **6+Extra Special Time** | **1.874** | **6.30%** |
+| 6+Extra media fascia 16-18 | 1.819 | 9.03% |
+
+Special Time riduce l'HE al 6.30% — il piu basso di qualsiasi lotteria italiana — ma resta sotto breakeven.
+
+---
+
+## 24. Strategy Lab — Seconda Campagna Predittiva 10eLotto
+
+### 24.1 Motivazione
+
+La prima campagna (cap. 23) ha testato 8 metodi "standard" adattati dal Lotto, tutti falliti al permutation test. Ma diversi metodi dal paper non erano mai stati adattati al 10eLotto:
+
+- **freq_rit_fib** (vincitore Lotto ambo a 1.16x)
+- **Ciclometria su coppie** (proprieta delle 15 coppie interne alla sestina)
+- **Extra stream** (trattare i 15 Extra come gioco separato)
+- **Dual target** (3 numeri per base + 3 per Extra)
+- **Anti-cluster** (numeri sparsi tra i frequenti)
+- **Ensemble voting** (fusione di 4 metodi)
+- **Wheeling** (3 schedine sulla stessa estrazione)
+- **Conditional staking** (money management adattivo)
+
+### 24.2 Risultati (34 configurazioni, 33.892 estrazioni)
+
+**Classifica top 6:**
+
+| # | Metodo | Config | EV val | Ratio |
+|---|--------|--------|--------|-------|
+| 1 | **S4 dual-target** | **W=100** | **1.9863** | **1.103x** |
+| 2 | S2 ciclometria | W=288 | 1.9099 | 1.060x |
+| 3 | S3 extra-stream | W=50 | 1.8795 | 1.043x |
+| 4 | S3 extra-stream | W=20 | 1.8753 | 1.041x |
+| 5 | S8 ensemble | W=288 | 1.8450 | 1.024x |
+| 6 | S1 freq_rit_fib | W=75 | 1.8342 | 1.018x |
+
+La strategia S4 dual-target (3 numeri caldi nel base + 3 numeri caldi nell'Extra, W=100) produce il ratio piu alto: **1.103x**. E il primo segnale del 10eLotto che supera il breakeven Special Time (1.067x).
+
+### 24.3 Permutation test
+
+| Segnale | Ratio | p-value | Soglia Bonf. (0.05/34) |
+|---------|-------|---------|------------------------|
+| **S4 dual-target W=100** | **1.103x** | **0.042** | 0.0015 → **FAIL** |
+| S2 ciclometria W=288 | 1.060x | 0.132 | FAIL |
+| S3 extra-stream W=50 | 1.043x | 0.199 | FAIL |
+
+Il p=0.042 e significativo al 5% grezzo ma **non sopravvive alla correzione Bonferroni** (soglia 0.0015 con 34 test). Il segnale e borderline — potrebbe essere reale o varianza campionaria.
+
+### 24.4 Money management
+
+**Wheeling (3 schedine x EUR 2 = EUR 6):** EV/EUR 0.864 vs 0.854 per singola. Marginalmente migliore ma entrambi sotto breakeven. Il wheeling NON crea edge, redistribuisce solo la varianza.
+
+**Conditional staking (raddoppio dopo streak):** Tutti negativi. ROI da -12% a -15%. Conferma che il raddoppio dopo perdite e una strategia perdente su un gioco con EV negativo. La gambler's fallacy non funziona nemmeno sul money management.
+
+### 24.5 Simulazione Special Time
+
+Strategia S4 dual-target, solo fascia 16:05-18:00, 1.415 giocate:
+- Bankroll EUR 200 → EUR 101
+- P&L: -EUR 99 (-3.5%)
+- Max drawdown: EUR 389
+
+Nonostante il ratio 1.103x, la simulazione produce perdita. Il motivo: il ratio e calcolato sui premi normali. Durante Special Time, solo il 25% delle estrazioni ha premi maggiorati — non abbastanza per compensare il 75% a premi normali con EV < costo.
+
+### 24.6 Insight sul segnale dual-target
+
+La strategia S4 e concettualmente nuova: tratta Base e Extra come due giochi separati con pool diversi. Il Base estrae 20 da 90; l'Extra estrae 15 dai 70 rimanenti. Allocando 3 numeri "caldi nel base" e 3 numeri "caldi nell'Extra", si massimizza la probabilita di match su entrambi i fronti.
+
+Perche potrebbe avere un micro-effetto: i numeri frequenti nell'Extra sono, per costruzione, quelli che escono POCO nel base (altrimenti sarebbero nei 20 e non nei 70 rimanenti). Questo crea una complementarita strutturale che il dual-target sfrutta.
+
+Tuttavia, su un RNG perfetto questa complementarita e puramente casuale — ogni estrazione e indipendente e la storia non predice il futuro. Il p=0.042 e compatibile con il rumore statistico di 34 test.
+
+---
+
+## 25. Confronto Finale e Conclusioni
+
+### 25.1 Tabella riepilogativa Lottery Lab
+
+| Gioco | Dataset | HE | Breakeven | Miglior segnale | p-value | Edge? |
+|-------|---------|-----|-----------|----------------|---------|-------|
+| Lotto ambetto V6 | 6.886 estr. | 37.6% | 1.60x | vicinanza D=20 W=125: **1.18x** | CV validato | Riduce HE |
+| Lotto ambo V6 | 6.886 estr. | 37.6% | 1.60x | freq_rit_fib W=75: **1.16x** | CV validato | Riduce HE |
+| VinciCasa | 3.279 estr. | 37.3% | 1.60x | top5 freq N=5: **+22%** | p=0.01 | Riduce HE |
+| 10eLotto 6+Extra | 33.892 estr. | 9.94% | 1.11x | dual-target 1.10x | p=0.042 | Borderline |
+| 10eLotto 6+Extra ST | 33.892 estr. | 6.30% | 1.067x | dual-target 1.10x | FAIL Bonf. | **No** |
+
+**Test totali eseguiti sul 10eLotto:** 94 configurazioni predittive in 2 campagne (60 + 34), 5 test RNG, 5 test deep (D1-D5), 8.010 coppie numeri spia, 4 test strutturali (E1-E4). Nessun segnale sopravvive alla correzione per test multipli.
+
+### 25.2 Lezioni apprese
+
+**1. L'RNG elettronico e imbattibile.** Su 33.892 estrazioni e 94 configurazioni predittive in 2 campagne indipendenti, il miglior p-value e 0.042 — non significativo dopo Bonferroni. Il Lotto tradizionale (urne fisiche) mostra pattern a 1.18x con CV validato; il 10eLotto elettronico no.
+
+**2. Il house edge non e tutto.** Il 10eLotto ha l'HE piu basso (6.3% ST) ma nessun segnale predittivo. Il Lotto ha l'HE piu alto (37.6%) ma segnali misurabili. Il gioco strutturalmente "migliore" e il piu difficile da battere.
+
+**3. La correzione per test multipli e la lezione piu importante.** Senza Bonferroni, segnali fino a 1.10x "emergono" da puro rumore. Con Bonferroni, spariscono. Con 94 test, P(almeno un falso positivo a p<0.05) = 1-(1-0.05)^94 = 99.2%. Il multiple testing spiega tutti i "segnali" trovati.
+
+**4. Trattare base e Extra come giochi separati e un'insight valida.** Il dual-target (3+3) ha il ratio piu alto. Anche se non significativo statisticamente, la logica e solida: ottimizzare separatamente due meccanismi con pool diversi e razionale. Su un gioco con edge strutturale (non RNG), questo approccio potrebbe funzionare.
+
+**5. Il money management non crea edge.** Wheeling, conditional staking, e variazioni di posta non cambiano l'EV. Su un gioco con EV negativo, nessuna strategia di bet sizing produce profitto nel lungo termine.
+
+**6. La configurazione 6+Extra Special Time resta ottimale.** Senza predizione, il giocatore razionale del 10eLotto dovrebbe giocare SOLO 6 numeri + Extra durante la fascia Special Time (16:05-18:00), con posta minima EUR 2. House edge 6.30% — il piu basso di qualsiasi lotteria italiana.
+
+### 25.3 La domanda finale
+
+Attraverso tre giochi e 43.000+ estrazioni analizzate, il progetto Lottery Lab ha risposto a una domanda fondamentale: **le lotterie italiane sono battibili?**
+
+La risposta e stratificata:
+- **Lotto (urne fisiche):** micro-pattern rilevabili (1.18x), insufficienti per profitto (breakeven 1.60x), ma il segnale e reale
+- **VinciCasa (elettronico):** segnale debole confermato (p=0.01), insufficiente per profitto
+- **10eLotto (elettronico ADM):** nessun segnale dopo 94 test e correzione Bonferroni
+
+Nessun gioco e profittevole. Il valore del progetto sta nel metodo: la dimostrazione sistematica che la "sensazione" di pattern nelle lotterie e un'illusione cognitiva misurabile e quantificabile, e che la differenza tra RNG fisico e elettronico e reale e rilevabile con sufficiente rigore statistico.
+
+### 25.4 Prospettive future
+
+1. **Dataset piu ampi per il 10eLotto**: 33K estrazioni = ~4 mesi. Con 1 anno (105K) il permutation test per S4 dual-target avrebbe potenza superiore. Se il p=0.042 e reale, con 3x i dati scenderebbe sotto Bonferroni.
+
+2. **Analisi dell'ordine di estrazione**: i dati attuali hanno perso l'ordine originale dei 20 numeri. Con un feed diretto dall'ADM, l'ordine potrebbe rivelare bias del PRNG.
+
+3. **Paper trading**: sistema automatizzato di previsioni giornaliere per tutti e 3 i giochi, con tracking P&L senza denaro reale.
+
+4. **Altri giochi**: MillionDay (5/55, giornaliero), SuperEnalotto (6/90, 3/settimana), EuroJackpot (5/50+2/12) — ciascuno con struttura diversa e potenziali angoli inesplorati.
+
+---
+
+## Appendice D: Tabella EV Completa 10eLotto
+
+Calcolo ipergeometrico per K=1-10 numeri giocati, opzione base.
+
+| K | EV/EUR | House Edge | P(vincita) |
+|---|--------|------------|------------|
+| 1 | 0.6667 | 33.33% | 22.22% |
+| 2 | 0.6642 | 33.58% | 4.74% |
+| 3 | 0.6631 | 33.69% | 12.29% |
+| 4 | 0.6625 | 33.75% | 21.27% |
+| 5 | 0.6524 | 34.76% | 30.74% |
+| 6 | 0.6249 | 37.51% | 12.08% |
+| 7 | 0.6648 | 33.52% | 20.13% |
+| 8 | 0.6545 | 34.55% | 13.40% |
+| 9 | 0.6604 | 33.96% | 11.55% |
+| 10 | 0.6337 | 36.63% | 10.92% |
+
+Con Extra (costo +1 EUR):
+| K | EV base | EV Extra | EV totale | HE totale |
+|---|---------|----------|-----------|-----------|
+| 6 | 0.6249 | 1.1763 | 1.8013 | **9.94%** |
+| 7 | 0.6648 | 0.6808 | 1.3456 | 32.72% |
+| 8 | 0.6545 | 0.7304 | 1.3850 | 30.75% |
+
+La configurazione 6+Extra e anomala: l'Extra per K=6 vale quasi il doppio del base (1.18 vs 0.62), a differenza di K=7-10 dove Extra e base sono comparabili. Questo dipende dalla struttura dei premi Extra per K=6 (premio 1/6 e 2/6 = 1.00 EUR ciascuno, una "rete di sicurezza" che le altre configurazioni non hanno).
+
+---
+
+*Documento generato dal sistema Lottery Lab -- Aprile 2026*
+*Dati: Lotto Italiano 2007-2026 (6.886 estr.), VinciCasa 2014-2026 (3.279 estr.), 10eLotto 5min 2025-2026 (33.431 estr.)*
