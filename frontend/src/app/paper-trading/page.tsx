@@ -100,12 +100,158 @@ export default async function PaperTradingPage() {
             </>
           )}
 
-          {/* History Table */}
+          {/* Per-game detailed history */}
           {storico.length > 0 && (
-            <section className="fade-up-3">
-              <SectionHeader label="Storico giocate" />
-              <HistoryTable records={storico} />
-            </section>
+            <>
+              {["lotto", "vincicasa", "diecielotto"].map((gameKey) => {
+                const gameRecords = storico.filter((r) => r.gioco === gameKey);
+                if (gameRecords.length === 0) return null;
+                const config = GAME_CONFIG[gameKey] ?? GAME_CONFIG.lotto;
+                let cumPnl = 0;
+                return (
+                  <section key={gameKey} className="fade-up-3">
+                    <SectionHeader label={`Storico ${config.label} — dettaglio per estrazione`} />
+                    <div className="space-y-3">
+                      {gameRecords.map((r, idx) => {
+                        const net = r.vincita - r.costo;
+                        cumPnl += net;
+                        const isWin = r.stato === "VINTA";
+                        return (
+                          <div
+                            key={idx}
+                            className={`glass p-4 relative overflow-hidden ${
+                              isWin ? "border-lotto-green/20" : ""
+                            }`}
+                          >
+                            {/* Top accent bar */}
+                            <div
+                              className={`absolute top-0 left-0 right-0 h-0.5 ${
+                                isWin
+                                  ? "bg-gradient-to-r from-lotto-green to-lotto-teal"
+                                  : "bg-[rgba(255,255,255,0.04)]"
+                              }`}
+                            />
+                            {/* Header row: date + game + stato + P&L */}
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-mono text-lotto-muted">
+                                  {formatDate(r.data)}
+                                  {r.ora ? ` ${r.ora}` : ""}
+                                </span>
+                                <span
+                                  className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${config.bgClass} ${config.colorClass} ${config.borderClass}`}
+                                >
+                                  {config.label}
+                                </span>
+                                <StatoBadge stato={r.stato} />
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <span className="text-xs text-lotto-muted">
+                                  Costo: {r.costo.toFixed(2)} EUR
+                                </span>
+                                <span
+                                  className={`text-sm font-black ${
+                                    net >= 0 ? "text-lotto-green" : "text-lotto-red"
+                                  }`}
+                                >
+                                  {net >= 0 ? "+" : ""}
+                                  {net.toFixed(2)} EUR
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Body: previsione vs estrazione */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Previsione */}
+                              <div>
+                                <p className="text-[10px] text-lotto-muted uppercase tracking-widest mb-2">
+                                  Previsione
+                                  {r.previsione.ruota ? ` · ${r.previsione.ruota}` : ""}
+                                  {r.previsione.metodo ? ` · ${r.previsione.metodo}` : ""}
+                                </p>
+                                <div className="flex gap-1.5 flex-wrap">
+                                  {r.previsione.numeri.map((n, i) => (
+                                    <NumberBall key={i} number={n} size="md" glow={isWin} />
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Estrazione reale */}
+                              <div>
+                                <p className="text-[10px] text-lotto-muted uppercase tracking-widest mb-2">
+                                  Estrazione reale
+                                  {r.estrazione.ruota ? ` · ${r.estrazione.ruota}` : ""}
+                                </p>
+                                <div className="flex gap-1 flex-wrap">
+                                  {(r.estrazione.numeri ?? []).map((n, i) => {
+                                    const isMatch = r.previsione.numeri.includes(n);
+                                    return (
+                                      <span
+                                        key={i}
+                                        className={isMatch ? "ring-2 ring-lotto-green rounded-full" : ""}
+                                      >
+                                        <NumberBall number={n} size="sm" />
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                                {/* Extra info for 10eLotto */}
+                                {r.estrazione.numero_oro && (
+                                  <div className="mt-2 flex items-center gap-3 text-xs">
+                                    <span className="text-lotto-amber">
+                                      Oro: <b>{r.estrazione.numero_oro}</b>
+                                    </span>
+                                    <span className="text-lotto-amber/70">
+                                      Doppio Oro: <b>{r.estrazione.doppio_oro}</b>
+                                    </span>
+                                  </div>
+                                )}
+                                {r.estrazione.numeri_extra && r.estrazione.numeri_extra.length > 0 && (
+                                  <div className="mt-1">
+                                    <span className="text-[10px] text-lotto-muted">Extra: </span>
+                                    <span className="text-[10px] text-lotto-muted/60">
+                                      {r.estrazione.numeri_extra.join(", ")}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Footer: match details + vincita */}
+                            <div className="mt-3 pt-2 border-t border-[rgba(255,255,255,0.04)] flex items-center justify-between text-xs">
+                              <div className="flex gap-4 text-lotto-muted">
+                                <span>
+                                  Match base: <b className="text-lotto-text">{r.match}</b>
+                                </span>
+                                {r.match_extra !== undefined && (
+                                  <span>
+                                    Match extra: <b className="text-lotto-text">{r.match_extra}</b>
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex gap-4">
+                                {r.vincita > 0 && (
+                                  <span className="text-lotto-green font-bold">
+                                    Vincita: +{r.vincita.toFixed(2)} EUR
+                                  </span>
+                                )}
+                                <span
+                                  className={`font-bold ${
+                                    cumPnl >= 0 ? "text-lotto-green" : "text-lotto-red"
+                                  }`}
+                                >
+                                  Cum: {cumPnl >= 0 ? "+" : ""}{cumPnl.toFixed(2)} EUR
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+            </>
           )}
 
           {!riepilogo && storico.length === 0 && (
@@ -257,129 +403,7 @@ function TotalCard({
   );
 }
 
-function HistoryTable({ records }: { records: PaperTradingRecord[] }) {
-  // Calculate cumulative P&L
-  let cumPnl = 0;
-  const withCum = records.map((r) => {
-    const net = r.vincita - r.costo;
-    cumPnl += net;
-    return { ...r, cumPnl };
-  });
-
-  return (
-    <div className="glass overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[rgba(255,255,255,0.06)]">
-              <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest whitespace-nowrap">
-                Data
-              </th>
-              <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest">
-                Gioco
-              </th>
-              <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest">
-                Previsione
-              </th>
-              <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest">
-                Estrazione
-              </th>
-              <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest">
-                Match
-              </th>
-              <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest">
-                Stato
-              </th>
-              <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest whitespace-nowrap">
-                Vincita
-              </th>
-              <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest whitespace-nowrap">
-                P&amp;L cum.
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {withCum.map((r, idx) => {
-              const config = GAME_CONFIG[r.gioco] ?? GAME_CONFIG.lotto;
-              const isWin = r.stato === "VINTA";
-              const isLoss = r.stato === "PERSA";
-              const rowBg = isWin
-                ? "bg-lotto-green/5"
-                : isLoss
-                ? "bg-lotto-red/5"
-                : idx % 2 === 0
-                ? ""
-                : "bg-[rgba(255,255,255,0.01)]";
-
-              return (
-                <tr
-                  key={idx}
-                  className={`border-b border-[rgba(255,255,255,0.04)] last:border-0 hover:bg-[rgba(255,255,255,0.03)] transition-colors ${rowBg}`}
-                >
-                  <td className="px-4 py-3 text-lotto-muted font-mono text-xs whitespace-nowrap">
-                    {formatDate(r.data)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border ${config.bgClass} ${config.colorClass} ${config.borderClass}`}
-                    >
-                      {config.label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1 flex-wrap">
-                      {r.previsione.numeri.map((n, i) => (
-                        <NumberBall key={i} number={n} size="sm" />
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1 flex-wrap">
-                      {(r.estrazione.numeri ?? []).slice(0, 8).map((n, i) => (
-                        <NumberBall key={i} number={n} size="sm" />
-                      ))}
-                      {(r.estrazione.numeri ?? []).length > 8 && (
-                        <span className="text-[10px] text-lotto-muted self-center">
-                          +{(r.estrazione.numeri ?? []).length - 8}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`text-sm font-black ${
-                        r.match > 0 ? "text-lotto-green" : "text-lotto-muted"
-                      }`}
-                    >
-                      {r.match}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatoBadge stato={r.stato} />
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">
-                    <span className={r.vincita > 0 ? "text-lotto-green font-bold" : "text-lotto-muted"}>
-                      {r.vincita > 0 ? `+${r.vincita.toFixed(2)}` : "—"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">
-                    <span
-                      className={`font-bold ${
-                        r.cumPnl >= 0 ? "text-lotto-green" : "text-lotto-red"
-                      }`}
-                    >
-                      {formatCurrency(r.cumPnl)}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+/* HistoryTable removed — replaced by per-game detailed card blocks */
 
 function StatoBadge({ stato }: { stato: string }) {
   const config =

@@ -137,10 +137,18 @@ export interface GamePnL {
 
 export interface PaperTradingRecord {
   data: string;
+  ora?: string;
   gioco: string;
-  previsione: { numeri: number[]; metodo?: string; ruota?: string };
-  estrazione: { numeri?: number[] };
+  previsione: { numeri: number[]; metodo?: string; ruota?: string; tipo?: string };
+  estrazione: {
+    numeri?: number[];
+    ruota?: string;
+    numero_oro?: number;
+    doppio_oro?: number;
+    numeri_extra?: number[];
+  };
   match: number;
+  match_extra?: number;
   stato: string;
   costo: number;
   vincita: number;
