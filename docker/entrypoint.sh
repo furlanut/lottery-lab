@@ -16,7 +16,7 @@ def run_update():
                          capture_output=True, text=True)
         except Exception:
             pass
-        time.sleep(600)  # every 10 minutes
+        time.sleep(300)  # every 5 minutes
 
 t = threading.Thread(target=run_update, daemon=True)
 t.start()
