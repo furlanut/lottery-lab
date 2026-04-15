@@ -709,6 +709,88 @@ def diecielotto_previsioni_storico(limit: int = Query(50, ge=1, le=500)):
         session.close()
 
 
+@app.get(f"{PREFIX}/diecielotto/storico-completo")
+def diecielotto_storico_completo(limit: int = Query(100, ge=1, le=1000)):
+    """Storico 10eLotto: ogni estrazione con previsione abbinata e P&L."""
+    session = get_session()
+    try:
+        # Get all predictions ordered by date+ora
+        preds = (
+            session.execute(
+                select(DiecieLottoPrevisione)
+                .order_by(
+                    DiecieLottoPrevisione.data_generazione.desc(),
+                )
+                .limit(limit)
+            )
+            .scalars()
+            .all()
+        )
+
+        records = []
+        premi_base = {3: 2.0, 4: 10.0, 5: 100.0, 6: 1000.0}
+        premi_extra = {1: 1.0, 2: 1.0, 3: 7.0, 4: 20.0, 5: 200.0, 6: 2000.0}
+        costo = 2.0
+
+        for p in preds:
+            numeri_prev = p.numeri if isinstance(p.numeri, list) else list(p.numeri)
+
+            # Find matching extraction
+            estr_data = {}
+            if p.ora_generazione:
+                estr = session.execute(
+                    select(DiecieLottoEstrazione).where(
+                        DiecieLottoEstrazione.data == p.data_generazione,
+                        DiecieLottoEstrazione.ora == p.ora_generazione,
+                    )
+                ).scalar_one_or_none()
+                if estr:
+                    pick = set(numeri_prev)
+                    drawn = set(estr.numeri)
+                    extra_set = set(estr.numeri_extra)
+                    mb = len(pick & drawn)
+                    rem = pick - drawn
+                    me = len(rem & extra_set)
+                    vb = premi_base.get(mb, 0.0)
+                    ve = premi_extra.get(me, 0.0)
+                    vincita = vb + ve
+
+                    estr_data = {
+                        "concorso": estr.concorso,
+                        "data": str(estr.data),
+                        "ora": str(estr.ora),
+                        "numeri": estr.numeri,
+                        "numero_oro": estr.numero_oro,
+                        "doppio_oro": estr.doppio_oro,
+                        "numeri_extra": estr.numeri_extra,
+                        "match_base": mb,
+                        "match_extra": me,
+                        "numeri_azzeccati": sorted(pick & drawn),
+                        "numeri_azzeccati_extra": sorted(rem & extra_set),
+                        "vincita_base": vb,
+                        "vincita_extra": ve,
+                        "vincita_totale": vincita,
+                        "pnl": vincita - costo,
+                    }
+
+            records.append(
+                {
+                    "previsione": {
+                        "numeri": numeri_prev,
+                        "metodo": p.segnale,
+                        "score": p.score,
+                        "stato": p.stato,
+                    },
+                    "estrazione": estr_data,
+                    "costo": costo,
+                }
+            )
+
+        return records
+    finally:
+        session.close()
+
+
 # ---------------------------------------------------------------------------
 # Paper Trading endpoints
 # ---------------------------------------------------------------------------

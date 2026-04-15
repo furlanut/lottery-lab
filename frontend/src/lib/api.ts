@@ -119,6 +119,34 @@ export interface DiecieLottoStatus {
 }
 
 // Paper Trading types
+// 10eLotto storico completo
+export interface DiecieLottoRecord {
+  previsione: {
+    numeri: number[];
+    metodo: string;
+    score: number;
+    stato: string;
+  };
+  estrazione: {
+    concorso?: number;
+    data?: string;
+    ora?: string;
+    numeri?: number[];
+    numero_oro?: number;
+    doppio_oro?: number;
+    numeri_extra?: number[];
+    match_base?: number;
+    match_extra?: number;
+    numeri_azzeccati?: number[];
+    numeri_azzeccati_extra?: number[];
+    vincita_base?: number;
+    vincita_extra?: number;
+    vincita_totale?: number;
+    pnl?: number;
+  };
+  costo: number;
+}
+
 export interface PaperTradingRiepilogo {
   giochi: Record<string, GamePnL>;
   totale: {
