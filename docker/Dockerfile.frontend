@@ -4,7 +4,7 @@ WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
-# In prod, API is on same domain behind nginx (/api/v1)
+# Client-side API URL (relative, proxied by NPM)
 ENV NEXT_PUBLIC_API_URL=/api/v1
 RUN npm run build
 
@@ -13,6 +13,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
+# Server-side (SSR) fetches go to backend container directly
+ENV API_URL_INTERNAL=http://lottery-backend:8000/api/v1
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 

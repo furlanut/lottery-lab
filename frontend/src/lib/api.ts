@@ -1,4 +1,9 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// Server-side (SSR): use internal Docker URL to reach backend container
+// Client-side (browser): use relative /api/v1 (proxied by NPM)
+const isServer = typeof window === 'undefined';
+const API_BASE = isServer
+  ? (process.env.API_URL_INTERNAL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1')
+  : (process.env.NEXT_PUBLIC_API_URL || '/api/v1');
 
 export async function fetchAPI<T>(endpoint: string): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {

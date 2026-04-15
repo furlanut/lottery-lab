@@ -36,6 +36,9 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.frontend
     container_name: lottery-frontend
+    environment:
+      API_URL_INTERNAL: http://lottery-backend:8000/api/v1
+      NEXT_PUBLIC_API_URL: /api/v1
     ports:
       - "8880:3000"
     depends_on:
