@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --bg: #050510;
-  --surface: rgba(255, 255, 255, 0.03);
-  --surface-hover: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.15);
+  --bg: #0c0c1d;
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.12);
+  --border-hover: rgba(255, 255, 255, 0.20);
   --text: #e8eaf6;
-  --text-muted: #6b7280;
+  --text-muted: #8b92a8;
   --blue: #4f6ef7;
   --purple: #8b5cf6;
   --green: #10b981;
@@ -44,8 +44,8 @@ body {
 .glass {
   background: var(--surface);
   border: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 16px;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
@@ -196,7 +196,7 @@ body {
 
 /* Table row alternating */
 .table-row-alt:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* Sidebar active indicator */

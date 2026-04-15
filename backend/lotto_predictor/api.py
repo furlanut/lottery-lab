@@ -15,12 +15,13 @@ from zoneinfo import ZoneInfo
 
 # Import VinciCasa and 10eLotto models to register them in the shared Base metadata
 from diecielotto.models.database import DiecieLottoEstrazione, DiecieLottoPrevisione
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select, text
 from vincicasa.models.database import VinciCasaEstrazione, VinciCasaPrevisione
 
+from lotto_predictor.auth import VALID_PASS, VALID_USER, create_token, verify_token
 from lotto_predictor.config import settings
 from lotto_predictor.models.database import (
     Estrazione,
@@ -183,6 +184,25 @@ app.add_middleware(
 )
 
 PREFIX = settings.api_prefix
+
+
+# ---------------------------------------------------------------------------
+# Auth endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.post(f"{PREFIX}/auth/login")
+def login(body: dict) -> dict:
+    """Login con credenziali hardcoded. Restituisce JWT Bearer token."""
+    if body.get("username") == VALID_USER and body.get("password") == VALID_PASS:
+        return {"token": create_token(VALID_USER), "username": VALID_USER}
+    raise HTTPException(status_code=401, detail="Credenziali non valide")
+
+
+@app.get(f"{PREFIX}/auth/me")
+def auth_me(user: str = Depends(verify_token)) -> dict:
+    """Restituisce l'utente corrente (richiede token valido)."""
+    return {"username": user}
 
 
 # ---------------------------------------------------------------------------
@@ -714,7 +734,7 @@ def paper_trading_storico(
 
 
 @app.post(f"{PREFIX}/paper-trading/run")
-def paper_trading_run():
+def paper_trading_run(user: str = Depends(verify_token)):
     """Genera e salva le previsioni del giorno per tutti i giochi."""
     from paper_trading.service import (
         paper_trade_diecielotto,
@@ -730,7 +750,7 @@ def paper_trading_run():
 
 
 @app.post(f"{PREFIX}/paper-trading/verifica")
-def paper_trading_verifica():
+def paper_trading_verifica(user: str = Depends(verify_token)):
     """Verifica le previsioni attive contro le ultime estrazioni."""
     from paper_trading.service import (
         verifica_diecielotto,

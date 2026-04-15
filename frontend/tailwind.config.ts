@@ -9,9 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "lotto-bg": "#050510",
-        "lotto-surface": "rgba(255,255,255,0.03)",
-        "lotto-border": "rgba(255,255,255,0.08)",
+        "lotto-bg": "#0c0c1d",
+        "lotto-surface": "rgba(255,255,255,0.05)",
+        "lotto-border": "rgba(255,255,255,0.12)",
         "lotto-blue": "#4f6ef7",
         "lotto-purple": "#8b5cf6",
         "lotto-green": "#10b981",
@@ -19,16 +19,16 @@ const config: Config = {
         "lotto-red": "#f43f5e",
         "lotto-amber": "#f59e0b",
         "lotto-text": "#e8eaf6",
-        "lotto-muted": "#6b7280",
+        "lotto-muted": "#8b92a8",
         // legacy aliases so old classes still compile
         background: "var(--bg)",
         foreground: "var(--text)",
-        "lottery-dark": "#050510",
-        "lottery-card": "rgba(255,255,255,0.03)",
+        "lottery-dark": "#0c0c1d",
+        "lottery-card": "rgba(255,255,255,0.05)",
         "lottery-blue": "#4f6ef7",
         "lottery-green": "#10b981",
         "lottery-red": "#f43f5e",
-        "lottery-card-hover": "rgba(255,255,255,0.06)",
+        "lottery-card-hover": "rgba(255,255,255,0.08)",
       },
     },
   },
