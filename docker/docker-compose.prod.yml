@@ -24,7 +24,7 @@ services:
       DATABASE_URL: postgresql://lotto:LotteryLab2026!@db:5432/lotto_convergent
       API_HOST: 0.0.0.0
       API_PORT: "8000"
-    command: ["/entrypoint.sh"]
+    command: ["bash", "-c", "service cron start; python3 /app/backend/scheduler.py & exec uvicorn lotto_predictor.api:app --host 0.0.0.0 --port 8000"]
     ports:
       - "8881:8000"
     depends_on:
