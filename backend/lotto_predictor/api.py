@@ -735,14 +735,31 @@ def diecielotto_storico_completo(limit: int = Query(100, ge=1, le=1000)):
         for p in preds:
             numeri_prev = p.numeri if isinstance(p.numeri, list) else list(p.numeri)
 
-            # Find matching extraction
+            # Find matching extraction (by date+ora if available, else closest)
             estr_data = {}
+            estr = None
             if p.ora_generazione:
                 estr = session.execute(
                     select(DiecieLottoEstrazione).where(
                         DiecieLottoEstrazione.data == p.data_generazione,
                         DiecieLottoEstrazione.ora == p.ora_generazione,
                     )
+                ).scalar_one_or_none()
+            if estr is None and p.data_esito:
+                # Fallback: find any extraction on the esito date
+                estr = session.execute(
+                    select(DiecieLottoEstrazione)
+                    .where(DiecieLottoEstrazione.data == p.data_esito)
+                    .order_by(DiecieLottoEstrazione.ora.desc())
+                    .limit(1)
+                ).scalar_one_or_none()
+            if estr is None:
+                # Last fallback: closest extraction to generation date
+                estr = session.execute(
+                    select(DiecieLottoEstrazione)
+                    .where(DiecieLottoEstrazione.data == p.data_generazione)
+                    .order_by(DiecieLottoEstrazione.ora.desc())
+                    .limit(1)
                 ).scalar_one_or_none()
                 if estr:
                     pick = set(numeri_prev)
