@@ -4,7 +4,7 @@ WORKDIR /app
 
 # System deps + cron
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc libpq-dev cron && \
+    gcc libpq-dev cron procps && \
     rm -rf /var/lib/apt/lists/*
 
 # Python deps
@@ -12,15 +12,15 @@ COPY pyproject.toml ./
 COPY backend/ ./backend/
 RUN pip install --no-cache-dir -e ".[dev]" 2>/dev/null || pip install --no-cache-dir -e .
 
-# Cron setup: auto-update every 10 minutes
+# Cron setup
 RUN echo "*/5 * * * * cd /app && /usr/local/bin/python3 backend/auto_update.py >> /var/log/lottery-cron.log 2>&1" > /etc/cron.d/lottery-lab \
     && chmod 0644 /etc/cron.d/lottery-lab \
     && crontab /etc/cron.d/lottery-lab \
     && touch /var/log/lottery-cron.log
 
-# Entrypoint: start cron + uvicorn
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Start script
+RUN printf '#!/bin/sh\nservice cron start\npython3 /app/backend/scheduler.py &\nexec uvicorn lotto_predictor.api:app --host 0.0.0.0 --port 8000\n' > /start.sh \
+    && chmod +x /start.sh
 
 EXPOSE 8000
-CMD ["/entrypoint.sh"]
+CMD ["/bin/sh", "/start.sh"]
