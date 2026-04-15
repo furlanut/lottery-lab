@@ -761,34 +761,36 @@ def diecielotto_storico_completo(limit: int = Query(100, ge=1, le=1000)):
                     .order_by(DiecieLottoEstrazione.ora.desc())
                     .limit(1)
                 ).scalar_one_or_none()
-                if estr:
-                    pick = set(numeri_prev)
-                    drawn = set(estr.numeri)
-                    extra_set = set(estr.numeri_extra)
-                    mb = len(pick & drawn)
-                    rem = pick - drawn
-                    me = len(rem & extra_set)
-                    vb = premi_base.get(mb, 0.0)
-                    ve = premi_extra.get(me, 0.0)
-                    vincita = vb + ve
 
-                    estr_data = {
-                        "concorso": estr.concorso,
-                        "data": str(estr.data),
-                        "ora": str(estr.ora),
-                        "numeri": estr.numeri,
-                        "numero_oro": estr.numero_oro,
-                        "doppio_oro": estr.doppio_oro,
-                        "numeri_extra": estr.numeri_extra,
-                        "match_base": mb,
-                        "match_extra": me,
-                        "numeri_azzeccati": sorted(pick & drawn),
-                        "numeri_azzeccati_extra": sorted(rem & extra_set),
-                        "vincita_base": vb,
-                        "vincita_extra": ve,
-                        "vincita_totale": vincita,
-                        "pnl": vincita - costo,
-                    }
+            # Build estr_data if we found any extraction
+            if estr:
+                pick = set(numeri_prev)
+                drawn = set(estr.numeri)
+                extra_set = set(estr.numeri_extra)
+                mb = len(pick & drawn)
+                rem = pick - drawn
+                me = len(rem & extra_set)
+                vb = premi_base.get(mb, 0.0)
+                ve = premi_extra.get(me, 0.0)
+                vincita = vb + ve
+
+                estr_data = {
+                    "concorso": estr.concorso,
+                    "data": str(estr.data),
+                    "ora": str(estr.ora),
+                    "numeri": estr.numeri,
+                    "numero_oro": estr.numero_oro,
+                    "doppio_oro": estr.doppio_oro,
+                    "numeri_extra": estr.numeri_extra,
+                    "match_base": mb,
+                    "match_extra": me,
+                    "numeri_azzeccati": sorted(pick & drawn),
+                    "numeri_azzeccati_extra": sorted(rem & extra_set),
+                    "vincita_base": vb,
+                    "vincita_extra": ve,
+                    "vincita_totale": vincita,
+                    "pnl": vincita - costo,
+                }
 
             records.append(
                 {
