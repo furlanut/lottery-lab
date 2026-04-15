@@ -46,14 +46,19 @@ function NextDrawTimer() {
     const iv = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
-          // Auto-refresh on draw
-          setTimeout(() => router.refresh(), 5000);
+          // Wait 20s for backend to scrape, then refresh
+          setTimeout(() => router.refresh(), 20000);
           return 300;
         }
         return prev - 1;
       });
     }, 1000);
-    return () => clearInterval(iv);
+    // Also poll every 60s as backup
+    const poll = setInterval(() => router.refresh(), 60000);
+    return () => {
+      clearInterval(iv);
+      clearInterval(poll);
+    };
   }, [router]);
 
   const mins = Math.floor(secondsLeft / 60);

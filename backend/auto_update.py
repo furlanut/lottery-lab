@@ -17,15 +17,28 @@ log = logging.getLogger("auto-update")
 
 
 def update_diecielotto():
-    """Scrape latest 10eLotto extractions from lottologia API."""
+    """Scrape latest 10eLotto extractions from live + daily API."""
     try:
-        import httpx
+        from diecielotto.ingestor.scraper import scarica_ultime_estrazioni
         from diecielotto.ingestor.service import inserisci_estrazioni
         from lotto_predictor.models.database import get_session
 
-        api_url = "https://lottologia.com/api/metalotto/data/lottery/10elotto5minuti/draw/bydate"
         session = get_session()
         total = 0
+
+        # 1. Live endpoint (last ~15 extractions, real-time)
+        try:
+            live = scarica_ultime_estrazioni()
+            if live:
+                stats = inserisci_estrazioni(session, live)
+                total += stats["inseriti"]
+        except Exception as e:
+            log.warning("Live scrape failed: %s", e)
+
+        # 2. Daily archive (backfill today + yesterday)
+        import httpx
+
+        api_url = "https://lottologia.com/api/metalotto/data/lottery/10elotto5minuti/draw/bydate"
         for i in range(2):
             d = date.today() - timedelta(days=i)
             try:
