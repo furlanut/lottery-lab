@@ -3,7 +3,7 @@
 import subprocess
 import time
 
-print("Scheduler started: auto_update every 300s", flush=True)
+print("Scheduler started: auto_update every 60s", flush=True)
 
 while True:
     try:
@@ -14,4 +14,4 @@ while True:
         )
     except Exception as e:
         print(f"Scheduler error: {e}", flush=True)
-    time.sleep(300)
+    time.sleep(60)

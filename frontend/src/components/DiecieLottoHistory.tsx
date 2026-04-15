@@ -46,15 +46,15 @@ function NextDrawTimer() {
     const iv = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
-          // Wait 20s for backend to scrape, then refresh
-          setTimeout(() => router.refresh(), 20000);
+          // Wait 15s for backend to scrape, then hard reload
+          setTimeout(() => window.location.reload(), 15000);
           return 300;
         }
         return prev - 1;
       });
     }, 1000);
-    // Also poll every 60s as backup
-    const poll = setInterval(() => router.refresh(), 60000);
+    // Hard reload every 90s as backup
+    const poll = setInterval(() => window.location.reload(), 90000);
     return () => {
       clearInterval(iv);
       clearInterval(poll);
