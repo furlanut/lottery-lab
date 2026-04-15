@@ -16,9 +16,7 @@ services:
     restart: unless-stopped
 
   backend:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.backend
+    image: ghcr.io/furlanut/lottery-lab/backend:latest
     container_name: lottery-backend
     environment:
       DATABASE_URL: postgresql://lotto:LotteryLab2026!@db:5432/lotto_convergent
@@ -32,10 +30,10 @@ services:
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.frontend
+    image: ghcr.io/furlanut/lottery-lab/frontend:latest
     container_name: lottery-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: https://lottery-api.fl3.org/api/v1
     ports:
       - "8880:3000"
     depends_on:
