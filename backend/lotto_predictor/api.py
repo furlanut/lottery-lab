@@ -811,6 +811,111 @@ def diecielotto_storico_completo(limit: int = Query(100, ge=1, le=1000)):
 
 
 # ---------------------------------------------------------------------------
+# 10eLotto 10 numeri endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.get(f"{PREFIX}/diecielotto10/previsione")
+def diecielotto10_previsione():
+    """Genera previsione 10eLotto con 10 numeri."""
+    from diecielotto.engine10 import genera_previsione_10
+
+    prev = genera_previsione_10()
+    return {
+        "numeri": prev.numeri,
+        "metodo": prev.metodo,
+        "score": prev.score,
+        "costo": prev.costo,
+        "configurazione": prev.configurazione,
+        "dettagli": prev.dettagli,
+    }
+
+
+@app.get(f"{PREFIX}/diecielotto10/storico-completo")
+def diecielotto10_storico(limit: int = Query(100, ge=1, le=500)):
+    """Storico 10eLotto 10 numeri: retroattivo con P&L."""
+    from collections import Counter
+
+    from diecielotto.engine10 import PREMI_BASE_10, PREMI_EXTRA_10
+
+    session = get_session()
+    try:
+        all_estr = (
+            session.execute(
+                select(DiecieLottoEstrazione).order_by(
+                    DiecieLottoEstrazione.data, DiecieLottoEstrazione.ora
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        w = 100
+        if len(all_estr) < w + 1:
+            return []
+
+        # Generate retroactive predictions for last N extractions
+        start = max(w, len(all_estr) - limit)
+        records = []
+        costo = 2.0
+
+        for i in range(start, len(all_estr)):
+            estr = all_estr[i]
+
+            # Top 10 freq in previous W
+            freq = Counter()
+            for j in range(i - w, i):
+                for n in all_estr[j].numeri:
+                    freq[n] += 1
+            pick = sorted([n for n, _ in freq.most_common(10)])
+
+            # Verify
+            pick_set = set(pick)
+            drawn = set(estr.numeri)
+            extra_set = set(estr.numeri_extra)
+            mb = len(pick_set & drawn)
+            rem = pick_set - drawn
+            me = len(rem & extra_set)
+            vb = PREMI_BASE_10.get(mb, 0.0)
+            ve = PREMI_EXTRA_10.get(me, 0.0)
+            vincita = vb + ve
+
+            records.append(
+                {
+                    "previsione": {
+                        "numeri": pick,
+                        "metodo": "top10_freq",
+                        "configurazione": 10,
+                    },
+                    "estrazione": {
+                        "concorso": estr.concorso,
+                        "data": str(estr.data),
+                        "ora": str(estr.ora),
+                        "numeri": estr.numeri,
+                        "numero_oro": estr.numero_oro,
+                        "doppio_oro": estr.doppio_oro,
+                        "numeri_extra": estr.numeri_extra,
+                        "match_base": mb,
+                        "match_extra": me,
+                        "numeri_azzeccati": sorted(pick_set & drawn),
+                        "numeri_azzeccati_extra": sorted(rem & extra_set),
+                        "vincita_base": vb,
+                        "vincita_extra": ve,
+                        "vincita_totale": vincita,
+                        "pnl": vincita - costo,
+                    },
+                    "costo": costo,
+                }
+            )
+
+        # Return in reverse chronological order
+        records.reverse()
+        return records
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
 # Paper Trading endpoints
 # ---------------------------------------------------------------------------
 

@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Dice1, Home, Calendar, Timer, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Dice1, Home, Calendar, Timer, Hash, TrendingUp } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/lotto", label: "Lotto", icon: Dice1 },
   { href: "/vincicasa", label: "VinciCasa", icon: Home },
   { href: "/calendario", label: "Calendario", icon: Calendar },
-  { href: "/diecielotto", label: "10eLotto", icon: Timer },
+  { href: "/diecielotto", label: "10eL 6num", icon: Timer },
+  { href: "/diecielotto10", label: "10eL 10num", icon: Hash },
   { href: "/paper-trading", label: "P&L", icon: TrendingUp },
 ];
 
