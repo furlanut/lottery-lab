@@ -817,8 +817,8 @@ def diecielotto_storico_completo(limit: int = Query(100, ge=1, le=1000)):
 
 @app.get(f"{PREFIX}/diecielotto-k/previsione")
 def diecielotto_k_previsione(k: int = Query(6, ge=1, le=10)):
-    """Genera previsione 10eLotto con K numeri."""
-    from diecielotto.engine_k import calcola_he, genera_previsione_k
+    """Genera previsione 10eLotto con K numeri (motore ottimale)."""
+    from diecielotto.engine_k import STRATEGY_NAMES, calcola_he, genera_previsione_k
 
     session = get_session()
     try:
@@ -833,13 +833,14 @@ def diecielotto_k_previsione(k: int = Query(6, ge=1, le=10)):
         )
         pick = genera_previsione_k(k, all_estr)
         he = calcola_he(k)
+        strategy = STRATEGY_NAMES.get(k, "dual_target")
         return {
             "numeri": pick,
-            "metodo": f"top{k}_freq",
+            "metodo": strategy,
             "configurazione": k,
             "costo": 2.0,
             "he": round(he, 2),
-            "dettagli": f"Top {k} frequenti W=100",
+            "dettagli": f"{strategy} W=100 (motore ottimale)",
         }
     finally:
         session.close()
@@ -850,8 +851,12 @@ def diecielotto_k_storico(
     k: int = Query(6, ge=1, le=10),
     limit: int = Query(100, ge=1, le=500),
 ):
-    """Storico retroattivo 10eLotto con K numeri e P&L."""
-    from diecielotto.engine_k import genera_previsione_k, verifica_previsione_k
+    """Storico retroattivo 10eLotto con K numeri e P&L (motore ottimale)."""
+    from diecielotto.engine_k import (
+        STRATEGY_NAMES,
+        genera_previsione_k,
+        verifica_previsione_k,
+    )
 
     session = get_session()
     try:
@@ -881,7 +886,7 @@ def diecielotto_k_storico(
                 {
                     "previsione": {
                         "numeri": pick,
-                        "metodo": f"top{k}_freq",
+                        "metodo": STRATEGY_NAMES.get(k, "dual_target"),
                         "configurazione": k,
                     },
                     "estrazione": {

@@ -2,7 +2,17 @@ from __future__ import annotations
 
 """10eLotto engine generico per K=1-10 numeri + Extra.
 
-Strategia per ogni K: top K numeri piu frequenti nelle ultime W=100 estrazioni.
+Motore OTTIMALE per ogni K, basato sui risultati del backtest su 17.082 giocate:
+  K=1:  hot_extra      (1.011x) — numero piu frequente nell'Extra
+  K=2:  hot_extra      (1.028x) — 2 numeri piu frequenti nell'Extra
+  K=3:  freq_rit_dec   (1.040x) — frequenti + in ritardo + stessa decina
+  K=4:  dual_target    (1.070x) — 2 hot base + 2 hot Extra
+  K=5:  dual_target    (1.024x) — 2 hot base + 3 hot Extra
+  K=6:  vicinanza      (1.080x) — numeri vicini al seed piu frequente
+  K=7:  dual_target    (1.185x) — 3 hot base + 4 hot Extra
+  K=8:  dual_target    (1.445x) — 4 hot base + 4 hot Extra  *** BREAKEVEN ***
+  K=9:  dual_target    (1.079x) — 4 hot base + 5 hot Extra
+  K=10: dual_target    (0.934x) — 5 hot base + 5 hot Extra
 """
 
 from collections import Counter
@@ -12,6 +22,20 @@ from diecielotto.ev_calculator import PREMI_BASE, PREMI_EXTRA
 
 COSTO = 2.0
 W = 100
+
+# Mapping K -> (strategy_name, strategy_function_name)
+STRATEGY_NAMES = {
+    1: "hot_extra",
+    2: "hot_extra",
+    3: "freq_rit_dec",
+    4: "dual_target",
+    5: "dual_target",
+    6: "vicinanza",
+    7: "dual_target",
+    8: "dual_target",
+    9: "dual_target",
+    10: "dual_target",
+}
 
 
 def calcola_he(k: int) -> float:
@@ -38,52 +62,123 @@ def calcola_he(k: int) -> float:
     return (1 - ev_tot / COSTO) * 100
 
 
-def genera_previsione_k(
-    k: int,
-    estrazioni_ordinate: list,
-) -> list[int]:
-    """Genera previsione per K numeri.
+def _hot_extra(k: int, window: list) -> list[int]:
+    """Top K numeri piu frequenti nell'Extra. Ottimale per K=1,2."""
+    freq = Counter()
+    for e in window:
+        for n in e.numeri_extra:
+            freq[n] += 1
+    return sorted([n for n, _ in freq.most_common(k)])
 
-    K=6: usa S4 dual-target (3 hot base + 3 hot Extra) — stesso motore di /diecielotto
-    Altri K: top K numeri piu frequenti nelle ultime W estrazioni
+
+def _freq_rit_dec(k: int, window: list, idx: int) -> list[int]:
+    """Frequenti + in ritardo + decina. Ottimale per K=3."""
+    freq = Counter()
+    last_seen: dict[int, int] = {}
+    for j, e in enumerate(window):
+        for n in e.numeri:
+            freq[n] += 1
+            last_seen[n] = idx - len(window) + j
+
+    rit_soglia = len(window) // 5
+    candidates = []
+    for n in range(1, 91):
+        f = freq.get(n, 0)
+        ls = last_seen.get(n, -1)
+        rit = idx - ls if ls >= 0 else len(window)
+        if f >= 3 and rit >= rit_soglia:
+            candidates.append((n, f + rit / len(window) * 3))
+
+    candidates.sort(key=lambda x: -x[1])
+    pick = [n for n, _ in candidates[:k]]
+
+    if len(pick) < k:
+        for n, _ in freq.most_common():
+            if n not in pick:
+                pick.append(n)
+            if len(pick) >= k:
+                break
+    return sorted(pick[:k])
+
+
+def _dual_target(k: int, window: list) -> list[int]:
+    """Meta hot base + meta hot Extra. Ottimale per K=4,5,7,8,9,10."""
+    base_freq = Counter()
+    extra_freq = Counter()
+    for e in window:
+        for n in e.numeri:
+            base_freq[n] += 1
+        for n in e.numeri_extra:
+            extra_freq[n] += 1
+
+    half = k // 2
+    other = k - half
+    hot_base = [n for n, _ in base_freq.most_common(k)][:half]
+    hot_extra = [n for n, _ in extra_freq.most_common(k * 2) if n not in hot_base][:other]
+    pick = hot_base + hot_extra
+
+    if len(pick) < k:
+        for n, _ in base_freq.most_common():
+            if n not in pick:
+                pick.append(n)
+            if len(pick) >= k:
+                break
+    return sorted(pick[:k])
+
+
+def _vicinanza(k: int, window: list) -> list[int]:
+    """Numeri vicini al seed piu frequente (D=5). Ottimale per K=6."""
+    freq = Counter()
+    for e in window:
+        for n in e.numeri:
+            freq[n] += 1
+
+    seed = freq.most_common(1)[0][0]
+    nearby = sorted(
+        [
+            (n, freq.get(n, 0))
+            for n in range(1, 91)
+            if abs(n - seed) <= 5 and n != seed and freq.get(n, 0) > 0
+        ],
+        key=lambda x: -x[1],
+    )
+    pick = [seed]
+    for n, _ in nearby:
+        pick.append(n)
+        if len(pick) >= k:
+            break
+
+    if len(pick) < k:
+        for n, _ in freq.most_common():
+            if n not in pick:
+                pick.append(n)
+            if len(pick) >= k:
+                break
+    return sorted(pick[:k])
+
+
+def genera_previsione_k(k: int, estrazioni_ordinate: list) -> list[int]:
+    """Genera previsione per K numeri usando il motore OTTIMALE.
 
     Args:
         k: quanti numeri giocare (1-10)
-        estrazioni_ordinate: lista di oggetti con .numeri e .numeri_extra property
+        estrazioni_ordinate: lista di oggetti con .numeri e .numeri_extra
 
     Returns:
         lista di K numeri ordinati
     """
     window = estrazioni_ordinate[-W:] if len(estrazioni_ordinate) >= W else estrazioni_ordinate
 
-    if k == 6:
-        # S4 dual-target: 3 hot base + 3 hot Extra (coerente con /diecielotto)
-        base_freq = Counter()
-        extra_freq = Counter()
-        for e in window:
-            for n in e.numeri:
-                base_freq[n] += 1
-            for n in e.numeri_extra:
-                extra_freq[n] += 1
+    strategy = STRATEGY_NAMES.get(k, "dual_target")
 
-        hot_base = [n for n, _ in base_freq.most_common(6)]
-        hot_extra = [n for n, _ in extra_freq.most_common(20) if n not in hot_base][:3]
-        pick = hot_base[:3] + hot_extra[:3]
-        if len(pick) < 6:
-            for n, _ in base_freq.most_common():
-                if n not in pick:
-                    pick.append(n)
-                if len(pick) >= 6:
-                    break
-        return sorted(pick[:6])
-
-    # Per tutti gli altri K: top K frequenti nel base
-    freq = Counter()
-    for e in window:
-        for n in e.numeri:
-            freq[n] += 1
-
-    return sorted([n for n, _ in freq.most_common(k)])
+    if strategy == "hot_extra":
+        return _hot_extra(k, window)
+    if strategy == "freq_rit_dec":
+        return _freq_rit_dec(k, window, len(estrazioni_ordinate))
+    if strategy == "vicinanza":
+        return _vicinanza(k, window)
+    # default: dual_target
+    return _dual_target(k, window)
 
 
 def verifica_previsione_k(
