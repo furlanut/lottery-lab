@@ -30,7 +30,7 @@ class Previsione10eLotto:
 
 
 def genera_previsione(session: Optional[object] = None) -> Previsione10eLotto:
-    """Genera previsione con S4 dual-target W=100."""
+    """Genera previsione con vicinanza D=5 W=100 (motore ottimale K=6)."""
     own = session is None
     if own:
         session = get_session()
@@ -48,20 +48,28 @@ def genera_previsione(session: Optional[object] = None) -> Previsione10eLotto:
         if len(rows) < 10:
             return Previsione10eLotto(numeri=[1, 2, 3, 4, 5, 6], dettagli="Dati insufficienti")
 
-        base_freq: Counter = Counter()
-        extra_freq: Counter = Counter()
+        freq: Counter = Counter()
         for r in rows:
             for n in r.numeri:
-                base_freq[n] += 1
-            for n in r.numeri_extra:
-                extra_freq[n] += 1
+                freq[n] += 1
 
-        hot_base = [n for n, _ in base_freq.most_common(6)]
-        hot_extra = [n for n, _ in extra_freq.most_common(20) if n not in hot_base][:3]
-        pick = hot_base[:3] + hot_extra[:3]
-
+        # Vicinanza: seed = piu frequente, poi i 5 piu vicini (D=5) e frequenti
+        seed = freq.most_common(1)[0][0]
+        nearby = sorted(
+            [
+                (n, freq.get(n, 0))
+                for n in range(1, 91)
+                if abs(n - seed) <= 5 and n != seed and freq.get(n, 0) > 0
+            ],
+            key=lambda x: -x[1],
+        )
+        pick = [seed]
+        for n, _ in nearby:
+            pick.append(n)
+            if len(pick) >= 6:
+                break
         if len(pick) < 6:
-            for n, _ in base_freq.most_common():
+            for n, _ in freq.most_common():
                 if n not in pick:
                     pick.append(n)
                 if len(pick) >= 6:
@@ -69,8 +77,9 @@ def genera_previsione(session: Optional[object] = None) -> Previsione10eLotto:
 
         return Previsione10eLotto(
             numeri=sorted(pick[:6]),
-            dettagli=f"S4 dual-target W={W}: 3 hot base + 3 hot extra",
-            score=1.103,
+            metodo="vicinanza",
+            dettagli=f"vicinanza D=5 W={W} (motore ottimale K=6, ratio 1.080x)",
+            score=1.080,
         )
     finally:
         if own:

@@ -135,23 +135,33 @@ def update_diecielotto():
                 continue
 
             # Generate prediction using W previous extractions
-            base_freq = Counter()
-            extra_freq = Counter()
+            # Vicinanza D=5 (motore ottimale K=6, ratio 1.080x)
+            freq = Counter()
             for j in range(idx - W, idx):
                 for n in all_estr[j].numeri:
-                    base_freq[n] += 1
-                for n in all_estr[j].numeri_extra:
-                    extra_freq[n] += 1
+                    freq[n] += 1
 
-            hot_base = [n for n, _ in base_freq.most_common(6)]
-            hot_extra = [n for n, _ in extra_freq.most_common(20) if n not in hot_base][:3]
-            pick = sorted(hot_base[:3] + hot_extra[:3])
+            seed = freq.most_common(1)[0][0]
+            nearby = sorted(
+                [
+                    (n, freq.get(n, 0))
+                    for n in range(1, 91)
+                    if abs(n - seed) <= 5 and n != seed and freq.get(n, 0) > 0
+                ],
+                key=lambda x: -x[1],
+            )
+            pick = [seed]
+            for n, _ in nearby:
+                pick.append(n)
+                if len(pick) >= 6:
+                    break
             if len(pick) < 6:
-                for n, _ in base_freq.most_common():
+                for n, _ in freq.most_common():
                     if n not in pick:
                         pick.append(n)
                     if len(pick) >= 6:
                         break
+            pick = sorted(pick[:6])
 
             # Verify against this extraction
             pick_set = set(pick)
@@ -167,13 +177,13 @@ def update_diecielotto():
             p = DiecieLottoPrevisione(
                 data_generazione=estr.data,
                 ora_generazione=estr.ora,
-                segnale="S4_dual_target",
+                segnale="vicinanza",
                 configurazione=6,
                 numeri=pick,
                 opzioni={"extra": True},
                 score=1.103,
                 dettagli={
-                    "metodo": "S4_dual_target",
+                    "metodo": "vicinanza",
                     "W": W,
                     "match_base": mb,
                     "match_extra": me,

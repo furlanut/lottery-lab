@@ -27,7 +27,7 @@ export default function DiecieLottoLabPage() {
     try {
       const [prevRes, storRes] = await Promise.all([
         fetch(`${API_BASE}/diecielotto-k/previsione?k=${numK}`),
-        fetch(`${API_BASE}/diecielotto-k/storico?k=${numK}&limit=100`),
+        fetch(`${API_BASE}/diecielotto-k/storico?k=${numK}&limit=500`),
       ]);
       if (prevRes.ok) setPrevisione(await prevRes.json());
       if (storRes.ok) setStorico(await storRes.json());
@@ -110,13 +110,19 @@ export default function DiecieLottoLabPage() {
                   <p className="text-[11px] text-lotto-muted uppercase tracking-widest mb-1">
                     Previsione {k} numeri + Extra
                   </p>
-                  <span className="text-xs px-2 py-0.5 rounded bg-lotto-amber/10 border border-lotto-amber/20 text-lotto-amber font-bold">
-                    HE {previsione.he}%
-                  </span>
+                  <div className="flex gap-2 flex-wrap mt-1">
+                    <span className="text-xs px-2 py-0.5 rounded bg-lotto-amber/10 border border-lotto-amber/20 text-lotto-amber font-bold">
+                      HE {previsione.he}%
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded bg-lotto-blue/10 border border-lotto-blue/20 text-lotto-blue font-bold">
+                      {previsione.metodo}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-xs text-lotto-muted">
-                  Costo: <b className="text-lotto-amber">EUR 2.00</b>
-                </span>
+                <div className="text-right text-xs text-lotto-muted">
+                  <div>Costo: <b className="text-lotto-amber">EUR 2.00</b></div>
+                  <div className="mt-1 text-[10px]">{previsione.dettagli}</div>
+                </div>
               </div>
               <div className="flex gap-2 flex-wrap">
                 {previsione.numeri.map((n) => (
@@ -154,7 +160,7 @@ export default function DiecieLottoLabPage() {
 
           {/* Storico */}
           <div className="space-y-2">
-            {withCum.slice(0, 50).map((r, idx) => {
+            {withCum.map((r, idx) => {
               const e = r.estrazione;
               const vincita = e?.vincita_totale ?? 0;
               const pnl = e?.pnl ?? -r.costo;
@@ -201,7 +207,9 @@ export default function DiecieLottoLabPage() {
 
                   {/* Previsione */}
                   <div className="mb-2">
-                    <span className="text-[10px] text-lotto-muted uppercase">Prev: </span>
+                    <span className="text-[10px] text-lotto-muted uppercase">
+                      {r.previsione.metodo} →{" "}
+                    </span>
                     <span className="inline-flex gap-1 flex-wrap">
                       {r.previsione.numeri.map((n, i) => (
                         <div key={i} className="flex flex-col items-center gap-0.5">
