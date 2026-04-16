@@ -7,6 +7,23 @@ import { FlaskConical } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
+const STRATEGY_DESCRIPTIONS: Record<string, string> = {
+  hot_extra:
+    "Seleziona i K numeri piu frequenti nelle estrazioni Extra (15 numeri dai 70 rimanenti). I numeri che appaiono spesso nell'Extra tendono a restare nel pool dei 70.",
+  freq_rit_dec:
+    "Combina frequenza e ritardo: numeri frequenti MA non usciti recentemente, preferendo quelli nella stessa decina. Metodo derivato dal paper Lotto.",
+  dual_target:
+    "Divide i numeri tra Base e Extra: meta numeri caldi nel base + meta numeri caldi nell'Extra. Sfrutta i due pool diversi del gioco.",
+  vicinanza:
+    "Identifica il numero piu frequente (seed) e seleziona i numeri piu vicini (distanza <=5). Produce numeri raggruppati. Motore ottimale per K=6.",
+  cold_zero:
+    "Seleziona numeri freddi (meno frequenti) per massimizzare P(0 match). Per K=7-9 il premio 0/K paga 1-2 EUR.",
+  mix_hot_cold:
+    "Meta numeri caldi + meta numeri freddi. Copre entrambe le possibilita: match alto E match zero.",
+  hot:
+    "Seleziona i K numeri piu frequenti nelle ultime 100 estrazioni base. Strategia classica.",
+};
+
 interface Previsione {
   numeri: number[];
   metodo: string;
@@ -27,7 +44,7 @@ export default function DiecieLottoLabPage() {
     try {
       const [prevRes, storRes] = await Promise.all([
         fetch(`${API_BASE}/diecielotto-k/previsione?k=${numK}`),
-        fetch(`${API_BASE}/diecielotto-k/storico?k=${numK}&limit=500`),
+        fetch(`${API_BASE}/diecielotto-k/storico?k=${numK}&limit=2000`),
       ]);
       if (prevRes.ok) setPrevisione(await prevRes.json());
       if (storRes.ok) setStorico(await storRes.json());
@@ -59,6 +76,10 @@ export default function DiecieLottoLabPage() {
   const wins = storico.filter(
     (r) => (r.estrazione?.vincita_totale ?? 0) > 0
   ).length;
+  const maxWin = Math.max(
+    0,
+    ...storico.map((r) => r.estrazione?.vincita_totale ?? 0)
+  );
 
   return (
     <div className="space-y-8">
@@ -132,8 +153,20 @@ export default function DiecieLottoLabPage() {
             </div>
           )}
 
+          {/* Spiegazione metodo */}
+          {previsione && (
+            <div className="glass p-4 border-l-2 border-lotto-blue/40">
+              <p className="text-[11px] text-lotto-blue uppercase tracking-widest font-bold mb-1">
+                {previsione.metodo}
+              </p>
+              <p className="text-xs text-lotto-muted leading-relaxed">
+                {STRATEGY_DESCRIPTIONS[previsione.metodo] ?? previsione.dettagli}
+              </p>
+            </div>
+          )}
+
           {/* Summary */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             <div className="glass p-3 text-center">
               <p className="text-[10px] text-lotto-muted uppercase">Giocate</p>
               <p className="text-lg font-black text-lotto-text">{storico.length}</p>
@@ -154,6 +187,12 @@ export default function DiecieLottoLabPage() {
               <p className="text-[10px] text-lotto-muted uppercase">P&L</p>
               <p className={`text-lg font-black ${totalPnl >= 0 ? "text-lotto-green" : "text-lotto-red"}`}>
                 {totalPnl >= 0 ? "+" : ""}{totalPnl.toFixed(2)}€
+              </p>
+            </div>
+            <div className="glass p-3 text-center">
+              <p className="text-[10px] text-lotto-muted uppercase">Max vincita</p>
+              <p className="text-lg font-black text-lotto-amber">
+                {maxWin.toFixed(2)}€
               </p>
             </div>
           </div>

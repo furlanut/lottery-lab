@@ -713,21 +713,66 @@ def diecielotto_previsioni_storico(limit: int = Query(50, ge=1, le=500)):
 def diecielotto_metodi():
     """Lista dei metodi predittivi disponibili per K=6."""
     return [
-        {"id": "vicinanza", "label": "Vicinanza D=5", "desc": "Seed + 5 vicini (1.080x)"},
-        {"id": "dual_target", "label": "Dual Target", "desc": "3 hot base + 3 hot extra (1.059x)"},
-        {"id": "hot", "label": "Hot Numbers", "desc": "Top 6 frequenti (0.950x)"},
-        {"id": "cold", "label": "Cold Numbers", "desc": "6 meno frequenti (0.990x)"},
+        {
+            "id": "vicinanza",
+            "label": "Vicinanza D=5",
+            "desc": "Seed + 5 vicini (1.080x)",
+            "spiegazione": (
+                "Identifica il numero piu frequente nelle ultime 100 estrazioni (il 'seed'), "
+                "poi seleziona i 5 numeri piu vicini ad esso (distanza massima 5 posizioni) "
+                "che sono anche frequenti. Produce una sestina di numeri raggruppati. "
+                "Ratio backtest: 1.080x — il migliore per K=6. HE effettivo: 2.7%."
+            ),
+        },
+        {
+            "id": "dual_target",
+            "label": "Dual Target",
+            "desc": "3 hot base + 3 hot extra (1.059x)",
+            "spiegazione": (
+                "Divide i 6 numeri tra Base e Extra: 3 numeri piu frequenti nelle estrazioni "
+                "base (20 numeri) + 3 numeri piu frequenti nelle estrazioni Extra (15 numeri), "
+                "evitando sovrapposizioni. Sfrutta il fatto che Base e Extra hanno pool diversi. "
+                "Ratio backtest: 1.059x."
+            ),
+        },
+        {
+            "id": "hot",
+            "label": "Hot Numbers",
+            "desc": "Top 6 frequenti (0.950x)",
+            "spiegazione": (
+                "Seleziona i 6 numeri che sono apparsi piu spesso nelle ultime 100 estrazioni. "
+                "Strategia semplice e intuitiva. "
+                "Ratio backtest: 0.950x — sotto baseline. Non consigliato."
+            ),
+        },
+        {
+            "id": "cold",
+            "label": "Cold Numbers",
+            "desc": "6 meno frequenti (0.990x)",
+            "spiegazione": (
+                "Seleziona i 6 numeri meno frequenti (piu 'freddi') nelle ultime 100 estrazioni. "
+                "Basato sull'idea che i numeri in ritardo siano 'dovuti'. "
+                "Ratio backtest: 0.990x — vicino a baseline ma non migliore."
+            ),
+        },
         {
             "id": "freq_rit_dec",
             "label": "Freq+Rit+Dec",
             "desc": "Frequenti in ritardo + decina (0.942x)",
+            "spiegazione": (
+                "Combina frequenza e ritardo: seleziona numeri che sono stati frequenti MA "
+                "non sono usciti nelle ultime W/5 estrazioni, "
+                "preferendo quelli nella stessa decina. "
+                "Metodo derivato dal paper Lotto (vincitore per K=3). "
+                "Ratio backtest: 0.942x per K=6."
+            ),
         },
     ]
 
 
 @app.get(f"{PREFIX}/diecielotto/storico-completo")
 def diecielotto_storico_completo(
-    limit: int = Query(500, ge=1, le=1000),
+    limit: int = Query(500, ge=1, le=5000),
     metodo: str = Query("vicinanza"),
 ):
     """Storico 10eLotto K=6: retroattivo con metodo selezionabile."""
@@ -904,7 +949,7 @@ def diecielotto_k_previsione(k: int = Query(6, ge=1, le=10)):
 @app.get(f"{PREFIX}/diecielotto-k/storico")
 def diecielotto_k_storico(
     k: int = Query(6, ge=1, le=10),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(500, ge=1, le=5000),
 ):
     """Storico retroattivo 10eLotto con K numeri e P&L (motore ottimale)."""
     from diecielotto.engine_k import (
