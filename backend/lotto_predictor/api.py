@@ -811,32 +811,47 @@ def diecielotto_storico_completo(limit: int = Query(100, ge=1, le=1000)):
 
 
 # ---------------------------------------------------------------------------
-# 10eLotto 10 numeri endpoints
+# 10eLotto K numeri (parametrico, K=1-10)
 # ---------------------------------------------------------------------------
 
 
-@app.get(f"{PREFIX}/diecielotto10/previsione")
-def diecielotto10_previsione():
-    """Genera previsione 10eLotto con 10 numeri."""
-    from diecielotto.engine10 import genera_previsione_10
+@app.get(f"{PREFIX}/diecielotto-k/previsione")
+def diecielotto_k_previsione(k: int = Query(6, ge=1, le=10)):
+    """Genera previsione 10eLotto con K numeri."""
+    from diecielotto.engine_k import calcola_he, genera_previsione_k
 
-    prev = genera_previsione_10()
-    return {
-        "numeri": prev.numeri,
-        "metodo": prev.metodo,
-        "score": prev.score,
-        "costo": prev.costo,
-        "configurazione": prev.configurazione,
-        "dettagli": prev.dettagli,
-    }
+    session = get_session()
+    try:
+        all_estr = (
+            session.execute(
+                select(DiecieLottoEstrazione).order_by(
+                    DiecieLottoEstrazione.data, DiecieLottoEstrazione.ora
+                )
+            )
+            .scalars()
+            .all()
+        )
+        pick = genera_previsione_k(k, all_estr)
+        he = calcola_he(k)
+        return {
+            "numeri": pick,
+            "metodo": f"top{k}_freq",
+            "configurazione": k,
+            "costo": 2.0,
+            "he": round(he, 2),
+            "dettagli": f"Top {k} frequenti W=100",
+        }
+    finally:
+        session.close()
 
 
-@app.get(f"{PREFIX}/diecielotto10/storico-completo")
-def diecielotto10_storico(limit: int = Query(100, ge=1, le=500)):
-    """Storico 10eLotto 10 numeri: retroattivo con P&L."""
-    from collections import Counter
-
-    from diecielotto.engine10 import PREMI_BASE_10, PREMI_EXTRA_10
+@app.get(f"{PREFIX}/diecielotto-k/storico")
+def diecielotto_k_storico(
+    k: int = Query(6, ge=1, le=10),
+    limit: int = Query(100, ge=1, le=500),
+):
+    """Storico retroattivo 10eLotto con K numeri e P&L."""
+    from diecielotto.engine_k import genera_previsione_k, verifica_previsione_k
 
     session = get_session()
     try:
@@ -854,38 +869,20 @@ def diecielotto10_storico(limit: int = Query(100, ge=1, le=500)):
         if len(all_estr) < w + 1:
             return []
 
-        # Generate retroactive predictions for last N extractions
         start = max(w, len(all_estr) - limit)
         records = []
-        costo = 2.0
 
         for i in range(start, len(all_estr)):
             estr = all_estr[i]
-
-            # Top 10 freq in previous W
-            freq = Counter()
-            for j in range(i - w, i):
-                for n in all_estr[j].numeri:
-                    freq[n] += 1
-            pick = sorted([n for n, _ in freq.most_common(10)])
-
-            # Verify
-            pick_set = set(pick)
-            drawn = set(estr.numeri)
-            extra_set = set(estr.numeri_extra)
-            mb = len(pick_set & drawn)
-            rem = pick_set - drawn
-            me = len(rem & extra_set)
-            vb = PREMI_BASE_10.get(mb, 0.0)
-            ve = PREMI_EXTRA_10.get(me, 0.0)
-            vincita = vb + ve
+            pick = genera_previsione_k(k, all_estr[:i])
+            result = verifica_previsione_k(k, pick, estr.numeri, estr.numeri_extra)
 
             records.append(
                 {
                     "previsione": {
                         "numeri": pick,
-                        "metodo": "top10_freq",
-                        "configurazione": 10,
+                        "metodo": f"top{k}_freq",
+                        "configurazione": k,
                     },
                     "estrazione": {
                         "concorso": estr.concorso,
@@ -895,20 +892,19 @@ def diecielotto10_storico(limit: int = Query(100, ge=1, le=500)):
                         "numero_oro": estr.numero_oro,
                         "doppio_oro": estr.doppio_oro,
                         "numeri_extra": estr.numeri_extra,
-                        "match_base": mb,
-                        "match_extra": me,
-                        "numeri_azzeccati": sorted(pick_set & drawn),
-                        "numeri_azzeccati_extra": sorted(rem & extra_set),
-                        "vincita_base": vb,
-                        "vincita_extra": ve,
-                        "vincita_totale": vincita,
-                        "pnl": vincita - costo,
+                        "match_base": result["match_base"],
+                        "match_extra": result["match_extra"],
+                        "numeri_azzeccati": result["numeri_azzeccati"],
+                        "numeri_azzeccati_extra": result["numeri_azzeccati_extra"],
+                        "vincita_base": result["vincita_base"],
+                        "vincita_extra": result["vincita_extra"],
+                        "vincita_totale": result["vincita_totale"],
+                        "pnl": result["pnl"],
                     },
-                    "costo": costo,
+                    "costo": 2.0,
                 }
             )
 
-        # Return in reverse chronological order
         records.reverse()
         return records
     finally:
