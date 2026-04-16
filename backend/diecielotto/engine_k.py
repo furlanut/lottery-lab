@@ -42,17 +42,43 @@ def genera_previsione_k(
     k: int,
     estrazioni_ordinate: list,
 ) -> list[int]:
-    """Genera previsione: top K numeri frequenti nelle ultime W estrazioni.
+    """Genera previsione per K numeri.
+
+    K=6: usa S4 dual-target (3 hot base + 3 hot Extra) — stesso motore di /diecielotto
+    Altri K: top K numeri piu frequenti nelle ultime W estrazioni
 
     Args:
         k: quanti numeri giocare (1-10)
-        estrazioni_ordinate: lista di oggetti con .numeri property
+        estrazioni_ordinate: lista di oggetti con .numeri e .numeri_extra property
 
     Returns:
         lista di K numeri ordinati
     """
-    freq = Counter()
     window = estrazioni_ordinate[-W:] if len(estrazioni_ordinate) >= W else estrazioni_ordinate
+
+    if k == 6:
+        # S4 dual-target: 3 hot base + 3 hot Extra (coerente con /diecielotto)
+        base_freq = Counter()
+        extra_freq = Counter()
+        for e in window:
+            for n in e.numeri:
+                base_freq[n] += 1
+            for n in e.numeri_extra:
+                extra_freq[n] += 1
+
+        hot_base = [n for n, _ in base_freq.most_common(6)]
+        hot_extra = [n for n, _ in extra_freq.most_common(20) if n not in hot_base][:3]
+        pick = hot_base[:3] + hot_extra[:3]
+        if len(pick) < 6:
+            for n, _ in base_freq.most_common():
+                if n not in pick:
+                    pick.append(n)
+                if len(pick) >= 6:
+                    break
+        return sorted(pick[:6])
+
+    # Per tutti gli altri K: top K frequenti nel base
+    freq = Counter()
     for e in window:
         for n in e.numeri:
             freq[n] += 1
