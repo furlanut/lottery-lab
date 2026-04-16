@@ -2823,5 +2823,51 @@ La configurazione 6+Extra e anomala: l'Extra per K=6 vale quasi il doppio del ba
 
 ---
 
+## Appendice E: MillionDay — Quarto Gioco
+
+### Regole
+
+5 numeri su 55, 5 estratti base + 5 Extra (dai 50 rimanenti). 2 estrazioni al giorno (13:00 e 20:30). Costo: 1 EUR base + 1 EUR Extra = 2 EUR. Strutturalmente identico a VinciCasa (5 su N) ma con pool piu grande (55 vs 40).
+
+### Premi (netti, dopo 8%)
+
+| Match | Base | Extra |
+|-------|------|-------|
+| 2/5 | 2 EUR | 4 EUR |
+| 3/5 | 50 EUR | 100 EUR |
+| 4/5 | 1.000 EUR | 1.000 EUR |
+| 5/5 | 1.000.000 EUR | 100.000 EUR |
+
+### EV
+
+| Config | EV | HE | Breakeven |
+|--------|-----|------|-----------|
+| Base | 0.648 | 35.2% | 1.54x |
+| Base+Extra | 1.326 | 33.7% | 1.51x |
+
+### Analisi (496 estrazioni, apr-dic 2025)
+
+RNG certificato: chi-quadro PASS (z=1.41), overlap PASS (0.449 vs 0.455), autocorrelazione PASS (max r=0.031).
+
+| Metodo | W | Ratio val |
+|--------|---|-----------|
+| top5_freq | 50 | **1.234x** |
+| vicinanza D=5 | 50 | 0.985x |
+| cold | 20 | 0.754x |
+
+Permutation test top5_freq W=50: p=0.183 — non significativo con 496 estrazioni. Dataset insufficiente per conferma (servirebbero 2000+). Il segnale e comparabile a VinciCasa (1.22x) e potrebbe essere confermato con piu dati.
+
+### Confronto finale Lottery Lab (5 giochi)
+
+| Gioco | Dataset | HE | Breakeven | Segnale | p-value |
+|-------|---------|-----|-----------|---------|---------|
+| Lotto ambetto | 6.886 | 37.6% | 1.60x | vicinanza 1.18x | CV |
+| VinciCasa | 3.279 | 37.3% | 1.60x | top5_freq 1.22x | 0.01 |
+| MillionDay b+E | 496 | 33.7% | 1.51x | top5_freq 1.23x | 0.18 |
+| 10eLotto 6+Extra | 34.000+ | 9.94% | 1.11x | vicinanza 1.08x | 0.05 |
+| 10eLotto ST | 34.000+ | 6.30% | 1.067x | nessuno | — |
+
+---
+
 *Documento generato dal sistema Lottery Lab -- Aprile 2026*
-*Dati: Lotto Italiano 2007-2026 (6.886 estr.), VinciCasa 2014-2026 (3.279 estr.), 10eLotto 5min 2025-2026 (33.431 estr.)*
+*Dati: Lotto 2007-2026 (6.886), VinciCasa 2014-2026 (3.279), 10eLotto 2025-2026 (34.000+), MillionDay 2025 (496)*
