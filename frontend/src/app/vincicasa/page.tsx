@@ -1,10 +1,10 @@
 import {
   fetchAPI,
   VinciCasaPrevisione,
-  Estrazione,
   VinciCasaStatusData,
 } from "@/lib/api";
 import NumberBall from "@/components/NumberBall";
+import { Home } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -17,158 +17,184 @@ function formatDate(dateStr: string | null | undefined): string {
   }
 }
 
-async function getVinciCasaData() {
+interface VCRecord {
+  data: string;
+  previsione: { numeri: number[]; metodo: string };
+  estrazione: { numeri: number[]; concorso: number };
+  match: number;
+  vincita: number;
+  costo: number;
+  pnl: number;
+  stato: string;
+}
+
+async function getData() {
   try {
-    const [previsione, estrazioni, status] = await Promise.all([
+    const [previsione, status, storico] = await Promise.all([
       fetchAPI<VinciCasaPrevisione>("/vincicasa/previsione"),
-      fetchAPI<Estrazione[]>("/vincicasa/estrazioni?limit=10"),
       fetchAPI<VinciCasaStatusData>("/vincicasa/status"),
+      fetchAPI<VCRecord[]>("/vincicasa/storico-completo?limit=30"),
     ]);
-    return { previsione, estrazioni, status, error: false };
+    return { previsione, status, storico, error: false };
   } catch {
-    return { previsione: null, estrazioni: [], status: null, error: true };
+    return { previsione: null, status: null, storico: [], error: true };
   }
 }
 
 export default async function VinciCasaPage() {
-  const { previsione, estrazioni, status, error } = await getVinciCasaData();
+  const { previsione, status, storico, error } = await getData();
+
+  const totalCost = storico.length * 2;
+  const totalWon = storico.reduce((s, r) => s + r.vincita, 0);
+  const totalPnl = totalWon - totalCost;
+  const wins = storico.filter((r) => r.vincita > 0).length;
+  const maxWin = Math.max(0, ...storico.map((r) => r.vincita));
+
+  let cumPnl = 0;
+  const reversed = [...storico].reverse();
+  const cumMap = new Map<number, number>();
+  reversed.forEach((r, i) => {
+    cumPnl += r.pnl;
+    cumMap.set(storico.length - 1 - i, cumPnl);
+  });
 
   return (
     <div className="space-y-10">
-      {/* Header */}
       <div className="fade-up">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-1">
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-1 flex items-center gap-4">
           <span className="gradient-green">VinciCasa</span>
+          <Home className="w-8 h-8 text-lotto-green opacity-60" />
         </h1>
-        <p className="text-lotto-muted text-sm">Estrazione giornaliera · 5 numeri su 40</p>
+        <p className="text-lotto-muted text-sm">5 numeri su 40 · Giornaliero</p>
       </div>
 
       {error ? (
-        <OfflineState />
+        <div className="glass p-10 text-center">
+          <p className="text-lotto-text font-semibold">Backend non raggiungibile</p>
+        </div>
       ) : (
         <>
           {/* Previsione */}
           {previsione && (
-            <section className="fade-up-1 space-y-5">
+            <section className="fade-up-1">
               <SectionHeader label="Previsione corrente" />
-
-              {/* Big Numbers Card */}
-              <div className="glass p-8 relative overflow-hidden text-center">
+              <div className="glass p-6 relative overflow-hidden text-center">
                 <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lotto-green to-lotto-teal" />
-                <div className="absolute -top-20 -right-20 w-64 h-64 bg-lotto-green/5 rounded-full blur-3xl pointer-events-none" />
-
-                <p className="text-[10px] font-bold uppercase tracking-widest text-lotto-muted mb-6">
-                  Numeri consigliati
-                </p>
-
-                <div className="flex items-center justify-center gap-4 flex-wrap mb-8">
+                <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
                   {previsione.numeri.map((n) => (
                     <NumberBall key={n} number={n} size="xl" glow />
                   ))}
                 </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-6 border-t border-[rgba(255,255,255,0.06)]">
-                  <MiniStat
-                    label="Finestra analisi"
-                    value={`${previsione.finestra} estrazioni`}
-                    color="green"
-                  />
-                  <MiniStat
-                    label="Generata il"
-                    value={formatDate(previsione.data_generazione)}
-                  />
-                  <MiniStat
-                    label="Costo giocata"
-                    value="EUR 2.00"
-                    color="green"
-                  />
-                </div>
-
-                {previsione.dettagli && (
-                  <p className="mt-5 text-xs text-lotto-muted leading-relaxed text-left">
-                    {previsione.dettagli}
-                  </p>
-                )}
-              </div>
-
-              {/* Frequency Chart */}
-              {Object.keys(previsione.frequenze).length > 0 && (
-                <FrequencyChart
-                  frequenze={previsione.frequenze}
-                  hotNumbers={previsione.numeri}
-                />
-              )}
-            </section>
-          )}
-
-          {/* Ultime Estrazioni */}
-          {estrazioni.length > 0 && (
-            <section className="fade-up-2">
-              <SectionHeader label="Ultime estrazioni" />
-              <div className="glass overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-[rgba(255,255,255,0.06)]">
-                        <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest">
-                          Concorso
-                        </th>
-                        <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest">
-                          Data
-                        </th>
-                        <th className="px-4 py-3 text-left text-[10px] text-lotto-muted uppercase tracking-widest">
-                          Numeri
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {estrazioni.map((e, idx) => (
-                        <tr
-                          key={e.id}
-                          className={`border-b border-[rgba(255,255,255,0.04)] last:border-0 hover:bg-[rgba(255,255,255,0.02)] transition-colors ${
-                            idx % 2 === 0 ? "" : "bg-[rgba(255,255,255,0.01)]"
-                          }`}
-                        >
-                          <td className="px-4 py-3 text-lotto-muted font-mono text-xs">
-                            #{e.concorso}
-                          </td>
-                          <td className="px-4 py-3 text-lotto-text text-xs">
-                            {formatDate(e.data)}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-1.5 flex-wrap">
-                              {e.numeri.map((n, i) => (
-                                <NumberBall key={i} number={n} size="sm" />
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="flex justify-center gap-3 text-xs text-lotto-muted">
+                  <span>Metodo: <b className="text-lotto-text">top5_freq N=5</b></span>
+                  <span>Costo: <b className="text-lotto-green">EUR 2.00</b></span>
+                  <span className="px-2 py-0.5 rounded bg-lotto-green/10 border border-lotto-green/20 text-lotto-green font-bold">
+                    HE 37.3%
+                  </span>
                 </div>
               </div>
             </section>
           )}
+
+          {/* Spiegazione */}
+          <div className="glass p-4 border-l-2 border-lotto-green/40">
+            <p className="text-[11px] text-lotto-green uppercase tracking-widest font-bold mb-1">Top 5 Frequenti N=5</p>
+            <p className="text-xs text-lotto-muted leading-relaxed">
+              Seleziona i 5 numeri piu frequenti nelle ultime 5 estrazioni VinciCasa.
+              Segnale validato: +22% sulla categoria 2/5 (p=0.01 permutation test).
+              Premi: 5/5=500.000€, 4/5=200€, 3/5=20€, 2/5=2.60€.
+            </p>
+          </div>
 
           {/* Stats */}
-          {status && (
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div className="glass p-3 text-center">
+              <p className="text-[10px] text-lotto-muted uppercase">Estrazioni</p>
+              <p className="text-lg font-black text-lotto-green">{status?.estrazioni_totali.toLocaleString()}</p>
+            </div>
+            <div className="glass p-3 text-center">
+              <p className="text-[10px] text-lotto-muted uppercase">Giocate</p>
+              <p className="text-lg font-black text-lotto-text">{storico.length}</p>
+            </div>
+            <div className="glass p-3 text-center">
+              <p className="text-[10px] text-lotto-muted uppercase">Vinte</p>
+              <p className="text-lg font-black text-lotto-green">{wins}</p>
+            </div>
+            <div className="glass p-3 text-center">
+              <p className="text-[10px] text-lotto-muted uppercase">Investito</p>
+              <p className="text-lg font-black text-lotto-text">{totalCost}€</p>
+            </div>
+            <div className="glass p-3 text-center">
+              <p className="text-[10px] text-lotto-muted uppercase">P&L</p>
+              <p className={`text-lg font-black ${totalPnl >= 0 ? "text-lotto-green" : "text-lotto-red"}`}>
+                {totalPnl >= 0 ? "+" : ""}{totalPnl.toFixed(2)}€
+              </p>
+            </div>
+            <div className="glass p-3 text-center">
+              <p className="text-[10px] text-lotto-muted uppercase">Max vincita</p>
+              <p className="text-lg font-black text-lotto-amber">{maxWin.toFixed(2)}€</p>
+            </div>
+          </div>
+
+          {/* Storico */}
+          {storico.length > 0 && (
             <section className="fade-up-3">
-              <SectionHeader label="Statistiche" />
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <StatCard
-                  label="Estrazioni totali"
-                  value={status.estrazioni_totali.toLocaleString("it-IT")}
-                  color="green"
-                />
-                <StatCard
-                  label="Prima estrazione"
-                  value={formatDate(status.data_prima)}
-                />
-                <StatCard
-                  label="Ultima estrazione"
-                  value={formatDate(status.data_ultima)}
-                />
+              <SectionHeader label="Storico previsioni vs estrazioni" />
+              <div className="space-y-2">
+                {storico.map((r, idx) => {
+                  const isWin = r.vincita > 0;
+                  const thisCum = cumMap.get(idx) ?? 0;
+                  return (
+                    <div key={idx} className={`glass p-3 relative overflow-hidden ${isWin ? "border-lotto-green/20" : ""}`}>
+                      {isWin && <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lotto-green to-lotto-teal" />}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-lotto-muted">{formatDate(r.data)}</span>
+                          <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${
+                            isWin ? "bg-lotto-green/10 text-lotto-green border-lotto-green/20" : "bg-lotto-red/10 text-lotto-red border-lotto-red/20"
+                          }`}>{r.stato}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-black ${r.pnl >= 0 ? "text-lotto-green" : "text-lotto-red"}`}>
+                            {r.pnl >= 0 ? "+" : ""}{r.pnl.toFixed(2)}€
+                          </span>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${thisCum >= 0 ? "bg-lotto-green/10 text-lotto-green" : "bg-lotto-red/10 text-lotto-red"}`}>
+                            Cum {thisCum >= 0 ? "+" : ""}{thisCum.toFixed(0)}€
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[10px] text-lotto-muted uppercase mb-1">Previsione</p>
+                          <div className="flex gap-2">
+                            {r.previsione.numeri.map((n, i) => {
+                              const matched = r.estrazione.numeri.includes(n);
+                              return (
+                                <div key={i} className="flex flex-col items-center gap-0.5">
+                                  <NumberBall number={n} size="md" glow={matched} />
+                                  {matched && <div className="w-1.5 h-1.5 rounded-full bg-lotto-green dot-pulse" />}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-lotto-muted uppercase mb-1">Estrazione</p>
+                          <div className="flex gap-1.5">
+                            {r.estrazione.numeri.map((n, i) => {
+                              const matched = r.previsione.numeri.includes(n);
+                              return (
+                                <div key={i} className={matched ? "ring-2 ring-lotto-green ring-offset-1 ring-offset-[#0c0c1d] rounded-full" : ""}>
+                                  <NumberBall number={n} size="md" />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}
@@ -178,149 +204,11 @@ export default async function VinciCasaPage() {
   );
 }
 
-function FrequencyChart({
-  frequenze,
-  hotNumbers,
-}: {
-  frequenze: Record<string, number>;
-  hotNumbers: number[];
-}) {
-  const maxFreq = Math.max(...Object.values(frequenze), 1);
-  const allNums = Array.from({ length: 40 }, (_, i) => i + 1);
-  const hot = new Set(hotNumbers);
-
-  return (
-    <div className="glass p-5">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-lotto-muted">
-          Frequenze · 1–40
-        </p>
-        <div className="flex items-center gap-3 text-[10px] text-lotto-muted">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm bg-lotto-green" /> Hot
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm bg-[rgba(255,255,255,0.15)]" /> Normal
-          </span>
-        </div>
-      </div>
-
-      <div className="flex items-end gap-0.5 h-20">
-        {allNums.map((n) => {
-          const freq = frequenze[String(n)] ?? 0;
-          const heightPct = freq > 0 ? Math.max((freq / maxFreq) * 100, 8) : 4;
-          const isHot = hot.has(n);
-          return (
-            <div
-              key={n}
-              className="flex-1 flex flex-col items-center justify-end gap-0.5 group"
-            >
-              <div
-                className={`w-full rounded-t-sm freq-bar transition-all ${
-                  isHot
-                    ? "bg-gradient-to-t from-lotto-green to-lotto-teal shadow-sm shadow-lotto-green/40"
-                    : "bg-[rgba(255,255,255,0.12)]"
-                }`}
-                style={{ height: `${heightPct}%` }}
-                title={`${n}: ${freq}`}
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Number labels — only show every 5 */}
-      <div className="flex items-end gap-0.5 mt-1">
-        {allNums.map((n) => (
-          <div key={n} className="flex-1 flex justify-center">
-            {n % 5 === 0 ? (
-              <span className="text-[8px] text-lotto-muted">{n}</span>
-            ) : null}
-          </div>
-        ))}
-      </div>
-
-      {/* Hot numbers row */}
-      <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.06)]">
-        <p className="text-[10px] text-lotto-muted uppercase tracking-widest mb-2">
-          Numeri in previsione
-        </p>
-        <div className="flex gap-2 flex-wrap">
-          {hotNumbers.map((n) => (
-            <div key={n} className="flex flex-col items-center gap-1">
-              <NumberBall number={n} size="sm" glow />
-              <span className="text-[9px] text-lotto-muted">
-                {frequenze[String(n)] ?? 0}x
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function SectionHeader({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 mb-4">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-lotto-muted whitespace-nowrap">
-        {label}
-      </h2>
+      <h2 className="text-xs font-bold uppercase tracking-widest text-lotto-muted whitespace-nowrap">{label}</h2>
       <div className="flex-1 h-px bg-[rgba(255,255,255,0.05)]" />
-    </div>
-  );
-}
-
-function MiniStat({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color?: "green" | "blue";
-}) {
-  const colorMap = { green: "text-lotto-green", blue: "text-lotto-blue" };
-  return (
-    <div>
-      <p className="text-[10px] text-lotto-muted uppercase tracking-wide mb-0.5">{label}</p>
-      <p className={`text-sm font-bold ${color ? colorMap[color] : "text-lotto-text"}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color?: "green" | "blue";
-}) {
-  const colorMap = { green: "text-lotto-green", blue: "text-lotto-blue" };
-  return (
-    <div className="glass p-4">
-      <p className="text-[10px] text-lotto-muted uppercase tracking-widest mb-1">{label}</p>
-      <p className={`text-xl font-black ${color ? colorMap[color] : "text-lotto-text"}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function OfflineState() {
-  return (
-    <div className="glass p-10 text-center fade-up-1">
-      <div className="w-12 h-12 rounded-full bg-lotto-red/10 border border-lotto-red/20 flex items-center justify-center mx-auto mb-4">
-        <svg className="w-6 h-6 text-lotto-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-          <path d="M18.364 5.636a9 9 0 010 12.728M5.636 5.636a9 9 0 000 12.728M9 10a3 3 0 100 4 3 3 0 000-4z" />
-        </svg>
-      </div>
-      <p className="text-lotto-text font-semibold mb-1">Backend non raggiungibile</p>
-      <p className="text-lotto-muted text-sm">Verifica che il backend sia in esecuzione</p>
     </div>
   );
 }

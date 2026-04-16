@@ -513,6 +513,125 @@ def lotto_calendario():
     return _prossime_estrazioni_lotto(5)
 
 
+@app.get(f"{PREFIX}/lotto/storico-completo")
+def lotto_storico_completo(limit: int = Query(50, ge=1, le=500)):
+    """Storico Lotto retroattivo: previsione V6 vs estrazione per ogni data."""
+    from collections import defaultdict
+
+    from lotto_predictor.analyzer.convergence_v6 import genera_giocata_v6
+
+    session = get_session()
+    try:
+        rows = (
+            session.execute(select(Estrazione).order_by(Estrazione.data, Estrazione.ruota))
+            .scalars()
+            .all()
+        )
+        grouped: dict[date, dict[str, list[int]]] = defaultdict(dict)
+        for r in rows:
+            grouped[r.data][r.ruota] = r.numeri
+
+        date_list = sorted(grouped.keys())
+        dati = [(d.isoformat(), grouped[d]) for d in date_list]
+
+        if len(dati) < 100:
+            return []
+
+        records = []
+        start = max(100, len(dati) - limit)
+
+        for idx in range(start, len(dati)):
+            target_date = date_list[idx]
+            dati_prima = dati[:idx]
+
+            try:
+                giocata = genera_giocata_v6(dati_prima)
+            except Exception:  # noqa: S112
+                continue
+
+            ruote_giorno = grouped[target_date]
+
+            for segnale in giocata.get("ambetti") or []:
+                estratti = ruote_giorno.get(segnale.ruota, [])
+                ambo = set(segnale.ambo)
+                estratti_set = set(estratti)
+                hit = ambo.issubset(estratti_set)
+                # Ambetto check
+                a, b = segnale.ambo
+                ambetto_hit = False
+                for n1 in estratti:
+                    for n2 in estratti:
+                        if (
+                            n1 != n2
+                            and not hit
+                            and (
+                                (abs(n1 - a) <= 1 and abs(n2 - b) <= 1)
+                                or (abs(n1 - b) <= 1 and abs(n2 - a) <= 1)
+                            )
+                        ):
+                            ambetto_hit = True
+
+                vincita = 0.0
+                if hit:
+                    vincita = 250.0
+                elif ambetto_hit:
+                    vincita = 65.0
+
+                records.append(
+                    {
+                        "data": str(target_date),
+                        "previsione": {
+                            "numeri": list(segnale.ambo),
+                            "ruota": segnale.ruota,
+                            "metodo": segnale.metodo,
+                            "tipo": segnale.tipo_giocata,
+                            "score": round(segnale.score, 2),
+                        },
+                        "estrazione": {
+                            "numeri": estratti,
+                            "ruota": segnale.ruota,
+                        },
+                        "match": 2 if hit else (1 if ambetto_hit else 0),
+                        "vincita": vincita,
+                        "costo": 1.0,
+                        "pnl": vincita - 1.0,
+                        "stato": ("AMBO" if hit else ("AMBETTO" if ambetto_hit else "PERSA")),
+                    }
+                )
+
+            if giocata.get("ambo_secco"):
+                s = giocata["ambo_secco"]
+                estratti = ruote_giorno.get(s.ruota, [])
+                hit = set(s.ambo).issubset(set(estratti))
+                vincita = 250.0 if hit else 0.0
+                records.append(
+                    {
+                        "data": str(target_date),
+                        "previsione": {
+                            "numeri": list(s.ambo),
+                            "ruota": s.ruota,
+                            "metodo": s.metodo,
+                            "tipo": s.tipo_giocata,
+                            "score": round(s.score, 2),
+                        },
+                        "estrazione": {
+                            "numeri": estratti,
+                            "ruota": s.ruota,
+                        },
+                        "match": 2 if hit else 0,
+                        "vincita": vincita,
+                        "costo": 1.0,
+                        "pnl": vincita - 1.0,
+                        "stato": "AMBO" if hit else "PERSA",
+                    }
+                )
+
+        records.reverse()
+        return records
+    finally:
+        session.close()
+
+
 # ---------------------------------------------------------------------------
 # VinciCasa endpoints
 # ---------------------------------------------------------------------------
@@ -611,6 +730,65 @@ def vincicasa_previsioni(limit: int = Query(20, ge=1, le=200)):
 def vincicasa_calendario():
     """Prossime 5 date di estrazione VinciCasa (giornaliera ore 20:00)."""
     return _prossime_estrazioni_vincicasa(5)
+
+
+@app.get(f"{PREFIX}/vincicasa/storico-completo")
+def vincicasa_storico_completo(limit: int = Query(30, ge=1, le=500)):
+    """Storico VinciCasa retroattivo: top5 freq vs estrazione."""
+    from collections import Counter
+
+    session = get_session()
+    try:
+        all_estr = (
+            session.execute(select(VinciCasaEstrazione).order_by(VinciCasaEstrazione.data))
+            .scalars()
+            .all()
+        )
+
+        if len(all_estr) < 6:
+            return []
+
+        premi = {5: 500000, 4: 200, 3: 20, 2: 2.60}
+        costo = 2.0
+        records = []
+        start = max(5, len(all_estr) - limit)
+
+        for i in range(start, len(all_estr)):
+            # Top 5 frequenti nelle ultime 5 estrazioni
+            freq = Counter()
+            for j in range(max(0, i - 5), i):
+                for n in all_estr[j].numeri:
+                    freq[n] += 1
+            top5 = sorted([n for n, _ in freq.most_common(5)])
+
+            estr = all_estr[i]
+            estratti = estr.numeri
+            match = len(set(top5) & set(estratti))
+            vincita = premi.get(match, 0.0)
+
+            records.append(
+                {
+                    "data": str(estr.data),
+                    "previsione": {
+                        "numeri": top5,
+                        "metodo": "top5_freq_N5",
+                    },
+                    "estrazione": {
+                        "numeri": estratti,
+                        "concorso": estr.concorso,
+                    },
+                    "match": match,
+                    "vincita": vincita,
+                    "costo": costo,
+                    "pnl": vincita - costo,
+                    "stato": (f"VINTA {match}/5" if vincita > 0 else f"PERSA ({match}/5)"),
+                }
+            )
+
+        records.reverse()
+        return records
+    finally:
+        session.close()
 
 
 # ---------------------------------------------------------------------------
