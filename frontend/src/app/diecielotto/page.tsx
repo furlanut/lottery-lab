@@ -1,148 +1,188 @@
-import {
-  fetchAPI,
-  DiecieLottoPrevisione,
-  DiecieLottoStatus,
-  DiecieLottoRecord,
-} from "@/lib/api";
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
 import NumberBall from "@/components/NumberBall";
-import { format, parseISO } from "date-fns";
-import { it } from "date-fns/locale";
-import { Timer } from "lucide-react";
+import { DiecieLottoRecord } from "@/lib/api";
 import DiecieLottoHistory from "@/components/DiecieLottoHistory";
+import { Timer } from "lucide-react";
 
-function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return "N/D";
-  try {
-    return format(parseISO(dateStr), "dd/MM/yyyy", { locale: it });
-  } catch {
-    return dateStr;
-  }
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
+
+interface Metodo {
+  id: string;
+  label: string;
+  desc: string;
 }
 
-async function getData() {
-  try {
-    const [previsione, status, storico] = await Promise.all([
-      fetchAPI<DiecieLottoPrevisione>("/diecielotto/previsione"),
-      fetchAPI<DiecieLottoStatus>("/diecielotto/status"),
-      fetchAPI<DiecieLottoRecord[]>("/diecielotto/storico-completo?limit=200"),
-    ]);
-    return { previsione, status, storico, error: false };
-  } catch {
-    return { previsione: null, status: null, storico: [], error: true };
-  }
+interface Previsione {
+  numeri: number[];
+  metodo: string;
+  score: number;
+  costo: number;
+  configurazione: number;
+  dettagli: string;
+  testo?: string;
 }
 
-export default async function DiecieLottoPage() {
-  const { previsione, status, storico, error } = await getData();
+interface Status {
+  estrazioni_totali: number;
+  data_prima: string | null;
+  data_ultima: string | null;
+}
+
+export default function DiecieLottoPage() {
+  const [metodo, setMetodo] = useState("vicinanza");
+  const [metodi, setMetodi] = useState<Metodo[]>([]);
+  const [previsione, setPrevisione] = useState<Previsione | null>(null);
+  const [storico, setStorico] = useState<DiecieLottoRecord[]>([]);
+  const [status, setStatus] = useState<Status | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch metodi list once
+  useEffect(() => {
+    fetch(`${API_BASE}/diecielotto/metodi`)
+      .then((r) => r.json())
+      .then(setMetodi)
+      .catch(() => {});
+    fetch(`${API_BASE}/diecielotto/status`)
+      .then((r) => r.json())
+      .then(setStatus)
+      .catch(() => {});
+  }, []);
+
+  // Fetch storico when metodo changes
+  const fetchData = useCallback(async (m: string) => {
+    setLoading(true);
+    try {
+      const [prevRes, storRes] = await Promise.all([
+        fetch(`${API_BASE}/diecielotto/previsione`),
+        fetch(`${API_BASE}/diecielotto/storico-completo?metodo=${m}&limit=500`),
+      ]);
+      if (prevRes.ok) setPrevisione(await prevRes.json());
+      if (storRes.ok) setStorico(await storRes.json());
+    } catch {
+      /* ignore */
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData(metodo);
+  }, [metodo, fetchData]);
+
+  // P&L summary
+  const totalCost = storico.length * 2;
+  const totalWon = storico.reduce(
+    (s, r) => s + (r.estrazione?.vincita_totale ?? 0),
+    0
+  );
+  const totalPnl = totalWon - totalCost;
+  const wins = storico.filter(
+    (r) => (r.estrazione?.vincita_totale ?? 0) > 0
+  ).length;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="fade-up">
+      <div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-1 flex items-center gap-4">
           <span className="gradient-amber">10eLotto</span>
           <Timer className="w-8 h-8 text-lotto-amber opacity-60" />
         </h1>
         <p className="text-lotto-muted text-sm">
-          5 Minuti · 6 numeri + Extra · Paper Trading
+          6 numeri + Extra · Paper Trading
         </p>
       </div>
 
-      {error ? (
-        <OfflineState />
-      ) : (
-        <>
-          {/* Previsione corrente */}
-          {previsione && (
-            <section className="fade-up-1">
-              <SectionHeader label="Previsione corrente" />
-              <div className="glass p-6 relative overflow-hidden text-center">
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lotto-amber to-yellow-400" />
-                <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
-                  {previsione.numeri.map((n) => (
-                    <NumberBall key={n} number={n} size="lg" glow />
-                  ))}
-                </div>
-                <div className="flex justify-center gap-4 text-xs text-lotto-muted">
-                  <span>
-                    Metodo: <b className="text-lotto-text">{previsione.metodo}</b>
-                  </span>
-                  <span>
-                    Costo: <b className="text-lotto-amber">EUR 2.00</b>
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-lotto-amber/10 border border-lotto-amber/20 text-lotto-amber font-bold">
-                    6+Extra · HE 9.94%
-                  </span>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Stats */}
-          {status && (
-            <section className="fade-up-2">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="glass p-4">
-                  <p className="text-[11px] text-lotto-muted uppercase tracking-widest mb-1">
-                    Estrazioni
-                  </p>
-                  <p className="text-xl font-black text-lotto-amber">
-                    {status.estrazioni_totali.toLocaleString("it-IT")}
-                  </p>
-                </div>
-                <div className="glass p-4">
-                  <p className="text-[11px] text-lotto-muted uppercase tracking-widest mb-1">
-                    Prima
-                  </p>
-                  <p className="text-sm font-bold text-lotto-text">
-                    {formatDate(status.data_prima)}
-                  </p>
-                </div>
-                <div className="glass p-4">
-                  <p className="text-[11px] text-lotto-muted uppercase tracking-widest mb-1">
-                    Ultima
-                  </p>
-                  <p className="text-sm font-bold text-lotto-text">
-                    {formatDate(status.data_ultima)}
-                  </p>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Storico con previsioni abbinate */}
-          {storico.length > 0 && (
-            <section className="fade-up-3">
-              <SectionHeader label="Storico estrazioni + previsioni" />
-              <DiecieLottoHistory records={storico} />
-            </section>
-          )}
-        </>
+      {/* Previsione corrente */}
+      {previsione && (
+        <div className="glass p-6 relative overflow-hidden text-center">
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lotto-amber to-yellow-400" />
+          <p className="text-[11px] text-lotto-muted uppercase tracking-widest mb-3">
+            Previsione corrente · {previsione.metodo}
+          </p>
+          <div className="flex items-center justify-center gap-3 flex-wrap mb-4">
+            {previsione.numeri.map((n) => (
+              <NumberBall key={n} number={n} size="lg" glow />
+            ))}
+          </div>
+          <div className="flex justify-center gap-3 text-xs text-lotto-muted">
+            <span>Costo: <b className="text-lotto-amber">EUR 2.00</b></span>
+            <span className="px-2 py-0.5 rounded bg-lotto-amber/10 border border-lotto-amber/20 text-lotto-amber font-bold">
+              6+Extra · HE 9.94%
+            </span>
+          </div>
+        </div>
       )}
-    </div>
-  );
-}
 
-function SectionHeader({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-3 mb-4">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-lotto-muted whitespace-nowrap">
-        {label}
-      </h2>
-      <div className="flex-1 h-px bg-[rgba(255,255,255,0.05)]" />
-    </div>
-  );
-}
+      {/* Stats + Metodo selector */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        {/* Stats */}
+        {status && (
+          <div className="flex gap-4 text-xs text-lotto-muted">
+            <span>Estrazioni: <b className="text-lotto-text">{status.estrazioni_totali.toLocaleString()}</b></span>
+            <span>Ultima: <b className="text-lotto-text">{status.data_ultima}</b></span>
+          </div>
+        )}
 
-function OfflineState() {
-  return (
-    <div className="glass p-10 text-center fade-up-1">
-      <p className="text-lotto-text font-semibold mb-1">
-        Backend non raggiungibile
-      </p>
-      <p className="text-lotto-muted text-sm">
-        Verifica che il backend sia in esecuzione
-      </p>
+        {/* Metodo dropdown */}
+        <div className="flex items-center gap-2">
+          <label className="text-[11px] text-lotto-muted uppercase tracking-widest">
+            Metodo predittivo:
+          </label>
+          <select
+            value={metodo}
+            onChange={(e) => setMetodo(e.target.value)}
+            className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.12)] text-lotto-text rounded-lg px-3 py-1.5 text-sm focus:border-lotto-amber focus:outline-none"
+          >
+            {metodi.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label} — {m.desc}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* P&L Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="glass p-3 text-center">
+          <p className="text-[10px] text-lotto-muted uppercase">Giocate</p>
+          <p className="text-lg font-black text-lotto-text">{storico.length}</p>
+        </div>
+        <div className="glass p-3 text-center">
+          <p className="text-[10px] text-lotto-muted uppercase">Vinte</p>
+          <p className="text-lg font-black text-lotto-green">{wins}</p>
+        </div>
+        <div className="glass p-3 text-center">
+          <p className="text-[10px] text-lotto-muted uppercase">Investito</p>
+          <p className="text-lg font-black text-lotto-text">{totalCost}€</p>
+        </div>
+        <div className="glass p-3 text-center">
+          <p className="text-[10px] text-lotto-muted uppercase">Vinto</p>
+          <p className="text-lg font-black text-lotto-text">{totalWon.toFixed(0)}€</p>
+        </div>
+        <div className="glass p-3 text-center">
+          <p className="text-[10px] text-lotto-muted uppercase">P&L</p>
+          <p className={`text-lg font-black ${totalPnl >= 0 ? "text-lotto-green" : "text-lotto-red"}`}>
+            {totalPnl >= 0 ? "+" : ""}{totalPnl.toFixed(2)}€
+          </p>
+        </div>
+      </div>
+
+      {/* Storico */}
+      {loading ? (
+        <div className="glass p-10 text-center">
+          <div className="w-8 h-8 border-2 border-lotto-amber border-t-transparent rounded-full spin mx-auto" />
+          <p className="text-lotto-muted text-sm mt-3">Caricamento {metodo}...</p>
+        </div>
+      ) : storico.length > 0 ? (
+        <DiecieLottoHistory records={storico} />
+      ) : (
+        <div className="glass p-10 text-center">
+          <p className="text-lotto-muted">Nessuna giocata disponibile</p>
+        </div>
+      )}
     </div>
   );
 }

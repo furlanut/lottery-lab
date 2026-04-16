@@ -709,102 +709,157 @@ def diecielotto_previsioni_storico(limit: int = Query(50, ge=1, le=500)):
         session.close()
 
 
+@app.get(f"{PREFIX}/diecielotto/metodi")
+def diecielotto_metodi():
+    """Lista dei metodi predittivi disponibili per K=6."""
+    return [
+        {"id": "vicinanza", "label": "Vicinanza D=5", "desc": "Seed + 5 vicini (1.080x)"},
+        {"id": "dual_target", "label": "Dual Target", "desc": "3 hot base + 3 hot extra (1.059x)"},
+        {"id": "hot", "label": "Hot Numbers", "desc": "Top 6 frequenti (0.950x)"},
+        {"id": "cold", "label": "Cold Numbers", "desc": "6 meno frequenti (0.990x)"},
+        {
+            "id": "freq_rit_dec",
+            "label": "Freq+Rit+Dec",
+            "desc": "Frequenti in ritardo + decina (0.942x)",
+        },
+    ]
+
+
 @app.get(f"{PREFIX}/diecielotto/storico-completo")
-def diecielotto_storico_completo(limit: int = Query(100, ge=1, le=1000)):
-    """Storico 10eLotto: ogni estrazione con previsione abbinata e P&L."""
+def diecielotto_storico_completo(
+    limit: int = Query(500, ge=1, le=1000),
+    metodo: str = Query("vicinanza"),
+):
+    """Storico 10eLotto K=6: retroattivo con metodo selezionabile."""
+    from collections import Counter
+
+    from diecielotto.ev_calculator import PREMI_BASE, PREMI_EXTRA
+
     session = get_session()
     try:
-        # Get all predictions ordered by date+ora
-        preds = (
+        all_estr = (
             session.execute(
-                select(DiecieLottoPrevisione)
-                .order_by(
-                    DiecieLottoPrevisione.data_generazione.desc(),
+                select(DiecieLottoEstrazione).order_by(
+                    DiecieLottoEstrazione.data, DiecieLottoEstrazione.ora
                 )
-                .limit(limit)
             )
             .scalars()
             .all()
         )
 
-        records = []
-        premi_base = {3: 2.0, 4: 10.0, 5: 100.0, 6: 1000.0}
-        premi_extra = {1: 1.0, 2: 1.0, 3: 7.0, 4: 20.0, 5: 200.0, 6: 2000.0}
+        w = 100
+        k = 6
+        pb = PREMI_BASE.get(k, {})
+        pe = PREMI_EXTRA.get(k, {})
         costo = 2.0
 
-        for p in preds:
-            numeri_prev = p.numeri if isinstance(p.numeri, list) else list(p.numeri)
+        if len(all_estr) < w + 1:
+            return []
 
-            # Find matching extraction (by date+ora if available, else closest)
-            estr_data = {}
-            estr = None
-            if p.ora_generazione:
-                estr = session.execute(
-                    select(DiecieLottoEstrazione).where(
-                        DiecieLottoEstrazione.data == p.data_generazione,
-                        DiecieLottoEstrazione.ora == p.ora_generazione,
-                    )
-                ).scalar_one_or_none()
-            if estr is None and p.data_esito:
-                # Fallback: find any extraction on the esito date
-                estr = session.execute(
-                    select(DiecieLottoEstrazione)
-                    .where(DiecieLottoEstrazione.data == p.data_esito)
-                    .order_by(DiecieLottoEstrazione.ora.desc())
-                    .limit(1)
-                ).scalar_one_or_none()
-            if estr is None:
-                # Last fallback: closest extraction to generation date
-                estr = session.execute(
-                    select(DiecieLottoEstrazione)
-                    .where(DiecieLottoEstrazione.data == p.data_generazione)
-                    .order_by(DiecieLottoEstrazione.ora.desc())
-                    .limit(1)
-                ).scalar_one_or_none()
+        start = max(w, len(all_estr) - limit)
+        records = []
 
-            # Build estr_data if we found any extraction
-            if estr:
-                pick = set(numeri_prev)
-                drawn = set(estr.numeri)
-                extra_set = set(estr.numeri_extra)
-                mb = len(pick & drawn)
-                rem = pick - drawn
-                me = len(rem & extra_set)
-                vb = premi_base.get(mb, 0.0)
-                ve = premi_extra.get(me, 0.0)
-                vincita = vb + ve
+        for i in range(start, len(all_estr)):
+            estr = all_estr[i]
+            window = all_estr[max(0, i - w) : i]
 
-                estr_data = {
-                    "concorso": estr.concorso,
-                    "data": str(estr.data),
-                    "ora": str(estr.ora),
-                    "numeri": estr.numeri,
-                    "numero_oro": estr.numero_oro,
-                    "doppio_oro": estr.doppio_oro,
-                    "numeri_extra": estr.numeri_extra,
-                    "match_base": mb,
-                    "match_extra": me,
-                    "numeri_azzeccati": sorted(pick & drawn),
-                    "numeri_azzeccati_extra": sorted(rem & extra_set),
-                    "vincita_base": vb,
-                    "vincita_extra": ve,
-                    "vincita_totale": vincita,
-                    "pnl": vincita - costo,
-                }
+            # Generate prediction with selected method
+            freq = Counter()
+            extra_freq = Counter()
+            last_seen: dict[int, int] = {}
+            for j, e in enumerate(window):
+                for n in e.numeri:
+                    freq[n] += 1
+                    last_seen[n] = i - len(window) + j
+                for n in e.numeri_extra:
+                    extra_freq[n] += 1
+
+            if metodo == "vicinanza":
+                seed = freq.most_common(1)[0][0]
+                nearby = sorted(
+                    [
+                        (n, freq.get(n, 0))
+                        for n in range(1, 91)
+                        if abs(n - seed) <= 5 and n != seed and freq.get(n, 0) > 0
+                    ],
+                    key=lambda x: -x[1],
+                )
+                pick_list = [seed]
+                for n, _ in nearby:
+                    pick_list.append(n)
+                    if len(pick_list) >= k:
+                        break
+            elif metodo == "dual_target":
+                hb = [n for n, _ in freq.most_common(k)][:3]
+                he = [n for n, _ in extra_freq.most_common(20) if n not in hb][:3]
+                pick_list = hb + he
+            elif metodo == "cold":
+                all_n = sorted(range(1, 91), key=lambda x: freq.get(x, 0))
+                pick_list = all_n[:k]
+            elif metodo == "freq_rit_dec":
+                rit_soglia = len(window) // 5
+                candidates = []
+                for n in range(1, 91):
+                    f = freq.get(n, 0)
+                    ls = last_seen.get(n, -1)
+                    rit = i - ls if ls >= 0 else len(window)
+                    if f >= 3 and rit >= rit_soglia:
+                        candidates.append((n, f + rit / len(window) * 3))
+                candidates.sort(key=lambda x: -x[1])
+                pick_list = [n for n, _ in candidates[:k]]
+            else:  # hot (default fallback)
+                pick_list = [n for n, _ in freq.most_common(k)]
+
+            # Pad if needed
+            if len(pick_list) < k:
+                for n, _ in freq.most_common():
+                    if n not in pick_list:
+                        pick_list.append(n)
+                    if len(pick_list) >= k:
+                        break
+            pick_list = sorted(pick_list[:k])
+
+            # Verify
+            pick_set = set(pick_list)
+            drawn = set(estr.numeri)
+            extra_set = set(estr.numeri_extra)
+            mb = len(pick_set & drawn)
+            rem = pick_set - drawn
+            me = len(rem & extra_set)
+            vb = pb.get(mb, 0.0)
+            ve = pe.get(me, 0.0)
+            vincita = vb + ve
 
             records.append(
                 {
                     "previsione": {
-                        "numeri": numeri_prev,
-                        "metodo": p.segnale,
-                        "score": p.score,
-                        "stato": p.stato,
+                        "numeri": pick_list,
+                        "metodo": metodo,
+                        "score": 0,
+                        "stato": "VINTA" if vincita > 0 else "PERSA",
                     },
-                    "estrazione": estr_data,
+                    "estrazione": {
+                        "concorso": estr.concorso,
+                        "data": str(estr.data),
+                        "ora": str(estr.ora),
+                        "numeri": estr.numeri,
+                        "numero_oro": estr.numero_oro,
+                        "doppio_oro": estr.doppio_oro,
+                        "numeri_extra": estr.numeri_extra,
+                        "match_base": mb,
+                        "match_extra": me,
+                        "numeri_azzeccati": sorted(pick_set & drawn),
+                        "numeri_azzeccati_extra": sorted(rem & extra_set),
+                        "vincita_base": vb,
+                        "vincita_extra": ve,
+                        "vincita_totale": vincita,
+                        "pnl": vincita - costo,
+                    },
                     "costo": costo,
                 }
             )
 
+        records.reverse()
         return records
     finally:
         session.close()
