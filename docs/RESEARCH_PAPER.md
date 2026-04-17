@@ -10,7 +10,7 @@ Su **VinciCasa**, il segnale top 5 frequenti nelle ultime 5 estrazioni produce +
 
 Sul **10eLotto**, la scoperta principale e stratificata. Sulla configurazione K=6+Extra (HE 9.94%), 94 test predittivi in 2 campagne non producono alcun segnale significativo dopo Bonferroni. Tuttavia, l'analisi per K=1..10 (Strategy Lab) ha rivelato che per **K=8 la strategia dual_target raggiunge ratio 1.445x** — primo segnale dell'intero Lottery Lab a coprire il proprio breakeven nel backtest (pending permutation test).
 
-Su **MillionDay**, l'analisi iniziale (496 estrazioni) aveva suggerito ratio 1.23x con p=0.18, interpretato come "segnale debole in attesa di conferma". Con dataset esteso a 2.607 estrazioni (parsing archivio millionday.cloud), il segnale originale W=50 crolla a 0.67x e il nuovo best (W=20, ratio 1.37x) non sopravvive a Bonferroni (p=0.054) e decade temporalmente (2022 0.94x → 2026 0.26x). **Il pattern MillionDay e stato invalidato.**
+Su **MillionDay**, tre fasi di ricerca progressiva: (1) dataset iniziale 496 estrazioni con apparente ratio 1.23x p=0.18 "promettente"; (2) dataset esteso a 2.607 estrazioni (archivio millionday.cloud) che **invalida** il segnale originale W=50; (3) deep analysis dedicata con 10 fasi specifiche al gioco — asimmetria fascia 51-55, 2 estrazioni/giorno, premio fisso 1M EUR, 7 sub-test di persistenza numerica. Miglior segnale: optfreq W=60 ratio 1.343x p=0.0495 (FAIL Bonferroni). **MillionDay non e battibile.**
 
 La lezione fondamentale: le lotterie con urne fisiche (Lotto) mostrano micro-pattern misurabili; quelle con RNG elettronico no — tranne forse K=8 su 10eLotto. Il sistema e deployato come **paper trading retroattivo in produzione** su https://lottery.fl3.org.
 
@@ -3125,7 +3125,150 @@ Il dataset 496 ha prodotto p=0.18 "non significativo ma suggestivo". Il dataset 
 
 ---
 
-## Appendice F: 10eLotto Strategy Lab — Motori Ottimali per K=1..10
+## Appendice E-ter: MillionDay — Deep Analysis (10 fasi dedicate)
+
+### E-ter.1 Motivazione
+
+Le Appendici E ed E-bis hanno applicato a MillionDay **test generici** derivati da Lotto e VinciCasa (top5_freq, cold, vicinanza, hot_extra). Ma MillionDay ha **proprieta uniche** che richiedono test specifici:
+
+- 5 numeri su 55 → 5 fasce complete (1-10, 11-20, ...) + 1 fascia parziale (51-55)
+- 2 estrazioni/giorno (13:00 e 20:30) — finestre in estrazioni, non giorni
+- Premio FISSO 1M EUR per 5/5 (non a totalizzatore come VinciCasa)
+- Extra opzionale +1 EUR con payout separati
+- Operatore Sisal (come VinciCasa) — possibile correlazione cross-game
+
+E stata quindi sviluppata una pipeline di **10 fasi dedicate** (`backend/millionday/deep_analysis.py`) con ~50 configurazioni specifiche. Output completo in `backend/millionday/DEEP_REPORT.md`.
+
+### E-ter.2 Fase 0 — EV esatto
+
+Calcolo ipergeometrico completo con payout ufficiali ADM (netti tassazione 8%):
+
+| Match | P | Premio base | Premio Extra |
+|-------|---|-------------|--------------|
+| 2/5 | 5.63% | EUR 2 | EUR 4 |
+| 3/5 | 0.35% | EUR 50 | EUR 100 |
+| 4/5 | 0.007% | EUR 1.000 | EUR 1.000 |
+| 5/5 | 0.000029% | EUR 1.000.000 | EUR 100.000 |
+
+| Config | EV | HE | Breakeven |
+|--------|-----|------|-----------|
+| Base (1 EUR) | 0.6481 | **35.19%** | 1.543x |
+| Base+Extra (2 EUR) | 1.3262 | **33.69%** | 1.508x |
+| Extra marginale (1 EUR) | 0.6781 | **32.19%** | 1.474x |
+
+**Insight operativo:** l'opzione Extra e *marginalmente piu conveniente* del base (HE 32.2% vs 35.2%). Chi decide di giocare dovrebbe sempre attivarla.
+
+### E-ter.3 Fase 1 — Asimmetria fascia 51-55
+
+Test specifico per bias modulo-10 del PRNG (comune in LCG mal implementati).
+
+| Fascia | Freq/num | z/num |
+|--------|----------|-------|
+| 1-10 | 235.0 | -0.43 |
+| 11-20 | 245.2 | +1.77 |
+| 21-30 | 228.8 | -1.77 |
+| 31-40 | 236.6 | -0.09 |
+| 41-50 | 230.5 | -1.40 |
+| **51-55 (parziale)** | **254.8** | **+2.71** |
+
+Fascia parziale vs altre 50: **z=+2.84** (borderline, soglia Bonferroni 6 fasce = 2.64).
+
+Chi-quadro sulla distribuzione K in 51-55 per estrazione: **9.88 df=5** (soglia 0.05 = 11.07). **Non significativo.**
+
+**Verdetto:** leggero eccesso di frequenza medio ma senza pattern strutturale sfruttabile.
+
+### E-ter.4 Fase 2 — RNG advanced
+
+Quattro test oltre i 5 standard:
+
+| Test | Risultato | Dettaglio |
+|------|-----------|-----------|
+| Gap test per numero (55 test) | PASS | 0/55 con \|z\|>3 |
+| Autocorr lag 1,2,3,7,14,30,60,365 | PASS (borderline lag 14) | max z=+2.28 a lag 14 |
+| Birthday test (cinquine ripetute) | PASS | 0 vs 0.98 atteso (Poisson) |
+| Chi-quadro coppie (1.485 bucket) | PASS | z=+1.09 |
+
+**Nessuna cinquina si e mai ripetuta in 4 anni** (2.607 estrazioni, 3.478.761 cinquine possibili). Compatibile con Poisson(0.98).
+
+### E-ter.5 Fase 3 — Singoli numeri con finestre ricalibrate
+
+Finestre in estrazioni (correzione rispetto a Appendice E dove erano in giorni): **W=14, 60, 180, 360, 730** (1 sett, 1 mese, 3 mesi, 6 mesi, 1 anno).
+
+4 strategie × 5 finestre = 20 configurazioni.
+
+| Strategia | W | Ratio disc | Ratio val |
+|-----------|---|-----------|-----------|
+| **optfreq** | **60** | **1.404x** | **1.343x** |
+| mix3h2c | 360 | 0.609x | 1.275x |
+| cold | 360 | 0.686x | 1.262x |
+| hot | 14 | 1.268x | 1.129x |
+
+`optfreq` = top 5 numeri con frequenza piu vicina al valore atteso (ne caldi ne freddi). Permutation test 10.000 iter: **p=0.0495**, soglia Bonferroni 20 test = 0.0025 → **FAIL**.
+
+**Coerenza disc/val eccellente (1.40x vs 1.34x)** — fatto favorevole a segnale reale — ma non sopravvive al multiple testing.
+
+### E-ter.6 Fase 4 — Struttura cinquina
+
+Mutual Information I(T_{t-1}; T_t) tra tipi di cinquina: **0.0064**, vs shuffled 0.0050 sd=0.0014. **p=0.151.** Non significativo. Somma media 140.5 vs attesa 140.0. **Nessuna memoria strutturale.**
+
+### E-ter.7 Fase 5 — Giorno della settimana
+
+0/7 giorni con |z somma|>2.69 (Bonferroni 7 test). Lunedi leggermente basso (z=-1.77) ma non sopravvive. **Nessun pattern temporale.**
+
+### E-ter.8 Fase 7 — Multi-giocata ottimale
+
+Simulazione Monte Carlo 10.000 iter su 4 strategie:
+
+| Strategia | Costo | P(≥2/5) | EV ratio |
+|-----------|-------|---------|----------|
+| Dispersione 10x5 (50 num distinti) | EUR 20 | **53.48%** | 0.480x |
+| Sistema 6 num (6 cinquine) | EUR 12 | 8.33% | **0.558x** |
+| Sistema 7 num (10 cinquine) | EUR 20 | 11.43% | 0.521x |
+| Singola 5 numeri | EUR 2 | 6.01% | 0.508x |
+
+**Finding:** la dispersione massimizza P(almeno 2/5) ma non l'EV. Il sistema 6 ha il miglior EV ratio ma pur sempre sotto breakeven. **Nessuna strategia multi-giocata crea edge.**
+
+### E-ter.9 Fase 9 — Persistenza numerica (7 sub-test)
+
+Test dell'ipotesi empirica: "i numeri si ripetono in finestre brevi".
+
+| Sub-test | Metrica | Osservato | Teorico | Z | Verdetto |
+|----------|---------|-----------|---------|---|----------|
+| 9A Overlap lag 1 | mean overlap | 0.4551 | 0.4545 | +0.05 | PASS |
+| 9B Intra-day 13→20 | mean overlap | 0.4659 | 0.4545 | +0.61 | PASS |
+| 9B Same-hour 13→13 | mean overlap | 0.4712 | 0.4545 | +0.90 | PASS |
+| 9B Same-hour 20→20 | mean overlap | 0.4423 | 0.4545 | -0.77 | PASS |
+| 9C Persistenza W=5 | P(X>=2) | 6.86% | 6.86% | +0.02 | PASS |
+| 9D Hot W=5 predict | P(hot in t+1) | 8.98% | 9.09% | -0.38 | PASS |
+| 9G Markov persistenza | N \|z\|>3.5 | 0/55 | 0 | – | PASS |
+
+**Tutti i test Fase 9 PASS.** L'osservazione che "il numero 34 esce 3 volte in 5 estrazioni" o "l'11 si ripete alle 13:00" e **cherry-picking post-hoc**:
+
+> P(almeno un numero esca >= 3 volte in 5 estrazioni) = 1 - (1 - 0.0073)^55 = **33%**.
+> Con 55 numeri monitorati, un evento "raro" al 0.7% emerge quasi una volta su tre per puro caso.
+
+**Fase 9E-F (strategia ripetitori):** ratio val fino a 1.91x ([13:00] W=3) ma con disc 0.76x — **dispersione massiva disc/val → overfitting**. Nessun segnale reale.
+
+### E-ter.10 Sintesi e 3 contributi originali
+
+**Verdetto definitivo:** MillionDay **NON e battibile** con nessuna delle ~50 configurazioni testate in 10 fasi. Il miglior candidato (optfreq W=60) ha p=0.0495 raw, FAIL Bonferroni, e ratio 1.343x ancora distante dal breakeven 1.508x.
+
+**3 contributi originali al Lottery Lab:**
+
+1. **Replicazione fallita del finding VinciCasa** su gioco strutturalmente simile (5/N). Il pattern top5_freq di VinciCasa (1.22x p=0.01) **non si generalizza**. E probabilmente specifico di quel gioco, non un meccanismo universale dei 5/N.
+
+2. **Test dell'asimmetria fascia-parziale** (unico nel panorama italiano): RNG Sisal non manifesta bias modulo-10. Nonostante la struttura 5+1 fasce sia teoricamente vulnerabile a PRNG mal implementati, il gioco passa tutti i controlli.
+
+3. **Smontaggio quantitativo dell'intuizione "numeri ripetuti"**: 7 sub-test dedicati al pattern percepito empiricamente mostrano zero evidenza. L'intuizione umana confonde multiple-testing implicito con segnale.
+
+### E-ter.11 Raccomandazioni operative per chi vuole giocare
+
+1. Attivare sempre l'opzione Extra (HE marginale 32.2% vs base 35.2%)
+2. Giocare singole, non sistemi (EV ratio comparabile, costo molto inferiore)
+3. Budget mensile fisso come costo di intrattenimento (aspettativa perdita ~50% del budget)
+4. Ignorare "numeri caldi", "ritardi", "sistemi guru" — la Fase 9 dimostra che non sono predittivi
+
+---
 
 ### F.1 Motivazione
 
@@ -3288,6 +3431,7 @@ Il sistema e deployato in produzione su **https://lottery.fl3.org** via VPS + Po
 | Lotto ambo | ruota singola | 6.886 estr. | 37.6% | 1.60x | freq_rit_fib W=75 | 1.16x | CV 5-fold | No |
 | VinciCasa | 5/40 base | 3.279 estr. | 37.3% | 1.60x | top5_freq W=5 | 1.22x | 0.01 | No |
 | MillionDay (est.) | 5/55 b+E | 2.607 estr. | 33.7% | 1.51x | top5_freq W=20 | 1.37x | 0.054 | No (FAIL Bonf.) |
+| MillionDay (deep) | 5/55 b+E optfreq | 2.607 estr. | 33.7% | 1.51x | optfreq W=60 | 1.34x | 0.050 | No (FAIL Bonf.) |
 | 10eLotto K=6+Extra | config HE min | 33.431 estr. | 9.94% | 1.11x | vicinanza W=100 | 1.08x | 0.054 | No (borderline) |
 | 10eLotto K=6+E ST | Special Time | 33.431 estr. | 6.30% | 1.067x | dual_target W=100 | 1.10x | FAIL Bonf. | No |
 | **10eLotto K=8+Extra** | **dual_target** | **33.431 estr.** | **30.75%** | **1.45x** | **dual_target W=100** | **1.445x** | **pending** | **SI (backtest)** |
@@ -3340,5 +3484,5 @@ Il paper si chiude con la stessa frase con cui e iniziato: **nessun gioco e prof
 
 *Documento generato dal sistema Lottery Lab — ultima revisione aprile 2026*
 *Dataset: Lotto 6.886 + VinciCasa 3.279 + 10eLotto 33.431 + MillionDay 2.607 = 46.203 estrazioni*
-*Test totali: 122+ configurazioni predittive, 5 RNG cert, 5 deep analysis, 8.010 coppie numeri spia*
+*Test totali: 172+ configurazioni predittive (incl. deep MillionDay 50 configurazioni), 9 RNG cert, 5 deep analysis, 8.010 coppie numeri spia*
 *Portale in produzione: https://lottery.fl3.org*
