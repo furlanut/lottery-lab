@@ -2,7 +2,7 @@
 
 ## Abstract
 
-**Lottery Lab** e un progetto di ricerca sistematica sulla predittivita delle lotterie italiane. Quattro giochi analizzati: Lotto Italiano (6.886 estrazioni, urne fisiche), VinciCasa (3.279 estrazioni, 5/40 giornaliero), 10eLotto ogni 5 minuti (33.431 estrazioni, RNG elettronico ADM) e MillionDay (496 estrazioni, 5/55 con Extra). Totale: ~44.000 estrazioni reali, oltre 118 configurazioni predittive testate.
+**Lottery Lab** e un progetto di ricerca sistematica sulla predittivita delle lotterie italiane. Quattro giochi analizzati: Lotto Italiano (6.886 estrazioni, urne fisiche), VinciCasa (3.279 estrazioni, 5/40 giornaliero), 10eLotto ogni 5 minuti (33.431 estrazioni, RNG elettronico ADM) e MillionDay (2.607 estrazioni da millionday.cloud, 5/55 con Extra, 2022-2026). Totale: ~46.000 estrazioni reali, oltre 122 configurazioni predittive testate.
 
 Sul **Lotto**, dopo 18+ test statistici e 12 test laterali non convenzionali, il miglior segnale e la vicinanza numerica (D=20, W=125): ratio 1.18x su ambetto, validato 5-fold CV. Il breakeven (1.60x) non e raggiunto, ma il segnale riduce il house edge. L'Engine V6 combina vicinanza (ambetto) e freq_rit_fib (ambo secco).
 
@@ -10,7 +10,7 @@ Su **VinciCasa**, il segnale top 5 frequenti nelle ultime 5 estrazioni produce +
 
 Sul **10eLotto**, la scoperta principale e stratificata. Sulla configurazione K=6+Extra (HE 9.94%), 94 test predittivi in 2 campagne non producono alcun segnale significativo dopo Bonferroni. Tuttavia, l'analisi per K=1..10 (Strategy Lab) ha rivelato che per **K=8 la strategia dual_target raggiunge ratio 1.445x** — primo segnale dell'intero Lottery Lab a coprire il proprio breakeven nel backtest (pending permutation test).
 
-Su **MillionDay**, il segnale top5_freq W=50 replica il pattern VinciCasa con ratio 1.23x. Non significativo (p=0.18) con soli 496 dati, ma direzionalmente coerente. Suggerisce un pattern generico nei giochi 5/N.
+Su **MillionDay**, l'analisi iniziale (496 estrazioni) aveva suggerito ratio 1.23x con p=0.18, interpretato come "segnale debole in attesa di conferma". Con dataset esteso a 2.607 estrazioni (parsing archivio millionday.cloud), il segnale originale W=50 crolla a 0.67x e il nuovo best (W=20, ratio 1.37x) non sopravvive a Bonferroni (p=0.054) e decade temporalmente (2022 0.94x → 2026 0.26x). **Il pattern MillionDay e stato invalidato.**
 
 La lezione fondamentale: le lotterie con urne fisiche (Lotto) mostrano micro-pattern misurabili; quelle con RNG elettronico no — tranne forse K=8 su 10eLotto. Il sistema e deployato come **paper trading retroattivo in produzione** su https://lottery.fl3.org.
 
@@ -2983,6 +2983,148 @@ Questi sono tracciati come debito tecnico in `docs/TECH_DEBT.md`.
 
 ---
 
+## Appendice E-bis: MillionDay — Analisi Estesa su Archivio millionday.cloud
+
+### E-bis.1 Motivazione e nuova fonte dati
+
+L'analisi originale (Appendice E) si basava su 496 estrazioni scaricate via API lottologia.com (apr-dic 2025). Il p-value borderline (0.18) era compatibile sia con un segnale reale debole sia con varianza campionaria; serviva piu dato per discriminare.
+
+E stato quindi integrato un archivio alternativo: **https://www.millionday.cloud/archivio-estrazioni.php**. La pagina espone un archivio HTML statico dichiarato dal 7 febbraio 2018 al 16 aprile 2026 (4.104 tag `<tr>` totali).
+
+**Tentativo precedente (documentato in Appendice E):** integrazione fallita. La pagina era ritenuta protetta da anti-bot JavaScript.
+
+**Nuovo tentativo riuscito:** richiesta HTTP diretta con User-Agent browser, parsing regex delle righe `<tr>` con pattern specifico per `testo_arancione` (data) + `<td>` (base) + `<td><span style="color:#088796">` (extra). Nessun JS, nessun anti-bot effettivamente attivo sull'endpoint PHP.
+
+Script di parsing: `backend/millionday/parse_cloud.py`.
+
+### E-bis.2 Dataset risultante
+
+- **Estrazioni parsate con successo:** 2.607
+- **Periodo coperto:** 16 marzo 2022 — 16 aprile 2026
+- **Rapporto vs dataset precedente:** **5.26x** (496 → 2.607)
+
+Distribuzione per anno:
+
+| Anno | N estrazioni |
+|------|--------------|
+| 2022 | 291 |
+| 2023 | 643 |
+| 2024 | 732 |
+| 2025 | 730 |
+| 2026 | 211 |
+
+**Discrepanza con 4.104 righe HTML:** ~1.500 righe non sono state parsate — probabilmente entries pre-Extra (estrazioni 2018-2019 che non avevano i 5 numeri Extra, introdotti in seguito). Il parser scarta righe con `len(extra) != 5`. Il dataset 2022-2026 e comunque completo e coerente.
+
+File persistente: `backend/millionday/data/archive_2022_2026.json` (509 KB).
+
+### E-bis.3 Fase 1 — RNG certification su dataset esteso
+
+| Test | Risultato | Dettaglio |
+|------|-----------|-----------|
+| Chi-quadro | PASS | z=0.63 (vs z=1.41 nel dataset 496), df=54, freq attesa 237, min 202, max 278 |
+| Overlap consecutivo | PASS | media 0.4551 vs 0.4545 atteso, z=0.05 (vs z=-0.37) |
+| Autocorrelazione somme | PASS | max \|r\|=0.015 (vs 0.031) |
+
+Su dataset 5x piu grande, **tutti i test RNG sono ancora piu "puliti"**. I valori z si avvicinano a zero — segno che le piccole deviazioni del dataset 496 erano puro rumore statistico. RNG MillionDay confermato indistinguibile da estrazioni genuinamente casuali.
+
+### E-bis.4 Fase 2 — Test segnali (18 configurazioni, split 1303/1304)
+
+EV baseline analitico: 1.3262.
+
+| Metodo | W | EV disc | EV val | Ratio disc | Ratio val |
+|--------|---|---------|--------|-----------|-----------|
+| top5_freq | 3 | 0.882 | 1.032 | 0.665x | 0.778x |
+| top5_freq | 5 | 0.946 | 0.819 | 0.713x | 0.618x |
+| top5_freq | 10 | 1.640 | 1.686 | 1.236x | 1.271x |
+| **top5_freq** | **20** | **1.836** | **1.822** | **1.385x** | **1.374x** |
+| top5_freq | 50 | 1.256 | 0.890 | 0.947x | 0.671x |
+| top5_freq | 100 | 0.758 | 0.888 | 0.572x | 0.670x |
+| cold | 10 | 0.940 | 1.638 | 0.709x | 1.235x |
+| cold | 20 | 0.753 | 0.770 | 0.568x | 0.581x |
+| cold | 50 | 0.605 | 1.098 | 0.456x | 0.828x |
+| cold | 100 | 0.675 | 0.969 | 0.509x | 0.731x |
+| hot_extra | 5 | 2.395 | 1.537 | 1.806x | 1.159x |
+| hot_extra | 10 | 1.732 | 0.851 | 1.306x | 0.642x |
+| hot_extra | 20 | 0.753 | 1.037 | 0.568x | 0.782x |
+| hot_extra | 50 | 1.783 | 0.807 | 1.344x | 0.608x |
+| vicinanza D=5 | 10 | 1.207 | 0.871 | 0.910x | 0.657x |
+| vicinanza D=5 | 20 | 0.661 | 1.017 | 0.498x | 0.767x |
+| vicinanza D=5 | 50 | 0.592 | 0.865 | 0.447x | 0.652x |
+| vicinanza D=5 | 100 | 0.582 | 1.064 | 0.439x | 0.803x |
+
+**Miglior segnale (validation): top5_freq W=20, ratio 1.374x.**
+
+Finding critico: il segnale piu forte su dataset 496 era **top5_freq W=50 (1.23x)**. Su dataset 5x piu grande, W=50 crolla a **0.67x** (peggio del caso) e il miglior W diventa **20**. 
+
+**La finestra ottimale e cambiata completamente.** Questo e il classico sintomo di **overfitting**: quando il dataset era piccolo, W=50 catturava rumore; ora che il dataset e rappresentativo, W=20 emerge come miglior compromesso bias-varianza. In assenza di validazione esterna, non si puo distinguere se W=20 e un altro artefatto o un segnale reale.
+
+**Coerenza disc/val per W=20:** 1.385x (disc) vs 1.374x (val) — i due valori sono molto simili, fatto positivo per l'ipotesi di segnale reale. Ma il p-value dira se resiste.
+
+### E-bis.5 Fase 3 — Permutation test (10.000 iterazioni, seed=42)
+
+- **Segnale testato:** top5_freq W=20 (ratio 1.374x)
+- **Observed EV:** 1.8221 vs baseline 1.3262
+- **Iterazioni con EV_shuffled >= EV_observed:** 539 / 10.000
+- **p-value: 0.0539**
+- **Bonferroni threshold (0.05/18 test):** 0.0028
+
+**Conclusione fase 3:** segnale **borderline — NON significativo a Bonferroni, borderline a p=0.05 raw**. Il p-value e esattamente al limite: interpretarlo come "segnale reale" sarebbe statisticamente scorretto. Con la correzione per 18 test multipli, la soglia e 0.0028: siamo ~20x sopra. Il segnale e compatibile con rumore atteso dal multiple testing.
+
+### E-bis.6 Fase 4 — Stabilita temporale del segnale top5_freq W=5
+
+Il pattern piu forte su VinciCasa era top5_freq W=5 (1.22x p=0.01). Se fosse un meccanismo RNG reale, dovrebbe persistere anche su MillionDay anno per anno. Test per anno:
+
+| Anno | N estrazioni | Ratio W=5 |
+|------|--------------|-----------|
+| 2022 | 291 | 0.9386x |
+| 2023 | 643 | 0.5909x |
+| 2024 | 732 | 0.7613x |
+| 2025 | 730 | 0.6532x |
+| **2026** | **211** | **0.2635x** |
+
+Il segnale **decade monotonicamente**. Nel 2022 era leggermente sotto il baseline (0.94x); nel 2026 e catastroficamente sotto (0.26x). Se il segnale fosse persistenza genuina del PRNG, dovrebbe essere stabile o variare casualmente; invece **decade** in modo sospetto.
+
+### E-bis.7 Fase 5 — Rolling window (bucket 500 giocate)
+
+| Range giocate | Ratio W=5 |
+|---------------|-----------|
+| 5-505 | 0.9169x |
+| 505-1005 | 0.5821x |
+| 1005-1505 | 0.5158x |
+| 1505-2005 | 1.0918x |
+| 2005-2505 | 0.3197x |
+| 2505-2607 | 0.1774x |
+
+Pattern irregolare con picco isolato nel bucket 1505-2005 (1.09x) seguito da crollo. **Compatibile con rumore, non con segnale stabile.**
+
+### E-bis.8 Revisione delle conclusioni (invalidazione parziale Appendice E)
+
+Dataset esteso forza una revisione delle conclusioni precedenti:
+
+| Claim originale (dataset 496) | Status con dataset 2607 |
+|-------------------------------|-------------------------|
+| Best signal: top5_freq W=50 ratio 1.234x | **Invalidato** — W=50 crolla a 0.67x |
+| p=0.183 "insufficiente per conferma" | **Confermato** — era rumore |
+| "Pattern generico dei giochi 5/N" | **Invalidato** — decade a 0.26x nel 2026 |
+| RNG certificato PASS | **Confermato** — anche piu solido |
+| Segnale comparabile a VinciCasa 1.22x | **Invalidato** — non replicato |
+
+**La conclusione rivista:** MillionDay **non mostra segnali predittivi robusti**. Il ratio 1.374x osservato su W=20 non sopravvive a Bonferroni (soglia 0.0028), non e stabile anno per anno, e il best W cambia completamente tra dataset 496 e 2607. E il classico pattern del multiple-testing fishing.
+
+### E-bis.9 Implicazioni per VinciCasa
+
+Il segnale top5_freq W=5 su VinciCasa (1.22x p=0.01, 3.279 estrazioni) rimane l'unico caso validato fra i giochi 5/N. Ma l'invalidazione del "pattern generico" indebolisce l'interpretazione: **non e un fenomeno universale dei giochi 5/N**, e potrebbe essere un artefatto specifico di VinciCasa (dataset, fornitore RNG, periodo). Una replicazione su un secondo dataset VinciCasa indipendente sarebbe decisiva.
+
+### E-bis.10 Nota metodologica: il valore del dataset ampliato
+
+Questa appendice illustra un principio fondamentale della ricerca statistica: **un dataset 5x piu grande puo invalidare claim basati su un dataset piccolo, anche se i test statistici originali erano corretti**.
+
+Il dataset 496 ha prodotto p=0.18 "non significativo ma suggestivo". Il dataset 2607 ha prodotto p=0.054 borderline ma su **un segnale completamente diverso** (W=20 invece di W=50), mentre il W=50 originale e ora chiaramente rumore (0.67x). Senza la seconda raccolta, si sarebbe continuato a credere in un segnale W=50 inesistente.
+
+**Lezione operativa:** i ratio osservati su piccoli dataset non devono mai essere trattati come "direzionalmente reali ma statisticamente deboli". Sono spesso artefatti del multiple testing mascherati da segnale promettente.
+
+---
+
 ## Appendice F: 10eLotto Strategy Lab — Motori Ottimali per K=1..10
 
 ### F.1 Motivazione
@@ -3145,7 +3287,7 @@ Il sistema e deployato in produzione su **https://lottery.fl3.org** via VPS + Po
 | Lotto ambetto | tutte le ruote | 6.886 estr. | 37.6% | 1.60x | vicinanza D=20 W=125 | 1.18x | CV 5-fold | No |
 | Lotto ambo | ruota singola | 6.886 estr. | 37.6% | 1.60x | freq_rit_fib W=75 | 1.16x | CV 5-fold | No |
 | VinciCasa | 5/40 base | 3.279 estr. | 37.3% | 1.60x | top5_freq W=5 | 1.22x | 0.01 | No |
-| MillionDay | 5/55 b+E | 496 estr. | 33.7% | 1.51x | top5_freq W=50 | 1.23x | 0.18 | No (poco dato) |
+| MillionDay (est.) | 5/55 b+E | 2.607 estr. | 33.7% | 1.51x | top5_freq W=20 | 1.37x | 0.054 | No (FAIL Bonf.) |
 | 10eLotto K=6+Extra | config HE min | 33.431 estr. | 9.94% | 1.11x | vicinanza W=100 | 1.08x | 0.054 | No (borderline) |
 | 10eLotto K=6+E ST | Special Time | 33.431 estr. | 6.30% | 1.067x | dual_target W=100 | 1.10x | FAIL Bonf. | No |
 | **10eLotto K=8+Extra** | **dual_target** | **33.431 estr.** | **30.75%** | **1.45x** | **dual_target W=100** | **1.445x** | **pending** | **SI (backtest)** |
@@ -3155,14 +3297,14 @@ Il sistema e deployato in produzione su **https://lottery.fl3.org** via VPS + Po
 **1. Il segnale piu forte e emerso dall'analisi sistematica per K, non dal K "ottimale" del HE.**
 Tutti i capitoli 21-24 si erano concentrati sul K=6+Extra (HE 9.94%). E stato solo generalizzando l'analisi a K=1..10 che e emerso il K=8+dual_target con ratio 1.445x. **Lezione: non lasciarsi guidare dall'EV ma dal prodotto ratio × breakeven_residuo.**
 
-**2. Le lotterie 5/N (VinciCasa, MillionDay) mostrano lo stesso pattern.**
-top5_freq W=5 su VinciCasa → 1.22x (p=0.01). top5_freq W=50 su MillionDay → 1.23x (p=0.18). La coincidenza direzionale su due dataset indipendenti e forte. La non-significativita su MillionDay e un problema di potenza, non di assenza.
+**2. Le lotterie 5/N: VinciCasa unico, MillionDay invalidato (vedi Appendice E-bis).**
+top5_freq W=5 su VinciCasa → 1.22x (p=0.01, 3.279 estrazioni) — **rimane l'unico segnale validato**. Su MillionDay, dataset 5x piu grande (2.607 estrazioni da millionday.cloud) **invalida** il segnale W=50 del dataset originale: W=50 crolla da 1.23x a 0.67x, il nuovo W=20 e borderline (p=0.054 FAIL Bonferroni) e decade temporalmente (2022 0.94x → 2026 0.26x). Il "pattern generico 5/N" era un'illusione da piccolo campione.
 
 **3. Il Lotto (urne fisiche) ha pattern piu robusti del 10eLotto (PRNG).**
 CV 5-fold valida il segnale Lotto. Il 10eLotto sopravvive a stento un singolo split 50/50. Lo scarto e reale: le urne hanno micro-bias fisici, il PRNG no.
 
 **4. La correzione Bonferroni distrugge quasi tutti i "segnali".**
-94 test sul 10eLotto + 10 sul Strategy Lab K + 14 su MillionDay = 118+ test. Soglia Bonferroni a 0.05/118 = 0.00042. Nessun segnale finora validato sopravvive (compreso il K=8+dual_target, in attesa di permutation test).
+94 test sul 10eLotto + 10 sul Strategy Lab K + 18 su MillionDay esteso = 122+ test. Soglia Bonferroni a 0.05/122 = 0.00041. Nessun segnale finora validato sopravvive (compreso il K=8+dual_target, in attesa di permutation test).
 
 **5. Il wheeling e il conditional staking non creano edge.**
 Testato esaustivamente: P&L marginale o peggio. Confermato dalla teoria (Kelly su EV<1 = non giocare).
@@ -3178,22 +3320,25 @@ La domanda "le lotterie italiane sono battibili?" ha oggi una risposta operativa
 | Item | Priorita | Note |
 |------|----------|------|
 | Permutation test K=8 dual_target | **Alta** | Conferma o smonta l'unico segnale al breakeven |
-| Ingestione storica MillionDay 2018-2026 | Alta | Portare dataset a 6k per confermare 1.23x |
-| Frontend MillionDay | Media | Engine + API + page |
+| Replicazione VinciCasa su dataset alternativo | Alta | Confermare che 1.22x non e artefatto di quel specifico dataset |
+| Ingestione MillionDay pre-2022 (2018-2021) | Media | Il parser scarta righe senza Extra (~1500 entries) |
+| Frontend MillionDay | Bassa | Engine + API + page (ora che non c'e segnale, meno urgente) |
 | Paper trading con denaro reale K=8 | Bassa | Solo dopo conferma permutation |
-| Integrazione millionday.cloud | Bassa | Scraping JS protetto anti-bot |
+| ~~Integrazione millionday.cloud~~ | Completato | Parser HTML + 2.607 estrazioni, Appendice E-bis |
 
 ### 26.4 Conclusione definitiva
 
-Il Lottery Lab ha coperto **4 giochi (Lotto, VinciCasa, 10eLotto, MillionDay)**, ha analizzato **~44.000 estrazioni reali**, ha testato **oltre 118 configurazioni predittive** con metodologia CV + permutation + Bonferroni, e ha prodotto un **portale web funzionante in produzione** (https://lottery.fl3.org) con paper trading live retroattivo.
+Il Lottery Lab ha coperto **4 giochi (Lotto, VinciCasa, 10eLotto, MillionDay)**, ha analizzato **~46.000 estrazioni reali** (con MillionDay esteso da 496 a 2.607), ha testato **oltre 122 configurazioni predittive** con metodologia CV + permutation + Bonferroni, e ha prodotto un **portale web funzionante in produzione** (https://lottery.fl3.org) con paper trading live retroattivo.
 
-Il risultato scientifico e netto: **le lotterie italiane sono al 99% imbattibili**. L'1% residuo e il K=8+Extra su 10eLotto con dual_target W=100, in attesa di validazione formale. Il valore metodologico e invece enorme: ogni test e riproducibile, ogni dato tracciato, ogni conclusione documentata.
+Il risultato scientifico e netto: **le lotterie italiane sono al 99% imbattibili**. L'1% residuo e il K=8+Extra su 10eLotto con dual_target W=100, in attesa di validazione formale. MillionDay, inizialmente promettente con 496 estrazioni (ratio 1.23x p=0.18), e stato **invalidato** dal dataset esteso: il segnale originale W=50 era rumore, il nuovo W=20 e borderline (p=0.054) e instabile nel tempo.
+
+Il valore metodologico e enorme: ogni test e riproducibile, ogni dato tracciato, ogni conclusione documentata. L'episodio MillionDay — ratio 1.23x su 496 invalidato su 2.607 — e esso stesso una lezione sul perche la replicazione su dataset ampliati sia irrinunciabile.
 
 Il paper si chiude con la stessa frase con cui e iniziato: **nessun gioco e profittevole. Ma il viaggio per scoprirlo e stato rigoroso, e questo paper documenta ogni passo.**
 
 ---
 
 *Documento generato dal sistema Lottery Lab — ultima revisione aprile 2026*
-*Dataset: Lotto 6.886 + VinciCasa 3.279 + 10eLotto 33.431 + MillionDay 496 = 44.092 estrazioni*
-*Test totali: 118+ configurazioni predittive, 5 RNG cert, 5 deep analysis, 8.010 coppie numeri spia*
+*Dataset: Lotto 6.886 + VinciCasa 3.279 + 10eLotto 33.431 + MillionDay 2.607 = 46.203 estrazioni*
+*Test totali: 122+ configurazioni predittive, 5 RNG cert, 5 deep analysis, 8.010 coppie numeri spia*
 *Portale in produzione: https://lottery.fl3.org*
