@@ -81,6 +81,34 @@ export interface VinciCasaPrevisione {
   testo: string;
 }
 
+// MillionDay types (5/55 + 5 Extra, 2 estrazioni/giorno)
+export interface MillionDayStatusData {
+  estrazioni_totali: number;
+  data_prima: string | null;
+  data_ultima: string | null;
+}
+
+export interface MillionDayPrevisione {
+  numeri: number[];
+  frequenze: Record<string, number>;
+  expected: number;
+  data_generazione: string;
+  finestra: number;
+  dettagli: string;
+  testo: string;
+  score: number;
+  house_edge: number;
+}
+
+export interface MillionDayEstrazione {
+  id: number;
+  data: string;
+  ora: string;
+  numeri: number[];
+  extra: number[];
+  created_at: string;
+}
+
 export interface CalendarioEntry {
   gioco: string;
   data: string;

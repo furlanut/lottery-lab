@@ -13,10 +13,11 @@ from pathlib import Path
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-# Import VinciCasa and 10eLotto models to register them in the shared Base metadata
+# Import VinciCasa, 10eLotto, MillionDay models to register in the shared Base metadata
 from diecielotto.models.database import DiecieLottoEstrazione, DiecieLottoPrevisione
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from millionday.models.database import MillionDayEstrazione
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select, text
 from vincicasa.models.database import VinciCasaEstrazione, VinciCasaPrevisione
@@ -141,6 +142,39 @@ class VinciCasaPrevisioneOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class MillionDayEstrazioneOut(BaseModel):
+    """Singola estrazione MillionDay (5 base + 5 Extra su 55)."""
+
+    id: int
+    data: date
+    ora: str  # "13:00" o "20:30"
+    numeri: list[int]
+    extra: list[int]
+    created_at: datetime
+
+
+class MillionDayStatusOut(BaseModel):
+    """Stato complessivo MillionDay."""
+
+    estrazioni_totali: int
+    data_prima: Optional[date] = None
+    data_ultima: Optional[date] = None
+
+
+class MillionDayPrevisioneGenerata(BaseModel):
+    """Previsione MillionDay generata al volo (optfreq W=60)."""
+
+    numeri: list[int]
+    frequenze: dict[str, int] = Field(default_factory=dict)
+    expected: float = 0.0
+    data_generazione: date
+    finestra: int
+    dettagli: str = ""
+    testo: str = ""
+    score: float = 1.343
+    house_edge: float = 33.69
 
 
 class CalendarioEntry(BaseModel):
@@ -782,6 +816,213 @@ def vincicasa_storico_completo(limit: int = Query(30, ge=1, le=500)):
                     "costo": costo,
                     "pnl": vincita - costo,
                     "stato": (f"VINTA {match}/5" if vincita > 0 else f"PERSA ({match}/5)"),
+                }
+            )
+
+        records.reverse()
+        return records
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# MillionDay endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.get(f"{PREFIX}/millionday/status", response_model=MillionDayStatusOut)
+def millionday_status():
+    """Stato complessivo MillionDay: conteggi e date min/max."""
+    session = get_session()
+    try:
+        count = session.scalar(select(func.count(MillionDayEstrazione.id))) or 0
+        date_min = session.scalar(select(func.min(MillionDayEstrazione.data)))
+        date_max = session.scalar(select(func.max(MillionDayEstrazione.data)))
+        return MillionDayStatusOut(
+            estrazioni_totali=count,
+            data_prima=date_min,
+            data_ultima=date_max,
+        )
+    except Exception as e:
+        logger.exception("Errore millionday/status")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    finally:
+        session.close()
+
+
+@app.get(f"{PREFIX}/millionday/estrazioni", response_model=list[MillionDayEstrazioneOut])
+def millionday_estrazioni(limit: int = Query(20, ge=1, le=500)):
+    """Ultime N estrazioni MillionDay ordinate per data+ora desc."""
+    session = get_session()
+    try:
+        rows = (
+            session.execute(
+                select(MillionDayEstrazione)
+                .order_by(MillionDayEstrazione.data.desc(), MillionDayEstrazione.ora.desc())
+                .limit(limit)
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            MillionDayEstrazioneOut(
+                id=r.id,
+                data=r.data,
+                ora=r.ora.strftime("%H:%M"),
+                numeri=r.numeri,
+                extra=r.numeri_extra,
+                created_at=r.created_at,
+            )
+            for r in rows
+        ]
+    except Exception as e:
+        logger.exception("Errore millionday/estrazioni")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    finally:
+        session.close()
+
+
+@app.get(f"{PREFIX}/millionday/previsione", response_model=MillionDayPrevisioneGenerata)
+def millionday_previsione():
+    """Genera la previsione MillionDay del prossimo turno (optfreq W=60 + Extra)."""
+    from millionday.engine import (
+        HE_TOTALE,
+        SCORE_BACKTEST,
+        formatta_previsione,
+        genera_previsione,
+    )
+
+    try:
+        prev = genera_previsione()
+        testo = formatta_previsione(prev)
+        # Keys int -> str per JSON
+        freq_str = {str(k): v for k, v in prev.frequenze.items()}
+
+        return MillionDayPrevisioneGenerata(
+            numeri=prev.numeri,
+            frequenze=freq_str,
+            expected=prev.expected,
+            data_generazione=prev.data_generazione,
+            finestra=prev.finestra,
+            dettagli=prev.dettagli,
+            testo=testo,
+            score=SCORE_BACKTEST,
+            house_edge=HE_TOTALE,
+        )
+    except Exception as e:
+        logger.exception("Errore millionday/previsione")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get(f"{PREFIX}/millionday/calendario", response_model=list[CalendarioEntry])
+def millionday_calendario():
+    """Prossime estrazioni MillionDay (2/giorno: 13:00 e 20:30)."""
+    now = datetime.now(ROME_TZ)
+    oggi = now.date()
+    risultati: list[CalendarioEntry] = []
+    d = oggi
+    nome_giorni = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]
+    while len(risultati) < 5:
+        for ora_str, ora_time in [("13:00", (13, 0)), ("20:30", (20, 30))]:
+            if d == oggi and (now.hour, now.minute) >= ora_time:
+                continue
+            risultati.append(
+                CalendarioEntry(
+                    gioco="MillionDay",
+                    data=d,
+                    giorno=nome_giorni[d.weekday()],
+                    ora=ora_str,
+                )
+            )
+            if len(risultati) >= 5:
+                break
+        d += timedelta(days=1)
+    return risultati
+
+
+@app.get(f"{PREFIX}/millionday/storico-completo")
+def millionday_storico_completo(limit: int = Query(30, ge=1, le=500)):
+    """Storico MillionDay retroattivo: optfreq W=60 vs estrazione reale.
+
+    Per ogni estrazione cronologica a partire dall'indice W, genera la previsione
+    con le 60 estrazioni precedenti e confronta con l'estrazione reale.
+    Ritorna gli ultimi `limit` record (piu recenti prima).
+    """
+    from collections import Counter
+
+    from millionday.engine import (
+        COSTO_TOTALE,
+        N_WINDOW,
+        PREMI_BASE,
+        PREMI_EXTRA,
+    )
+
+    session = get_session()
+    try:
+        all_estr = (
+            session.execute(
+                select(MillionDayEstrazione).order_by(
+                    MillionDayEstrazione.data, MillionDayEstrazione.ora
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        if len(all_estr) < N_WINDOW + 1:
+            return []
+
+        records = []
+        start = max(N_WINDOW, len(all_estr) - limit)
+
+        for i in range(start, len(all_estr)):
+            # optfreq W=60: top 5 con frequenza piu vicina all'attesa
+            window = all_estr[i - N_WINDOW : i]
+            freq = Counter()
+            for e in window:
+                for n in e.numeri:
+                    freq[n] += 1
+            expected = N_WINDOW * 5 / 55
+            pick = sorted(
+                range(1, 56),
+                key=lambda x: (abs(freq.get(x, 0) - expected), x),
+            )[:5]
+
+            estr = all_estr[i]
+            base = set(estr.numeri)
+            extra = set(estr.numeri_extra)
+            match_base = len(set(pick) & base)
+            match_extra = len((set(pick) - base) & extra)
+            v_base = PREMI_BASE.get(match_base, 0.0)
+            v_extra = PREMI_EXTRA.get(match_extra, 0.0)
+            vincita = v_base + v_extra
+            pnl = vincita - COSTO_TOTALE
+
+            stato = "VINTA" if vincita > 0 else "PERSA"
+            cat = f"{match_base}/5"
+            if match_extra > 0:
+                cat += f" +{match_extra}E"
+
+            records.append(
+                {
+                    "data": str(estr.data),
+                    "ora": estr.ora.strftime("%H:%M"),
+                    "previsione": {
+                        "numeri": pick,
+                        "metodo": "optfreq_W60",
+                    },
+                    "estrazione": {
+                        "numeri": estr.numeri,
+                        "extra": estr.numeri_extra,
+                    },
+                    "match_base": match_base,
+                    "match_extra": match_extra,
+                    "vincita_base": v_base,
+                    "vincita_extra": v_extra,
+                    "vincita": vincita,
+                    "costo": COSTO_TOTALE,
+                    "pnl": pnl,
+                    "stato": f"{stato} {cat}",
                 }
             )
 

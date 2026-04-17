@@ -246,9 +246,26 @@ def update_vincicasa():
         log.error("VinciCasa: %s", e)
 
 
+def update_millionday():
+    """Scrape millionday.cloud for new extractions (2/day: 13:00 and 20:30)."""
+    try:
+        from millionday.ingestor import aggiorna_da_cloud
+
+        stats = aggiorna_da_cloud()
+        if stats["inseriti"] > 0:
+            log.info(
+                "MillionDay: +%d new, %d duplicates",
+                stats["inseriti"],
+                stats["duplicati"],
+            )
+    except Exception as e:
+        log.error("MillionDay update failed: %s", e)
+
+
 if __name__ == "__main__":
     log.info("=== Auto-update starting ===")
     update_diecielotto()
     update_lotto()
     update_vincicasa()
+    update_millionday()
     log.info("=== Auto-update complete ===")

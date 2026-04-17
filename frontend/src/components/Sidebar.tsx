@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Dice1, Home, Calendar, Timer, FlaskConical, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Dice1, Home, Calendar, Timer, FlaskConical, TrendingUp, Coins } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/lotto", label: "Lotto", icon: Dice1 },
   { href: "/vincicasa", label: "VinciCasa", icon: Home },
+  { href: "/millionday", label: "MillionDay", icon: Coins },
   { href: "/calendario", label: "Calendario", icon: Calendar },
   { href: "/diecielotto", label: "10eLotto", icon: Timer },
   { href: "/diecielotto-lab", label: "10eL Lab", icon: FlaskConical },
