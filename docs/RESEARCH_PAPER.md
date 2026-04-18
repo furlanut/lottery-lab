@@ -4134,6 +4134,177 @@ Tuttavia, **aggiungere alla pagina MillionDay un disclaimer** che la performance
 
 ---
 
+## Appendice M: Deep Lotto Sweep — l'edge V6 e un artefatto
+
+### M.1 Motivazione
+
+Il paper V6 (capitoli 11-18) ha stabilito come segnale dominante **vicinanza D=20 W=125** con ratio 1.18x su ambetto, validato 5-fold CV su 6.886 estrazioni. Dopo le appendici H-L che hanno smentito ogni ipotesi di meccanismo sul 10eLotto e MillionDay, mi sono chiesto: **abbiamo veramente testato il Lotto con lo stesso rigore?**
+
+Risposta: **no**. Il claim 1.18x derivava da cross-validation, non da test di meccanismo (label-shuffle, hot-hand, stabilita decadale). Applicando gli stessi test dell'Appendice H al Lotto, ho scoperto che il segnale V6 **non e sopravvissuto**.
+
+Script: `backend/lotto_predictor/analyzer/deep_lotto_sweep.py`. Dataset: 68.898 estrazioni-ruota × 10 ruote × 80 anni. Runtime: ~2 minuti con numpy ottimizzato.
+
+### M.2 Fase 1 — Test diagnostici (Test A/B/C)
+
+### Test A — Label-shuffle ambetto W=125
+
+Replica dell'Appendice H.3 sul Lotto merged (68.898 estrazioni):
+
+| | Valore |
+|---|---|
+| Baseline vicinanza_D20 W=125 | **hit 1.948% vs random 1.962% → ratio 0.993x** |
+| 20 permutazioni label (preserva freq) | mean 1.031x, SD 0.015, range [1.00, 1.07] |
+| **p-value** | **1.000** |
+
+**Risultato catastrofico**: il baseline (1.18x nel paper) **si riduce a 0.993x** con questa misura corretta, e **tutti i permutati label-shuffle fanno MEGLIO** del baseline. Il p-value e 1.0 (baseline sotto il 100% dei permutati).
+
+**Verdetto Test A**: Geografia NON conta. Il presunto edge vicinanza W=125 era artefatto dell'implementazione originaria del V6. Su implementazione pulita (algo standard senza overfitting su fold), il ratio e 0.993x.
+
+### Test B — Hot-hand per numero × ruota
+
+900 test (90 numeri × 10 ruote), finestra W=100, frequenza alta vs bassa:
+
+| Metrica | Valore |
+|---------|--------|
+| |z| > 3.0 raw | 2/900 |
+| |z| > 3.8 Bonferroni (0.05/900) | **0/900** |
+| Mean z | -0.234 (lievissima anti-persistenza, non sig) |
+
+Top 10 |z| — tutti NEGATIVI:
+- FIRENZE n=43: z=-3.28
+- NAPOLI n=14: z=-3.25
+- NAPOLI n=31: z=-2.91
+- GENOVA n=52: z=-2.89
+- ROMA n=71: z=-2.83
+
+**Verdetto Test B**: Nessun bias fisico delle urne oltre il multiple testing. Il mean z leggermente negativo suggerisce lieve anti-persistenza (numeri caldi lievemente meno probabili), ma non significativo.
+
+### Test C — Stabilita temporale 8-fold decadale
+
+Ratio di vicinanza_D20 W=125 su 8 decenni (1946-2026):
+
+| Decennio | N estrazioni | Hit% | Baseline% | Ratio |
+|----------|-------------|------|-----------|-------|
+| 1946-1955 | 5.093 | 1.98% | 1.83% | **+1.084x** |
+| 1956-1965 | 5.075 | 2.11% | 2.14% | +0.983x |
+| 1966-1975 | 5.095 | 1.47% | 1.94% | **0.757x** (sotto!) |
+| 1976-1985 | 5.095 | 1.90% | 1.53% | **+1.242x** |
+| 1986-1995 | 5.095 | 2.18% | 1.94% | +1.126x |
+| 1996-2005 | 9.685 | 1.97% | 1.96% | +1.008x |
+| 2006-2015 | 15.525 | 1.92% | 2.07% | +0.926x |
+| 2016-2026 | 17.235 | 1.89% | 2.04% | +0.926x |
+
+**Solo 4/8 decenni sopra 1.0x**. Mean 1.006x, SD 0.138. Il ratio oscilla da **0.757 a 1.242** nel tempo — grosso coefficiente di variazione (CV 14%).
+
+**Verdetto Test C**: Pattern INSTABILE. Se l'edge fosse reale, dovrebbe persistere nei decenni; invece oscilla sia sopra che sotto 1.0x senza pattern, sintomo di varianza campionaria e non di segnale RNG/fisico.
+
+### M.3 Fase 2 — Window sweep per ruota
+
+2.100 configurazioni: 7 algoritmi × 30 finestre (W=5..150 step 5) × 10 ruote. Baseline random empirica per ciascuna ruota (2 simulazioni). Best config trovata per ciascuna:
+
+| Ruota | Algoritmo | W | Hit rate | Ratio robust |
+|-------|-----------|---|----------|--------------|
+| BARI | spread_decade | 100 | 2.356% | **+1.259x** |
+| CAGLIARI | vicinanza_D40 | 15 | 2.415% | +1.117x |
+| FIRENZE | cold_pair | 140 | 2.504% | +1.268x |
+| GENOVA | vicinanza_D5 | 30 | 2.434% | +1.215x |
+| NAPOLI | spread_decade | 85 | 2.395% | +1.150x |
+| PALERMO | vicinanza_D40 | 85 | 2.337% | +1.154x |
+| **ROMA** | **cold_pair** | **135** | **2.546%** | **+1.281x** (best) |
+| TORINO | cold_pair | 65 | 2.418% | +1.243x |
+| VENEZIA | spread_decade | 95 | 2.384% | +1.203x |
+| MILANO | cold_pair | 140 | 2.534% | +1.247x |
+
+Osservazioni:
+- **cold_pair vince in 4/10 ruote** (FIRENZE, ROMA, TORINO, MILANO) — pattern anti-persistenza coerente con Test B
+- **spread_decade** vince in 3/10 (BARI, NAPOLI, VENEZIA)
+- **Vicinanza** (D=5, D=20, D=40) vince in 3/10 ma con W molto diversi (15, 30, 85-100)
+- **Nessuna finestra "universale"**: W varia da 15 a 140 tra ruote
+- Ratio massimi 1.25-1.28x — ma questi sono selection bias su 210 test per ruota
+
+### M.4 Multiple testing: i ratio osservati sono rumore?
+
+Con 210 configurazioni testate per ruota, la probabilita di osservare per caso un ratio ≥ 1.25x su almeno una config dipende dalla distribuzione null.
+
+Se il vero ratio e 1.0 e la varianza del ratio empirico (su ~6.800 test per ciascuna config) e circa 0.06 (stimata), allora:
+- P(ratio > 1.25 per singola config) ≈ P(Z > (1.25-1.0)/0.06) = P(Z > 4.17) ≈ 1.5e-5
+- P(almeno 1 config su 210 con ratio > 1.25) ≈ 1 - (1 - 1.5e-5)^210 ≈ 0.3%
+
+Questo sembrerebbe significativo. MA la varianza cross-decennale osservata nel Test C e molto maggiore (SD 0.138 su 8 fold), quindi la stima 0.06 potrebbe essere sottostimata. Assumendo SD vera = 0.15:
+- P(ratio > 1.25) ≈ P(Z > 1.67) ≈ 4.8%
+- P(almeno 1 su 210) ≈ 100% (certo)
+
+**Selection bias quasi-inevitabile.** Inoltre, nessuna di queste config e stata testata con label-shuffle (che come Test A mostra, degrada a 0.99x).
+
+### M.5 Fase 3 — Pattern inter-ruota con config fissa
+
+Per un confronto onesto, applichiamo lo **stesso** algoritmo (vicinanza_D20 W=125, la config del paper V6) a tutte le ruote senza cherry-picking:
+
+| Ruota | Hit rate | Baseline | Ratio |
+|-------|----------|----------|-------|
+| **BARI** | 2.040% | 1.863% | **+1.095x** |
+| FIRENZE | 2.129% | 2.022% | +1.053x |
+| TORINO | 2.025% | 1.945% | +1.041x |
+| ROMA | 1.951% | 1.984% | +0.984x |
+| GENOVA | 2.025% | 2.100% | +0.964x |
+| MILANO | 1.937% | 2.013% | +0.962x |
+| NAPOLI | 1.966% | 2.085% | +0.943x |
+| PALERMO | 1.892% | 2.066% | +0.916x |
+| CAGLIARI | 1.803% | 2.114% | +0.853x |
+| **VENEZIA** | 1.641% | 2.013% | **+0.815x** |
+
+**Solo 3/10 ruote sopra 1.0x.** Gap tra migliore (BARI 1.095x) e peggiore (VENEZIA 0.815x): **0.28**. Questa e la firma di pura varianza: un algoritmo senza edge reale deve produrre ratio centrati su 1.0 con dispersione per ruote.
+
+Per confronto: se avessimo veramente un bias fisico comune (urne di stessa fornitura), tutte le ruote dovrebbero mostrare ratio coerenti. Invece il gap 0.28 e cosi grande (equivalente a ±14% del baseline) che conferma varianza campionaria.
+
+### M.6 Il claim V6 del paper e stato smentito
+
+Riepilogo:
+
+| Claim paper V6 | Verifica Appendice M | Esito |
+|----------------|---------------------|-------|
+| Vicinanza D=20 W=125 → 1.18x ambetto | 0.993x (sweep pulito) / 1.031x (permutati) | **SMENTITO** |
+| "Segnale validato 5-fold CV" | CV temporale 8-fold: 4/8 sopra 1.0, range [0.76, 1.24] | **INSTABILE** |
+| "Bias urne fisiche plausibile" | Hot-hand test 0/900 Bonf-sig | **INESISTENTE** |
+| "Edge universale su tutte ruote" | 3/10 ruote sopra 1.0x con config fissa | **NON UNIVERSALE** |
+
+L'ipotesi ottimistica dell'Introduzione (**"Il Lotto probabilmente HA un edge reale per via urne fisiche"**) e **falsa**. Le urne fisiche Lotto hanno passato tutti i test di bias a cui sono state sottoposte. Il 1.18x del paper e con alta probabilita un **artefatto dell'implementazione specifica** della cross-validation usata in V6 (forse fold scelti in modo non random, o normalizzazione diversa, o bug di calcolo).
+
+### M.7 Lezione finale per il Lottery Lab
+
+Abbiamo ora testato **tutti i 4 giochi** del Lottery Lab con lo stesso standard di rigore:
+
+| Gioco | Dataset | Tutti test negativi? | Edge replicabile? |
+|-------|---------|---------------------|-------------------|
+| Lotto | 6.886 × 80 anni | **SI** (Appendice M) | NO |
+| VinciCasa | 3.279 × 12 anni | SI (Appendice E) | NO (1.22x p=0.01 non Bonf) |
+| MillionDay | 2.607 × 4 anni | SI (Appendici E-bis, E-ter, L) | NO |
+| 10eLotto | 33.431 × 4 mesi | SI (Appendici H, I, J, K) | NO |
+
+**Tutti e 4 i giochi hanno lo stesso verdetto**: nessun meccanismo sfruttabile. L'HE strutturale e ineluttabile.
+
+Il paper V6, prima di questa revisione, era l'unico punto di apparente vittoria. **Ora che anche V6 e stato smentito**, il Lottery Lab chiude con un verdetto unitario: le lotterie italiane sono statisticamente imbattibili con i metodi di analisi computazionale disponibili.
+
+### M.8 Cosa fare con Engine V6 ora
+
+Nel portale esiste `/lotto` con Engine V6 (vicinanza + freq_rit_fib). Due opzioni:
+
+**Opzione 1 — Mantenere V6 come benchmark storico**
+Il codice funziona, genera cinquine deterministiche. Anche se l'edge e artefatto, **non danneggia** il giocatore: il ratio ≈ 1.0x del baseline random. Giocare V6 e equivalente a giocare random. Mantenere per coerenza storica del paper.
+
+**Opzione 2 — Aggiornare a "anti-V6"**
+Cambiare algoritmo del portale a `cold_pair` per ogni ruota con W ottimizzato per quella ruota. Questo **sembra** migliore (ratio robust 1.20-1.28x su best per-ruota), ma **non e conservativo**: selection bias su 2100 config testate.
+
+**Raccomandazione**: mantenere V6 con un **disclaimer in pagina** che chiarisce "il ratio 1.18x del paper non si replica con test rigorosi; giocare qualsiasi cinquina ha valore atteso equivalente". Onesta intellettuale > marketing.
+
+### M.9 File e codice
+
+- `backend/lotto_predictor/analyzer/deep_lotto_sweep.py`: script completo Fase 1+2+3
+- `backend/lotto_predictor/deep_lotto_results.json`: risultati serializzati per analisi futura
+- `backend/lotto_predictor/analyzer/convergence_v6.py`: V6 originale (invariato, mantiene il codice storico)
+
+---
+
 ## 26. Lezioni Finali del Lottery Lab
 
 ### 26.1 Tabella definitiva dei segnali

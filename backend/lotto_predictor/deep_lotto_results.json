@@ -1,0 +1,1031 @@
+{
+  "dataset_size": 68898,
+  "ruote": [
+    "BARI",
+    "CAGLIARI",
+    "FIRENZE",
+    "GENOVA",
+    "NAPOLI",
+    "PALERMO",
+    "ROMA",
+    "TORINO",
+    "VENEZIA",
+    "MILANO"
+  ],
+  "test_A": {
+    "baseline_ratio": 0.9931705663387707,
+    "perm_mean": 1.0313409276570145,
+    "perm_sd": 0.015330799719779294,
+    "perm_min": 1.0005822869830898,
+    "perm_max": 1.0687701169108264,
+    "p_value": 1.0,
+    "verdict": "GEOGRAFIA NON CONTA: label-shuffle mantiene l'edge \u2192 artefatto del calcolo"
+  },
+  "test_B": {
+    "total_samples": 900,
+    "mean_z": -0.2337571449963543,
+    "sig_raw": 2,
+    "sig_bonf": 0,
+    "verdict": "NESSUN BIAS FISICO rilevato oltre multiple testing",
+    "top_10_z": [
+      [
+        "FIRENZE",
+        43,
+        -3.2790822403468836
+      ],
+      [
+        "NAPOLI",
+        14,
+        -3.2519269766162333
+      ],
+      [
+        "NAPOLI",
+        31,
+        -2.909331519788606
+      ],
+      [
+        "GENOVA",
+        52,
+        -2.8900134632371457
+      ],
+      [
+        "ROMA",
+        71,
+        -2.826509679383821
+      ],
+      [
+        "BARI",
+        62,
+        -2.7391398163421408
+      ],
+      [
+        "VENEZIA",
+        6,
+        -2.724891271707371
+      ],
+      [
+        "FIRENZE",
+        17,
+        -2.674123062366905
+      ],
+      [
+        "CAGLIARI",
+        43,
+        -2.6037062363517847
+      ],
+      [
+        "CAGLIARI",
+        48,
+        -2.540699532261805
+      ]
+    ]
+  },
+  "test_C": {
+    "folds": [
+      {
+        "decade": "1946-1955",
+        "n_plays": 5093,
+        "wins": 101,
+        "hit_rate": 0.019831140781464755,
+        "baseline_random": 0.01830203142966654,
+        "ratio": 1.0835486135883046
+      },
+      {
+        "decade": "1956-1965",
+        "n_plays": 5075,
+        "wins": 107,
+        "hit_rate": 0.02108374384236453,
+        "baseline_random": 0.02144230769230769,
+        "ratio": 0.9832777397335926
+      },
+      {
+        "decade": "1966-1975",
+        "n_plays": 5095,
+        "wins": 75,
+        "hit_rate": 0.014720314033366046,
+        "baseline_random": 0.019444444444444445,
+        "ratio": 0.757044721715968
+      },
+      {
+        "decade": "1976-1985",
+        "n_plays": 5095,
+        "wins": 97,
+        "hit_rate": 0.01903827281648675,
+        "baseline_random": 0.01532567049808429,
+        "ratio": 1.2422473012757607
+      },
+      {
+        "decade": "1986-1995",
+        "n_plays": 5095,
+        "wins": 111,
+        "hit_rate": 0.021786064769381747,
+        "baseline_random": 0.01934865900383142,
+        "ratio": 1.1259728524373536
+      },
+      {
+        "decade": "1996-2005",
+        "n_plays": 9685,
+        "wins": 191,
+        "hit_rate": 0.0197212183789365,
+        "baseline_random": 0.019571865443425075,
+        "ratio": 1.0076310015487868
+      },
+      {
+        "decade": "2006-2015",
+        "n_plays": 15525,
+        "wins": 298,
+        "hit_rate": 0.019194847020933978,
+        "baseline_random": 0.02073482428115016,
+        "ratio": 0.925729910254597
+      },
+      {
+        "decade": "2016-2026",
+        "n_plays": 17235,
+        "wins": 325,
+        "hit_rate": 0.018856977081520163,
+        "baseline_random": 0.02036290322580645,
+        "ratio": 0.9260456071716833
+      }
+    ],
+    "mean_ratio": 1.0064372184657557,
+    "sd_ratio": 0.13763730189116383,
+    "above_1": 4,
+    "above_1_1": 2,
+    "verdict": "Pattern INSTABILE: solo 4/8 decenni sopra baseline"
+  },
+  "fase2": {
+    "per_ruota": {
+      "BARI": {
+        "hot_pair": {
+          "n_plays": 6835,
+          "wins": 156,
+          "hit_rate": 0.022823701536210682,
+          "ev_per_play": 1.4835405998536944,
+          "pnl_total": 3305.000000000001,
+          "ratio_vs_random": 1.2190333611200899,
+          "best_W": 55
+        },
+        "cold_pair": {
+          "n_plays": 6800,
+          "wins": 148,
+          "hit_rate": 0.02176470588235294,
+          "ev_per_play": 1.414705882352941,
+          "pnl_total": 2819.999999999999,
+          "ratio_vs_random": 1.162471500227998,
+          "best_W": 90
+        },
+        "vicinanza_D5": {
+          "n_plays": 6815,
+          "wins": 147,
+          "hit_rate": 0.02157006603081438,
+          "ev_per_play": 1.4020542920029349,
+          "pnl_total": 2740.000000000001,
+          "ratio_vs_random": 1.1520756197853572,
+          "best_W": 75
+        },
+        "vicinanza_D20": {
+          "n_plays": 6775,
+          "wins": 157,
+          "hit_rate": 0.023173431734317344,
+          "ev_per_play": 1.5062730627306273,
+          "pnl_total": 3430.0,
+          "ratio_vs_random": 1.2377127492205156,
+          "best_W": 115
+        },
+        "vicinanza_D40": {
+          "n_plays": 6775,
+          "wins": 157,
+          "hit_rate": 0.023173431734317344,
+          "ev_per_play": 1.5062730627306273,
+          "pnl_total": 3430.0,
+          "ratio_vs_random": 1.2377127492205156,
+          "best_W": 115
+        },
+        "spread_decade": {
+          "n_plays": 6790,
+          "wins": 160,
+          "hit_rate": 0.023564064801178203,
+          "ev_per_play": 1.531664212076583,
+          "pnl_total": 3609.999999999999,
+          "ratio_vs_random": 1.2585767944195179,
+          "best_W": 100
+        },
+        "anti_persist": {
+          "n_plays": 6760,
+          "wins": 146,
+          "hit_rate": 0.021597633136094675,
+          "ev_per_play": 1.403846153846154,
+          "pnl_total": 2730.000000000001,
+          "ratio_vs_random": 1.1535480023852116,
+          "best_W": 130
+        },
+        "freq_rit_fib": {
+          "n_plays": 6845,
+          "wins": 158,
+          "hit_rate": 0.02308254200146092,
+          "ev_per_play": 1.5003652300949597,
+          "pnl_total": 3424.999999999999,
+          "ratio_vs_random": 1.2328582510857808,
+          "best_W": 45
+        }
+      },
+      "CAGLIARI": {
+        "hot_pair": {
+          "n_plays": 6825,
+          "wins": 156,
+          "hit_rate": 0.022857142857142857,
+          "ev_per_play": 1.4857142857142858,
+          "pnl_total": 3315.0000000000005,
+          "ratio_vs_random": 1.0569511025886864,
+          "best_W": 65
+        },
+        "cold_pair": {
+          "n_plays": 6805,
+          "wins": 157,
+          "hit_rate": 0.0230712711241734,
+          "ev_per_play": 1.499632623071271,
+          "pnl_total": 3400.0,
+          "ratio_vs_random": 1.06685273856077,
+          "best_W": 85
+        },
+        "vicinanza_D5": {
+          "n_plays": 6815,
+          "wins": 140,
+          "hit_rate": 0.020542920029347028,
+          "ev_per_play": 1.3352898019075568,
+          "pnl_total": 2284.999999999999,
+          "ratio_vs_random": 0.9499377114241678,
+          "best_W": 75
+        },
+        "vicinanza_D20": {
+          "n_plays": 6755,
+          "wins": 149,
+          "hit_rate": 0.022057735011102888,
+          "ev_per_play": 1.4337527757216877,
+          "pnl_total": 2930.0000000000005,
+          "ratio_vs_random": 1.0199851961509994,
+          "best_W": 135
+        },
+        "vicinanza_D40": {
+          "n_plays": 6875,
+          "wins": 166,
+          "hit_rate": 0.024145454545454546,
+          "ev_per_play": 1.5694545454545454,
+          "pnl_total": 3915.0,
+          "ratio_vs_random": 1.1165247101891398,
+          "best_W": 15
+        },
+        "spread_decade": {
+          "n_plays": 6745,
+          "wins": 156,
+          "hit_rate": 0.02312824314306894,
+          "ev_per_play": 1.503335804299481,
+          "pnl_total": 3395.0,
+          "ratio_vs_random": 1.06948721648151,
+          "best_W": 145
+        },
+        "anti_persist": {
+          "n_plays": 6805,
+          "wins": 137,
+          "hit_rate": 0.020132255694342394,
+          "ev_per_play": 1.3085966201322556,
+          "pnl_total": 2099.9999999999995,
+          "ratio_vs_random": 0.9309479311007992,
+          "best_W": 85
+        },
+        "freq_rit_fib": {
+          "n_plays": 6750,
+          "wins": 156,
+          "hit_rate": 0.02311111111111111,
+          "ev_per_play": 1.5022222222222221,
+          "pnl_total": 3389.9999999999995,
+          "ratio_vs_random": 1.0686950037285607,
+          "best_W": 140
+        }
+      },
+      "FIRENZE": {
+        "hot_pair": {
+          "n_plays": 6745,
+          "wins": 150,
+          "hit_rate": 0.02223869532987398,
+          "ev_per_play": 1.4455151964418087,
+          "pnl_total": 3004.9999999999995,
+          "ratio_vs_random": 1.1266515501678802,
+          "best_W": 145
+        },
+        "cold_pair": {
+          "n_plays": 6750,
+          "wins": 169,
+          "hit_rate": 0.025037037037037038,
+          "ev_per_play": 1.6274074074074074,
+          "pnl_total": 4235.0,
+          "ratio_vs_random": 1.2684204793028322,
+          "best_W": 140
+        },
+        "vicinanza_D5": {
+          "n_plays": 6825,
+          "wins": 138,
+          "hit_rate": 0.02021978021978022,
+          "ev_per_play": 1.3142857142857145,
+          "pnl_total": 2145.0000000000014,
+          "ratio_vs_random": 1.0243697478991596,
+          "best_W": 65
+        },
+        "vicinanza_D20": {
+          "n_plays": 6740,
+          "wins": 157,
+          "hit_rate": 0.023293768545994065,
+          "ev_per_play": 1.5140949554896141,
+          "pnl_total": 3464.9999999999995,
+          "ratio_vs_random": 1.1801034211904347,
+          "best_W": 150
+        },
+        "vicinanza_D40": {
+          "n_plays": 6860,
+          "wins": 156,
+          "hit_rate": 0.022740524781341108,
+          "ev_per_play": 1.478134110787172,
+          "pnl_total": 3279.9999999999995,
+          "ratio_vs_random": 1.15207511576059,
+          "best_W": 30
+        },
+        "spread_decade": {
+          "n_plays": 6740,
+          "wins": 159,
+          "hit_rate": 0.023590504451038576,
+          "ev_per_play": 1.5333827893175074,
+          "pnl_total": 3594.9999999999995,
+          "ratio_vs_random": 1.1951365857915865,
+          "best_W": 150
+        },
+        "anti_persist": {
+          "n_plays": 6760,
+          "wins": 143,
+          "hit_rate": 0.021153846153846155,
+          "ev_per_play": 1.375,
+          "pnl_total": 2535.0,
+          "ratio_vs_random": 1.0716911764705883,
+          "best_W": 130
+        },
+        "freq_rit_fib": {
+          "n_plays": 6740,
+          "wins": 165,
+          "hit_rate": 0.024480712166172106,
+          "ev_per_play": 1.5912462908011868,
+          "pnl_total": 3984.9999999999995,
+          "ratio_vs_random": 1.2402360795950427,
+          "best_W": 150
+        }
+      },
+      "GENOVA": {
+        "hot_pair": {
+          "n_plays": 6850,
+          "wins": 155,
+          "hit_rate": 0.022627737226277374,
+          "ev_per_play": 1.4708029197080292,
+          "pnl_total": 3225.0000000000005,
+          "ratio_vs_random": 1.1297471702105153,
+          "best_W": 40
+        },
+        "cold_pair": {
+          "n_plays": 6805,
+          "wins": 144,
+          "hit_rate": 0.021160911094783248,
+          "ev_per_play": 1.3754592211609111,
+          "pnl_total": 2555.0,
+          "ratio_vs_random": 1.056512155384468,
+          "best_W": 85
+        },
+        "vicinanza_D5": {
+          "n_plays": 6860,
+          "wins": 167,
+          "hit_rate": 0.024344023323615162,
+          "ev_per_play": 1.5823615160349855,
+          "pnl_total": 3995.000000000001,
+          "ratio_vs_random": 1.2154371065196266,
+          "best_W": 30
+        },
+        "vicinanza_D20": {
+          "n_plays": 6850,
+          "wins": 166,
+          "hit_rate": 0.024233576642335768,
+          "ev_per_play": 1.575182481751825,
+          "pnl_total": 3940.000000000001,
+          "ratio_vs_random": 1.2099227758383584,
+          "best_W": 40
+        },
+        "vicinanza_D40": {
+          "n_plays": 6840,
+          "wins": 162,
+          "hit_rate": 0.02368421052631579,
+          "ev_per_play": 1.5394736842105263,
+          "pnl_total": 3690.0,
+          "ratio_vs_random": 1.1824942791762014,
+          "best_W": 50
+        },
+        "spread_decade": {
+          "n_plays": 6880,
+          "wins": 159,
+          "hit_rate": 0.02311046511627907,
+          "ev_per_play": 1.5021802325581395,
+          "pnl_total": 3454.9999999999995,
+          "ratio_vs_random": 1.1538485844287159,
+          "best_W": 10
+        },
+        "anti_persist": {
+          "n_plays": 6800,
+          "wins": 132,
+          "hit_rate": 0.019411764705882354,
+          "ev_per_play": 1.2617647058823531,
+          "pnl_total": 1780.0000000000011,
+          "ratio_vs_random": 0.9691815856777495,
+          "best_W": 90
+        },
+        "freq_rit_fib": {
+          "n_plays": 6770,
+          "wins": 160,
+          "hit_rate": 0.023633677991137372,
+          "ev_per_play": 1.5361890694239293,
+          "pnl_total": 3630.0000000000014,
+          "ratio_vs_random": 1.179971314195192,
+          "best_W": 120
+        }
+      },
+      "NAPOLI": {
+        "hot_pair": {
+          "n_plays": 6795,
+          "wins": 160,
+          "hit_rate": 0.0235467255334805,
+          "ev_per_play": 1.5305371596762325,
+          "pnl_total": 3605.0,
+          "ratio_vs_random": 1.1305710029664158,
+          "best_W": 95
+        },
+        "cold_pair": {
+          "n_plays": 6820,
+          "wins": 141,
+          "hit_rate": 0.020674486803519063,
+          "ev_per_play": 1.3438416422287391,
+          "pnl_total": 2345.000000000001,
+          "ratio_vs_random": 0.9926635127264554,
+          "best_W": 70
+        },
+        "vicinanza_D5": {
+          "n_plays": 6880,
+          "wins": 147,
+          "hit_rate": 0.02136627906976744,
+          "ev_per_play": 1.3888081395348837,
+          "pnl_total": 2675.0,
+          "ratio_vs_random": 1.0258791832104366,
+          "best_W": 10
+        },
+        "vicinanza_D20": {
+          "n_plays": 6830,
+          "wins": 163,
+          "hit_rate": 0.023865300146412884,
+          "ev_per_play": 1.5512445095168375,
+          "pnl_total": 3765.0,
+          "ratio_vs_random": 1.145867024451462,
+          "best_W": 60
+        },
+        "vicinanza_D40": {
+          "n_plays": 6805,
+          "wins": 158,
+          "hit_rate": 0.023218221895664953,
+          "ev_per_play": 1.5091844232182219,
+          "pnl_total": 3465.0,
+          "ratio_vs_random": 1.1147982499033555,
+          "best_W": 85
+        },
+        "spread_decade": {
+          "n_plays": 6805,
+          "wins": 163,
+          "hit_rate": 0.023952975753122704,
+          "ev_per_play": 1.5569434239529758,
+          "pnl_total": 3790.0000000000005,
+          "ratio_vs_random": 1.1500766755332086,
+          "best_W": 85
+        },
+        "anti_persist": {
+          "n_plays": 6760,
+          "wins": 138,
+          "hit_rate": 0.020414201183431954,
+          "ev_per_play": 1.3269230769230769,
+          "pnl_total": 2209.9999999999995,
+          "ratio_vs_random": 0.9801661752881266,
+          "best_W": 130
+        },
+        "freq_rit_fib": {
+          "n_plays": 6750,
+          "wins": 153,
+          "hit_rate": 0.02266666666666667,
+          "ev_per_play": 1.4733333333333334,
+          "pnl_total": 3195.0000000000005,
+          "ratio_vs_random": 1.0883159117305459,
+          "best_W": 140
+        }
+      },
+      "PALERMO": {
+        "hot_pair": {
+          "n_plays": 6810,
+          "wins": 157,
+          "hit_rate": 0.02305433186490455,
+          "ev_per_play": 1.4985315712187959,
+          "pnl_total": 3395.0,
+          "ratio_vs_random": 1.138669150890268,
+          "best_W": 80
+        },
+        "cold_pair": {
+          "n_plays": 6820,
+          "wins": 156,
+          "hit_rate": 0.02287390029325513,
+          "ev_per_play": 1.4868035190615836,
+          "pnl_total": 3320.0,
+          "ratio_vs_random": 1.1297575126919561,
+          "best_W": 70
+        },
+        "vicinanza_D5": {
+          "n_plays": 6765,
+          "wins": 137,
+          "hit_rate": 0.02025129342202513,
+          "ev_per_play": 1.3163340724316335,
+          "pnl_total": 2140.0000000000005,
+          "ratio_vs_random": 1.000225173317227,
+          "best_W": 125
+        },
+        "vicinanza_D20": {
+          "n_plays": 6880,
+          "wins": 149,
+          "hit_rate": 0.021656976744186048,
+          "ev_per_play": 1.4077034883720931,
+          "pnl_total": 2805.000000000001,
+          "ratio_vs_random": 1.0696528298741352,
+          "best_W": 10
+        },
+        "vicinanza_D40": {
+          "n_plays": 6805,
+          "wins": 159,
+          "hit_rate": 0.023365172667156504,
+          "ev_per_play": 1.5187362233651727,
+          "pnl_total": 3530.0,
+          "ratio_vs_random": 1.1540217897971923,
+          "best_W": 85
+        },
+        "spread_decade": {
+          "n_plays": 6885,
+          "wins": 159,
+          "hit_rate": 0.02309368191721133,
+          "ev_per_play": 1.5010893246187365,
+          "pnl_total": 3450.0000000000005,
+          "ratio_vs_random": 1.1406126767712264,
+          "best_W": 5
+        },
+        "anti_persist": {
+          "n_plays": 6740,
+          "wins": 134,
+          "hit_rate": 0.019881305637982197,
+          "ev_per_play": 1.2922848664688429,
+          "pnl_total": 1970.0000000000011,
+          "ratio_vs_random": 0.9819512247003394,
+          "best_W": 150
+        },
+        "freq_rit_fib": {
+          "n_plays": 6775,
+          "wins": 168,
+          "hit_rate": 0.024797047970479706,
+          "ev_per_play": 1.611808118081181,
+          "pnl_total": 4145.000000000001,
+          "ratio_vs_random": 1.224743086140539,
+          "best_W": 115
+        }
+      },
+      "ROMA": {
+        "hot_pair": {
+          "n_plays": 6765,
+          "wins": 162,
+          "hit_rate": 0.02394678492239468,
+          "ev_per_play": 1.5565410199556542,
+          "pnl_total": 3765.0000000000005,
+          "ratio_vs_random": 1.2043310081408711,
+          "best_W": 125
+        },
+        "cold_pair": {
+          "n_plays": 6755,
+          "wins": 172,
+          "hit_rate": 0.02546262028127313,
+          "ev_per_play": 1.6550703182827535,
+          "pnl_total": 4425.0,
+          "ratio_vs_random": 1.2805653557516194,
+          "best_W": 135
+        },
+        "vicinanza_D5": {
+          "n_plays": 6855,
+          "wins": 147,
+          "hit_rate": 0.021444201312910284,
+          "ev_per_play": 1.3938730853391685,
+          "pnl_total": 2700.0000000000005,
+          "ratio_vs_random": 1.0784711463208165,
+          "best_W": 35
+        },
+        "vicinanza_D20": {
+          "n_plays": 6840,
+          "wins": 162,
+          "hit_rate": 0.02368421052631579,
+          "ev_per_play": 1.5394736842105263,
+          "pnl_total": 3690.0,
+          "ratio_vs_random": 1.1911256242796773,
+          "best_W": 50
+        },
+        "vicinanza_D40": {
+          "n_plays": 6790,
+          "wins": 164,
+          "hit_rate": 0.02415316642120766,
+          "ev_per_play": 1.5699558173784978,
+          "pnl_total": 3870.0,
+          "ratio_vs_random": 1.2147103404534363,
+          "best_W": 100
+        },
+        "spread_decade": {
+          "n_plays": 6755,
+          "wins": 154,
+          "hit_rate": 0.022797927461139896,
+          "ev_per_play": 1.4818652849740932,
+          "pnl_total": 3254.9999999999995,
+          "ratio_vs_random": 1.146552702242729,
+          "best_W": 135
+        },
+        "anti_persist": {
+          "n_plays": 6765,
+          "wins": 141,
+          "hit_rate": 0.020842572062084258,
+          "ev_per_play": 1.3547671840354767,
+          "pnl_total": 2400.0,
+          "ratio_vs_random": 1.0482140256040915,
+          "best_W": 125
+        },
+        "freq_rit_fib": {
+          "n_plays": 6775,
+          "wins": 157,
+          "hit_rate": 0.023173431734317344,
+          "ev_per_play": 1.5062730627306273,
+          "pnl_total": 3430.0,
+          "ratio_vs_random": 1.165437552185741,
+          "best_W": 115
+        }
+      },
+      "TORINO": {
+        "hot_pair": {
+          "n_plays": 6860,
+          "wins": 161,
+          "hit_rate": 0.02346938775510204,
+          "ev_per_play": 1.5255102040816326,
+          "pnl_total": 3605.0,
+          "ratio_vs_random": 1.2067468778556198,
+          "best_W": 30
+        },
+        "cold_pair": {
+          "n_plays": 6825,
+          "wins": 165,
+          "hit_rate": 0.024175824175824177,
+          "ev_per_play": 1.5714285714285714,
+          "pnl_total": 3900.0,
+          "ratio_vs_random": 1.2430703624733475,
+          "best_W": 65
+        },
+        "vicinanza_D5": {
+          "n_plays": 6785,
+          "wins": 146,
+          "hit_rate": 0.021518054532056005,
+          "ev_per_play": 1.3986735445836402,
+          "pnl_total": 2704.999999999999,
+          "ratio_vs_random": 1.1064134009392976,
+          "best_W": 105
+        },
+        "vicinanza_D20": {
+          "n_plays": 6740,
+          "wins": 150,
+          "hit_rate": 0.02225519287833828,
+          "ev_per_play": 1.4465875370919883,
+          "pnl_total": 3010.000000000001,
+          "ratio_vs_random": 1.1443155144160504,
+          "best_W": 150
+        },
+        "vicinanza_D40": {
+          "n_plays": 6780,
+          "wins": 146,
+          "hit_rate": 0.021533923303834808,
+          "ev_per_play": 1.3997050147492625,
+          "pnl_total": 2709.9999999999995,
+          "ratio_vs_random": 1.107229340025536,
+          "best_W": 110
+        },
+        "spread_decade": {
+          "n_plays": 6860,
+          "wins": 160,
+          "hit_rate": 0.023323615160349854,
+          "ev_per_play": 1.5160349854227404,
+          "pnl_total": 3539.999999999999,
+          "ratio_vs_random": 1.1992515556329142,
+          "best_W": 30
+        },
+        "anti_persist": {
+          "n_plays": 6785,
+          "wins": 138,
+          "hit_rate": 0.020338983050847456,
+          "ev_per_play": 1.3220338983050846,
+          "pnl_total": 2184.9999999999986,
+          "ratio_vs_random": 1.0457880091070073,
+          "best_W": 105
+        },
+        "freq_rit_fib": {
+          "n_plays": 6760,
+          "wins": 164,
+          "hit_rate": 0.0242603550295858,
+          "ev_per_play": 1.576923076923077,
+          "pnl_total": 3900.0000000000014,
+          "ratio_vs_random": 1.2474167623421355,
+          "best_W": 130
+        }
+      },
+      "VENEZIA": {
+        "hot_pair": {
+          "n_plays": 6870,
+          "wins": 157,
+          "hit_rate": 0.02285298398835517,
+          "ev_per_play": 1.485443959243086,
+          "pnl_total": 3335.0000000000005,
+          "ratio_vs_random": 1.1535315727455466,
+          "best_W": 20
+        },
+        "cold_pair": {
+          "n_plays": 6785,
+          "wins": 144,
+          "hit_rate": 0.021223286661753868,
+          "ev_per_play": 1.3795136330140014,
+          "pnl_total": 2574.9999999999995,
+          "ratio_vs_random": 1.071270660069481,
+          "best_W": 105
+        },
+        "vicinanza_D5": {
+          "n_plays": 6885,
+          "wins": 153,
+          "hit_rate": 0.022222222222222223,
+          "ev_per_play": 1.4444444444444444,
+          "pnl_total": 3060.0,
+          "ratio_vs_random": 1.1216931216931219,
+          "best_W": 5
+        },
+        "vicinanza_D20": {
+          "n_plays": 6860,
+          "wins": 157,
+          "hit_rate": 0.022886297376093295,
+          "ev_per_play": 1.4876093294460642,
+          "pnl_total": 3345.0,
+          "ratio_vs_random": 1.1552131056504236,
+          "best_W": 30
+        },
+        "vicinanza_D40": {
+          "n_plays": 6870,
+          "wins": 163,
+          "hit_rate": 0.023726346433770015,
+          "ev_per_play": 1.542212518195051,
+          "pnl_total": 3725.0000000000005,
+          "ratio_vs_random": 1.197615581895058,
+          "best_W": 20
+        },
+        "spread_decade": {
+          "n_plays": 6795,
+          "wins": 162,
+          "hit_rate": 0.02384105960264901,
+          "ev_per_play": 1.5496688741721856,
+          "pnl_total": 3735.000000000001,
+          "ratio_vs_random": 1.2034058656575215,
+          "best_W": 95
+        },
+        "anti_persist": {
+          "n_plays": 6775,
+          "wins": 134,
+          "hit_rate": 0.01977859778597786,
+          "ev_per_play": 1.285608856088561,
+          "pnl_total": 1935.000000000001,
+          "ratio_vs_random": 0.9983482691969778,
+          "best_W": 115
+        },
+        "freq_rit_fib": {
+          "n_plays": 6840,
+          "wins": 159,
+          "hit_rate": 0.02324561403508772,
+          "ev_per_play": 1.5109649122807016,
+          "pnl_total": 3494.999999999999,
+          "ratio_vs_random": 1.1733500417710945,
+          "best_W": 50
+        }
+      },
+      "MILANO": {
+        "hot_pair": {
+          "n_plays": 6798,
+          "wins": 160,
+          "hit_rate": 0.023536334215945868,
+          "ev_per_play": 1.5298617240364814,
+          "pnl_total": 3602.0000000000005,
+          "ratio_vs_random": 1.1579876434245366,
+          "best_W": 90
+        },
+        "cold_pair": {
+          "n_plays": 6748,
+          "wins": 171,
+          "hit_rate": 0.025340841730883225,
+          "ev_per_play": 1.6471547125074095,
+          "pnl_total": 4366.999999999999,
+          "ratio_vs_random": 1.2467694131594547,
+          "best_W": 140
+        },
+        "vicinanza_D5": {
+          "n_plays": 6758,
+          "wins": 136,
+          "hit_rate": 0.020124297129328204,
+          "ev_per_play": 1.3080793134063333,
+          "pnl_total": 2082.0000000000005,
+          "ratio_vs_random": 0.9901154187629476,
+          "best_W": 130
+        },
+        "vicinanza_D20": {
+          "n_plays": 6783,
+          "wins": 147,
+          "hit_rate": 0.021671826625386997,
+          "ev_per_play": 1.4086687306501549,
+          "pnl_total": 2772.0000000000005,
+          "ratio_vs_random": 1.0662538699690403,
+          "best_W": 105
+        },
+        "vicinanza_D40": {
+          "n_plays": 6833,
+          "wins": 159,
+          "hit_rate": 0.02326942777696473,
+          "ev_per_play": 1.5125128055027075,
+          "pnl_total": 3502.0000000000005,
+          "ratio_vs_random": 1.1448558466266647,
+          "best_W": 55
+        },
+        "spread_decade": {
+          "n_plays": 6753,
+          "wins": 151,
+          "hit_rate": 0.02236043240041463,
+          "ev_per_play": 1.453428106026951,
+          "pnl_total": 3061.9999999999995,
+          "ratio_vs_random": 1.1001332741004,
+          "best_W": 135
+        },
+        "anti_persist": {
+          "n_plays": 6773,
+          "wins": 138,
+          "hit_rate": 0.02037501845563266,
+          "ev_per_play": 1.3243761996161227,
+          "pnl_total": 2196.9999999999995,
+          "ratio_vs_random": 1.0024509080171269,
+          "best_W": 115
+        },
+        "freq_rit_fib": {
+          "n_plays": 6838,
+          "wins": 163,
+          "hit_rate": 0.023837379350687336,
+          "ev_per_play": 1.549429657794677,
+          "pnl_total": 3757.0000000000005,
+          "ratio_vs_random": 1.1727990640538168,
+          "best_W": 50
+        }
+      }
+    },
+    "global_best": {
+      "BARI": {
+        "algo": "spread_decade",
+        "n_plays": 6790,
+        "wins": 160,
+        "hit_rate": 0.023564064801178203,
+        "ev_per_play": 1.531664212076583,
+        "pnl_total": 3609.999999999999,
+        "ratio_vs_random": 1.2585767944195179,
+        "best_W": 100
+      },
+      "CAGLIARI": {
+        "algo": "vicinanza_D40",
+        "n_plays": 6875,
+        "wins": 166,
+        "hit_rate": 0.024145454545454546,
+        "ev_per_play": 1.5694545454545454,
+        "pnl_total": 3915.0,
+        "ratio_vs_random": 1.1165247101891398,
+        "best_W": 15
+      },
+      "FIRENZE": {
+        "algo": "cold_pair",
+        "n_plays": 6750,
+        "wins": 169,
+        "hit_rate": 0.025037037037037038,
+        "ev_per_play": 1.6274074074074074,
+        "pnl_total": 4235.0,
+        "ratio_vs_random": 1.2684204793028322,
+        "best_W": 140
+      },
+      "GENOVA": {
+        "algo": "vicinanza_D5",
+        "n_plays": 6860,
+        "wins": 167,
+        "hit_rate": 0.024344023323615162,
+        "ev_per_play": 1.5823615160349855,
+        "pnl_total": 3995.000000000001,
+        "ratio_vs_random": 1.2154371065196266,
+        "best_W": 30
+      },
+      "NAPOLI": {
+        "algo": "spread_decade",
+        "n_plays": 6805,
+        "wins": 163,
+        "hit_rate": 0.023952975753122704,
+        "ev_per_play": 1.5569434239529758,
+        "pnl_total": 3790.0000000000005,
+        "ratio_vs_random": 1.1500766755332086,
+        "best_W": 85
+      },
+      "PALERMO": {
+        "algo": "freq_rit_fib",
+        "n_plays": 6775,
+        "wins": 168,
+        "hit_rate": 0.024797047970479706,
+        "ev_per_play": 1.611808118081181,
+        "pnl_total": 4145.000000000001,
+        "ratio_vs_random": 1.224743086140539,
+        "best_W": 115
+      },
+      "ROMA": {
+        "algo": "cold_pair",
+        "n_plays": 6755,
+        "wins": 172,
+        "hit_rate": 0.02546262028127313,
+        "ev_per_play": 1.6550703182827535,
+        "pnl_total": 4425.0,
+        "ratio_vs_random": 1.2805653557516194,
+        "best_W": 135
+      },
+      "TORINO": {
+        "algo": "freq_rit_fib",
+        "n_plays": 6760,
+        "wins": 164,
+        "hit_rate": 0.0242603550295858,
+        "ev_per_play": 1.576923076923077,
+        "pnl_total": 3900.0000000000014,
+        "ratio_vs_random": 1.2474167623421355,
+        "best_W": 130
+      },
+      "VENEZIA": {
+        "algo": "spread_decade",
+        "n_plays": 6795,
+        "wins": 162,
+        "hit_rate": 0.02384105960264901,
+        "ev_per_play": 1.5496688741721856,
+        "pnl_total": 3735.000000000001,
+        "ratio_vs_random": 1.2034058656575215,
+        "best_W": 95
+      },
+      "MILANO": {
+        "algo": "cold_pair",
+        "n_plays": 6748,
+        "wins": 171,
+        "hit_rate": 0.025340841730883225,
+        "ev_per_play": 1.6471547125074095,
+        "pnl_total": 4366.999999999999,
+        "ratio_vs_random": 1.2467694131594547,
+        "best_W": 140
+      }
+    }
+  },
+  "fase3": {
+    "ratios_per_ruota": {
+      "BARI": 1.0951939413136753,
+      "CAGLIARI": 0.8530040033081838,
+      "FIRENZE": 1.0525891426813354,
+      "GENOVA": 0.9645028456987544,
+      "NAPOLI": 0.942859641631641,
+      "PALERMO": 0.915914153818992,
+      "ROMA": 0.9837001784651992,
+      "TORINO": 1.0412791916250235,
+      "VENEZIA": 0.8152716186252772,
+      "MILANO": 0.9621725679318465
+    },
+    "baselines": {
+      "BARI": 0.018626028059990325,
+      "CAGLIARI": 0.021141751330430576,
+      "FIRENZE": 0.020222544750846637,
+      "GENOVA": 0.02099661344944364,
+      "NAPOLI": 0.0208514755684567,
+      "PALERMO": 0.02065795839380745,
+      "ROMA": 0.01983551040154814,
+      "TORINO": 0.019448476052249638,
+      "VENEZIA": 0.02012578616352201,
+      "MILANO": 0.02013162988772745
+    },
+    "best_ruota": "BARI",
+    "worst_ruota": "VENEZIA",
+    "gap": 0.2799223226883981
+  }
+}
