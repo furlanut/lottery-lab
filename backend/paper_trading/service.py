@@ -514,6 +514,181 @@ def riepilogo(session: Optional[object] = None) -> dict:
             session.close()
 
 
+def backtest_diecielotto_compare(
+    metodi: Optional[list[str]] = None,
+    session: Optional[object] = None,
+) -> dict:
+    """Backtest comparativo retroattivo 10eLotto (K=6) per multipli metodi.
+
+    Per ciascun metodo in `metodi`, ricorre su tutte le estrazioni nel DB
+    (escluse le prime W=100 usate come warm-up), genera la previsione con solo
+    i dati disponibili prima di quella estrazione, e calcola l'esito.
+
+    Metodi supportati: ``vicinanza``, ``dual_target``, ``cold``, ``hot``,
+    ``freq_rit_dec``.
+
+    Il risultato contiene, per ogni metodo: giocate, vinte, perse, P&L,
+    hit rate, ROI, ratio vs EV teorico K=6+Extra (1.80€/giocata), e
+    distribuzione dei match base/extra.
+
+    Nota: il backtest retroattivo e piu rigoroso del "paper trading live"
+    perche usa TUTTE le estrazioni disponibili (migliaia) anziche solo quelle
+    dopo l'introduzione del metodo. Riduce la varianza campionaria.
+    """
+    from collections import Counter
+
+    from diecielotto.ev_calculator import PREMI_BASE, PREMI_EXTRA
+
+    if metodi is None:
+        metodi = ["vicinanza", "dual_target"]
+
+    own = session is None
+    if own:
+        session = get_session()
+    try:
+        all_estr = (
+            session.execute(
+                select(DiecieLottoEstrazione).order_by(
+                    DiecieLottoEstrazione.data, DiecieLottoEstrazione.ora
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        w = 100
+        k = 6
+        costo = 2.0
+        ev_teorico = 1.80  # EV analitico K=6+Extra (EUR per giocata 2 EUR)
+
+        pb = PREMI_BASE.get(k, {})
+        pe = PREMI_EXTRA.get(k, {})
+
+        out: dict = {"dataset_size": len(all_estr), "window": w, "per_metodo": {}}
+
+        if len(all_estr) < w + 1:
+            return out
+
+        # Pre-compute freq/extra_freq per window position to speed up
+        # (not critical — calculation cost dominated by loop itself)
+
+        for metodo in metodi:
+            giocate = 0
+            vinte = 0
+            perse = 0
+            totale_vinto = 0.0
+            match_base_dist: dict[int, int] = {}
+            match_extra_dist: dict[int, int] = {}
+            big_wins = 0  # vincita >= 20€
+
+            for i in range(w, len(all_estr)):
+                estr = all_estr[i]
+                window = all_estr[max(0, i - w) : i]
+
+                freq: Counter = Counter()
+                extra_freq: Counter = Counter()
+                last_seen: dict[int, int] = {}
+                for j, e in enumerate(window):
+                    for n in e.numeri:
+                        freq[n] += 1
+                        last_seen[n] = i - len(window) + j
+                    for n in e.numeri_extra:
+                        extra_freq[n] += 1
+
+                if metodo == "vicinanza":
+                    seed = freq.most_common(1)[0][0] if freq else 1
+                    nearby = sorted(
+                        [
+                            (n, freq.get(n, 0))
+                            for n in range(1, 91)
+                            if abs(n - seed) <= 5 and n != seed and freq.get(n, 0) > 0
+                        ],
+                        key=lambda x: -x[1],
+                    )
+                    pick = [seed]
+                    for n, _ in nearby:
+                        pick.append(n)
+                        if len(pick) >= k:
+                            break
+                elif metodo == "dual_target":
+                    hb = [n for n, _ in freq.most_common(k)][:3]
+                    he = [n for n, _ in extra_freq.most_common(20) if n not in hb][:3]
+                    pick = hb + he
+                elif metodo == "cold":
+                    pick = sorted(range(1, 91), key=lambda x: freq.get(x, 0))[:k]
+                elif metodo == "freq_rit_dec":
+                    rit_soglia = len(window) // 5
+                    candidates = []
+                    for n in range(1, 91):
+                        f = freq.get(n, 0)
+                        ls = last_seen.get(n, -1)
+                        rit = i - ls if ls >= 0 else len(window)
+                        if f >= 3 and rit >= rit_soglia:
+                            candidates.append((n, f + rit / len(window) * 3))
+                    candidates.sort(key=lambda x: -x[1])
+                    pick = [n for n, _ in candidates[:k]]
+                else:  # hot default
+                    pick = [n for n, _ in freq.most_common(k)]
+
+                # Pad with most frequent if short
+                if len(pick) < k:
+                    for n, _ in freq.most_common():
+                        if n not in pick:
+                            pick.append(n)
+                        if len(pick) >= k:
+                            break
+                pick_set = set(pick[:k])
+
+                drawn = set(estr.numeri)
+                extra_set = set(estr.numeri_extra)
+                mb = len(pick_set & drawn)
+                rem = pick_set - drawn
+                me = len(rem & extra_set)
+
+                v_base = pb.get(mb, 0.0)
+                v_extra = pe.get(me, 0.0)
+                vincita = v_base + v_extra
+
+                giocate += 1
+                totale_vinto += vincita
+                if vincita > 0:
+                    vinte += 1
+                else:
+                    perse += 1
+                if vincita >= 20:
+                    big_wins += 1
+                match_base_dist[mb] = match_base_dist.get(mb, 0) + 1
+                match_extra_dist[me] = match_extra_dist.get(me, 0) + 1
+
+            totale_giocato = giocate * costo
+            pnl = totale_vinto - totale_giocato
+            avg_vincita = totale_vinto / giocate if giocate else 0
+            ratio = avg_vincita / ev_teorico if ev_teorico else 0
+            roi = pnl / totale_giocato * 100 if totale_giocato else 0
+            hit_rate = vinte / giocate * 100 if giocate else 0
+
+            out["per_metodo"][metodo] = {
+                "giocate": giocate,
+                "vinte": vinte,
+                "perse": perse,
+                "big_wins": big_wins,
+                "totale_giocato": totale_giocato,
+                "totale_vinto": round(totale_vinto, 2),
+                "pnl": round(pnl, 2),
+                "hit_rate": round(hit_rate, 2),
+                "roi": round(roi, 2),
+                "avg_vincita": round(avg_vincita, 4),
+                "ratio_vs_ev": round(ratio, 4),
+                "match_base_dist": match_base_dist,
+                "match_extra_dist": match_extra_dist,
+            }
+
+        return out
+    finally:
+        if own:
+            session.close()
+
+
 def storico(gioco: str = "all", limit: int = 100, session: Optional[object] = None) -> list[dict]:
     """Get chronological history of paper trades."""
     own = session is None

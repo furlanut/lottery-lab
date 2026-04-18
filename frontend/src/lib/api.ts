@@ -196,6 +196,28 @@ export interface GamePnL {
   hit_rate: number;
 }
 
+export interface DiecieLottoCompareMetodo {
+  giocate: number;
+  vinte: number;
+  perse: number;
+  big_wins: number;
+  totale_giocato: number;
+  totale_vinto: number;
+  pnl: number;
+  hit_rate: number;
+  roi: number;
+  avg_vincita: number;
+  ratio_vs_ev: number;
+  match_base_dist: Record<string, number>;
+  match_extra_dist: Record<string, number>;
+}
+
+export interface DiecieLottoCompare {
+  dataset_size: number;
+  window: number;
+  per_metodo: Record<string, DiecieLottoCompareMetodo>;
+}
+
 export interface PaperTradingRecord {
   data: string;
   ora?: string;

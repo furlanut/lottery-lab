@@ -1459,6 +1459,25 @@ def paper_trading_storico(
     return storico(gioco=gioco, limit=limit)
 
 
+@app.get(f"{PREFIX}/paper-trading/diecielotto/compare")
+def paper_trading_diecielotto_compare(
+    metodi: str = Query("vicinanza,dual_target"),
+):
+    """Backtest retroattivo 10eLotto K=6 con confronto multi-metodo.
+
+    Calcola su TUTTE le estrazioni disponibili (non solo le 4 giornate di
+    paper trading live) il P&L di ciascun metodo: vicinanza, dual_target,
+    ecc. Riduce drammaticamente la varianza campionaria.
+
+    Parametri:
+      metodi: CSV di metodi (es. "vicinanza,dual_target,cold")
+    """
+    from paper_trading.service import backtest_diecielotto_compare
+
+    metodi_list = [m.strip() for m in metodi.split(",") if m.strip()]
+    return backtest_diecielotto_compare(metodi=metodi_list)
+
+
 @app.post(f"{PREFIX}/paper-trading/run")
 def paper_trading_run(user: str = Depends(verify_token)):
     """Genera e salva le previsioni del giorno per tutti i giochi."""
