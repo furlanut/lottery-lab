@@ -3538,6 +3538,299 @@ Proposta per il prossimo test: **autocorrelazione a lag 100 filtrata per adjacen
 
 ---
 
+## Appendice I: La Caccia al Meccanismo — 4 Test, Tutti Negativi
+
+### I.1 Motivazione e attesa
+
+L'Appendice H aveva decomposto l'edge di vicinanza (ratio 1.060x vs 1.001x di dual_target) come:
+- 92% dal seed-selection (numero piu frequente in W=100)
+- 8% dall'adjacency filtering
+
+Il passo logico successivo: se il seed-selection (prendere il numero piu frequente) produce edge, deve esistere una forma di **hot-hand numerica** nel PRNG 10eLotto, ovvero numeri che sono stati frequenti in W=100 devono avere probabilita > 20/90 = 22.22% di apparire nell'estrazione successiva.
+
+Quattro test progettati per isolare e caratterizzare questo pattern (`backend/diecielotto/autocorr_tests.py`, dataset 34.739 estrazioni, 3.117.510 sample pair (numero, estrazione)).
+
+### I.2 Test H.8a — Hot-hand numerica
+
+Per ogni coppia (t ≥ W, n ∈ 1..90) registro (`freq(n, W=100)`, `present(n, t+1)`). Il baseline P(present) = 20/90 = 0.2222. Se i numeri caldi sono piu probabili, P(present|freq alta) > 0.2222.
+
+| freq_n | N samples | P(present) | Diff % | z |
+|--------|-----------|------------|--------|---|
+| 15 | 65.405 | 0.2236 | +0.63% | +0.86 |
+| 20 (media) | 266.327 | 0.2237 | +0.66% | +1.81 |
+| 22 | 303.827 | 0.2215 | -0.32% | -0.93 |
+| 25 | 230.698 | 0.2235 | +0.58% | +1.49 |
+| 30 (caldo) | 52.787 | 0.2211 | -0.52% | -0.64 |
+| 35 (caldissimo) | 3.621 | 0.2207 | -0.70% | -0.23 |
+| 39 (estremo) | 197 | 0.1777 | -20.05% | -1.50 |
+
+**Aggregato:**
+- HIGH freq (≥28.5): n=211.052, P(present) = 0.2208 (**-0.66%**)
+- LOW freq (≤16.0): n=147.455, P(present) = 0.2222 (-0.02%)
+- **HI - LO: -0.143 punti percentuali, z = -1.01**
+
+**Verdetto H.8a: NESSUNA hot-hand.** Il PRNG 10eLotto e uniforme rispetto alla frequenza in W=100. Anzi, una lievissima (non significativa) tendenza di *anti-persistenza*: i numeri caldi hanno P(present) leggermente inferiore alla media.
+
+### I.3 Test H.8b — Adjacency bonus controllato
+
+Per ogni (t, n): registro (freq_n, avg_freq_neighbors_n, present). Poi per freq_n fissa, osservo come varia P(present) con avg_freq_neighbors.
+
+Tabella parziale (freq_n = 22, il valore piu comune):
+
+| avg_neighbors | N | P(present) | Diff % |
+|---------------|---|------------|--------|
+| 19 | 3.824 | 0.2105 | -5.27% |
+| 21 | 54.528 | 0.2230 | +0.35% |
+| 22 | 102.781 | 0.2214 | -0.38% |
+| 24 | 38.746 | 0.2223 | +0.02% |
+| 26 | 1.860 | 0.2140 | -3.71% |
+
+**Aggregato (freq_n ≈ 22 ± 1):**
+- LOW neighbors (avg ≤ 20): P = 0.2215
+- HIGH neighbors (avg ≥ 24): P = 0.2230
+- **z = +0.94** (non significativo)
+
+**Verdetto H.8b: NESSUN adjacency bonus.** Dopo controllo per freq_n, la frequenza dei vicini non aggiunge potere predittivo. L'effetto +8% attribuito nell'Appendice H all'adjacency era artefatto del backtest monetario, non del prediction power.
+
+### I.4 Test H.8c — Sensibilita della finestra W
+
+Ripeto H.8a per W ∈ {20, 50, 100, 200, 500, 1000}:
+
+| W | z (HI vs LO) | P(pres\|hi) | P(pres\|lo) | Diff pp |
+|---|--------------|-------------|-------------|---------|
+| 20 | -0.49 | 0.2215 | 0.2223 | -0.073 |
+| 50 | -1.63 | 0.2210 | 0.2233 | -0.223 |
+| 100 | -1.01 | 0.2208 | 0.2222 | -0.143 |
+| 200 | **+1.38** | 0.2237 | 0.2218 | +0.185 |
+| 500 | -0.10 | 0.2228 | 0.2229 | -0.013 |
+| 1000 | +0.76 | 0.2229 | 0.2220 | +0.098 |
+
+**Nessun W raggiunge z > 2**. Il "migliore" W=200 ha z=+1.38 (p ≈ 0.08, non sig). La direzione dell'effetto e inconsistente (oscilla fra + e - cambiando W) — pattern di puro rumore.
+
+### I.5 Test H.8d — Stabilita temporale
+
+Split cronologico del dataset in 4 parti (~8.700 estrazioni ciascuno), ripeto H.8a.
+
+| Fold | Range | z | P_hi | P_lo |
+|------|-------|---|------|------|
+| 1 | [0..8684) | -1.04 | 0.2174 | 0.2203 |
+| 2 | [8684..17368) | +0.45 | 0.2215 | 0.2202 |
+| 3 | [17368..26052) | -0.74 | 0.2220 | 0.2241 |
+| 4 | [26052..34739) | -0.67 | 0.2222 | 0.2241 |
+
+**Mean z = -0.50, SD z = 0.57.** I 4 fold danno effetti in direzione opposta (2 positivi, 2 negativi) con magnitudine piccola. **Pattern instabile: se esistesse un segnale RNG, i 4 fold dovrebbero dare z coerente in segno e almeno > 2 in magnitudine.**
+
+### I.6 La riconciliazione: perche vicinanza ha ratio > 1 se non c'e hot-hand?
+
+I 4 test smentiscono tutte le ipotesi di "meccanismo PRNG". Il RNG 10eLotto **e genuinamente perfetto** rispetto a frequenza, adjacency, finestra, e tempo.
+
+Ma allora perche vicinanza ha ratio 1.060x e random-seed 0.976x nell'Appendice H.3?
+
+La risposta, dopo riflessione, e un **effetto combinatoriale sui payoff, non un effetto predittivo**:
+
+1. **I payoff sono convessi nel match count**: 2€ per 3/6, 10€ per 4/6, 100€ per 5/6, 1000€ per 6/6. Premi Extra: 1€ per 2/6, 7€ per 3/6, 20€ per 4/6, 200€ per 5/6.
+
+2. **Pick "clusterato" vs pick "sparso" hanno stessa E[match] ma DIVERSA Var[match]**: quando pesco 6 numeri in un cluster compatto, i 6 eventi (base^i presente) sono piu *correlati* tra loro (non perche il RNG li correla, ma perche gli stessi 20 estratti dal pool di 90 formano naturalmente cluster per pigeonhole). Risultato: vicinanza ha distribuzione di match_base piu "a code" (piu zero-match E piu 5-match).
+
+3. **Convessita + skewness = ratio > 1** anche con P marginale identica. E' lo stesso effetto della disuguaglianza di Jensen applicata al premio(match_count): E[f(X)] > f(E[X]) se f e convessa e X ha varianza > 0.
+
+Quindi: il ratio 1.060x di vicinanza **non e un edge predittivo**. E' un **artefatto del payoff asimmetrico × varianza del pick**. Vicinanza produce pick con varianza maggiore (perche clusterati) → match distribution con coda piu pesante → EV leggermente maggiore per via della convessita.
+
+### I.7 Verifica rapida: varianza del match_count
+
+Piccolo test di conferma: su 34.739 estrazioni, la distribuzione di match_base dovrebbe essere piu "spalmata" (piu zero e piu quattro+) per vicinanza che per dual_target.
+
+Dal backtest locale originale:
+
+| Match base | Vicinanza | Dual_target | Diff |
+|------------|-----------|-------------|------|
+| 0 | 7.342 | 7.379 | -37 |
+| 1 | 13.398 | 13.359 | +39 |
+| 2 | 9.659 | 9.693 | -34 |
+| 3 | 3.487 | 3.486 | +1 |
+| 4 | 675 | 644 | **+31** |
+| 5 | 61 | 62 | -1 |
+| 6 | 3 | 2 | +1 |
+
+Vicinanza ha **+31 giocate a 4/6 base** (premio 10€) rispetto a dual_target, e +3 a 4-6 match. Il totale "code" (≥4/6) e 739 vs 708 → **+4.4% di eventi di coda** per vicinanza. Con premi 10€-1000€ in quei bucket, l'edge +0.06x di ratio totale e spiegato.
+
+### I.8 Implicazione profonda: rivedere la conclusione H
+
+**La decomposizione dell'Appendice H era numericamente corretta ma interpretata male.**
+
+Non e vero che "seed-selection sfrutta momentum frequenziale" (H.8a lo smentisce). E' vero che:
+- Il seed-selection + adjacency PRODUCONO pick con varianza diversa
+- Quella varianza moltiplicata per la convessita dei payoff da EV maggiore
+
+Il test H random-seed (Appendice H.4) non isolava "seed-selection" ma "una varianta del pick". Un seed random + 5 vicini piu frequenti produce pick che e *a volte* clusterato e *a volte* no (dipende se il seed random cade in zona hot), degradando la struttura. Per questo ratio scende.
+
+### I.9 La vera spiegazione di vicinanza
+
+Vicinanza NON e un metodo predittivo. E' un **metodo di generazione di scommesse ad alta varianza su gioco con payoff convesso**. E' equivalente a comprare opzioni out-of-the-money: l'EV marginale viene dalla coda, non dalla previsione.
+
+Implicazione pratica: **qualsiasi strategia che produca cinquine "clusterate" dovrebbe avere lo stesso edge**, indipendentemente da come e scelto il cluster. Vediamo:
+
+| Strategia | Cluster? | Atteso ratio | Osservato |
+|-----------|----------|--------------|-----------|
+| Vicinanza (seed = most_freq) | SI | ~1.05-1.08x | 1.060x |
+| Vicinanza (seed = random) | SI (ma a volte no) | ~1.02-1.05x | 0.976x (a volte degenera) |
+| Cluster fisso "1-6" | SI | ~1.05-1.08x | (da testare) |
+| Cluster fisso "50-55" | SI | ~1.05-1.08x | (da testare) |
+| Dual_target (3 base + 3 extra) | NO (sparso) | ~1.00-1.01x | 1.001x |
+| Hot (top 6 sparsi) | NO | ~1.00-1.01x | 0.950x |
+
+Il pattern e coerente: **cluster → ratio lievemente sopra baseline, sparso → ratio circa baseline**.
+
+### I.10 Perche nessun metodo supera il breakeven 1.11x
+
+Il breakeven 1.11x per K=6+Extra richiede un edge di +11%. Il massimo guadagno da convessita + clustering e circa +5-8% (dai nostri dati). Quindi **nessuna strategia combinatoriale pura puo superare il breakeven** senza un vero edge predittivo, che il RNG 10eLotto non concede.
+
+**Teorema pratico**: su un RNG uniforme con payoff convessi, max ratio ottenibile ≈ 1 + O(Var[match] × convexity_degree). Per K=6, 20 estratti su 90, cluster estremo: ratio ≈ 1.05-1.08x. Per superare 1.11x servirebbe un vero bias RNG.
+
+### I.11 Proposta verifica diretta del "cluster bias"
+
+Eseguire backtest con:
+1. "Cluster fisso random" ogni volta (es. `[r, r+1, r+2, r+3, r+4, r+5]` con r casuale 1-85)
+2. "Cluster optimal-positioned" (es. cluster in posizione che bilancia fasce del wheel)
+3. "Pick anti-cluster" (6 numeri con minima vicinanza reciproca, es. `[10, 25, 40, 55, 70, 85]`)
+
+Se (1) da ratio ~1.04-1.06x anche con seed random, conferma: **il bonus e nel cluster, non nel seed**.
+Se (3) da ratio ~0.94-0.96x (sotto baseline), conferma: **essere sparso penalizza via convessita**.
+
+Il test e stato eseguito (Appendice J). Risultati ribaltano anche la teoria della convessita.
+
+---
+
+## Appendice J: Il Colpo di Scena — Tutto e Varianza
+
+### J.1 Esecuzione del test proposto in I.11
+
+Codice: `backend/diecielotto/cluster_verify.py`. Cinque strategie su 34.740 estrazioni, con lo stesso backtest di Appendice H.
+
+| Strategia | Cluster? | Ratio | Var(match_base) | Big wins ≥20€ | Coda 4/6+ |
+|-----------|----------|-------|-----------------|---------------|-----------|
+| Cluster RANDOM seed `[r..r+5]` | SI | **0.9915x** | 0.9747 | 296 | 712 |
+| **Anti-cluster FISSO `[10,25,40,55,70,85]`** | **NO** | **1.0651x** | 0.9731 | 303 | 681 |
+| Sparse random (dist ≥ 10) | NO | 0.9744x | 0.9749 | 278 | 710 |
+| Vicinanza classic (seed=most_freq) | SI | 1.0595x | 0.9879 | 301 | 740 |
+| Dual target (3 base + 3 extra) | NO | 1.0009x | 0.9834 | 278 | 709 |
+
+### J.2 Il risultato ribalta TUTTO
+
+**Osservazioni decisive:**
+
+1. **Cluster random-seed: 0.9915x** (sotto baseline!)
+   Se la teoria "cluster bonus" fosse vera, dovrebbe essere 1.04-1.06x. Non lo e.
+
+2. **Anti-cluster fisso [10,25,40,55,70,85]: 1.0651x** (ALTO come vicinanza!)
+   6 numeri sparsi FISSI battono vicinanza (1.0595x). Questo non ha senso ne con la teoria "hot-hand" (H.8a), ne con "cluster convessita" (I).
+
+3. **Sparse random: 0.9744x** (sotto baseline)
+   Sparso random perde. Ma sparso FISSO vince. La differenza e solo la fissita.
+
+4. **Distribuzione match_base quasi IDENTICA** per tutte le strategie (vedi tabella sotto).
+
+Distribuzione match_base dettagliata:
+
+| mb | cluster_rand | cluster_anti | sparse_rand | vicinanza | dual_target |
+|----|-------------|-------------|-------------|-----------|-------------|
+| 0 | 7.343 | 7.292 | 7.136 | 7.343 | 7.380 |
+| 1 | 13.509 | 13.514 | 13.410 | 13.405 | 13.366 |
+| 2 | 9.690 | 9.658 | 9.872 | 9.663 | 9.698 |
+| 3 | 3.386 | 3.495 | 3.512 | 3.489 | 3.487 |
+| 4 | 646 | 623 | 647 | 676 | 645 |
+| 5 | 64 | 54 | 62 | 61 | 62 |
+| 6 | 2 | 4 | 1 | 3 | 2 |
+
+Le distribuzioni sono statisticamente identiche (chi-quadro sui 5 pattern: non significativo). La varianza del match_base e simile (0.97-0.99). **Il match_base NON spiega la differenza di ratio.**
+
+La differenza deve stare nei **match_extra** e nella loro **covarianza con i match_base**, attraverso i payoff extra convessi.
+
+### J.3 Il vero verdetto: e tutta varianza
+
+Facciamo i conti. Su 34.740 giocate con payoff estremi (1000€ per 6/6, 2000€ per 6/6 Extra):
+- EV teorico: 1.80€/giocata, totale atteso 62.532€
+- Osservato vicinanza: ratio 1.060x → 66.284€ (+3.752€)
+- Osservato cluster_anti: ratio 1.065x → 66.641€ (+4.109€)
+- Osservato cluster_rand: ratio 0.992x → 62.001€ (-531€)
+- Osservato sparse_rand: ratio 0.974x → 60.922€ (-1.610€)
+
+Il gap massimo (cluster_anti vs sparse_rand) e 5.719€ su 34.740 giocate = **0.16€ per giocata media**.
+
+Ma un singolo jackpot 6/6 vale 1.000€, un 5/6 Extra vale 200€. La differenza di 5.719€ corrisponde a **~3-10 eventi rari** di differenza tra strategie.
+
+**Stima della varianza teorica del ratio**:
+- Payoff Extra ha p = 4×10^-6 per 6/6 (2000€) e p = 3×10^-5 per 5/6 (200€)
+- Var(payoff singolo) ≈ 4×10^-6 × 2000² + ... ≈ 30
+- sd_giocata ≈ 5.5€
+- sd_media(N=34740) ≈ 5.5 / √34740 ≈ 0.029€
+- sd_ratio ≈ 0.029 / 1.80 ≈ **0.016**
+
+Con sd=0.016, un intervallo 95% sul ratio osservato e ±0.032. Quindi:
+- Vicinanza 1.060x ± 0.032 = [1.028, 1.092]
+- Cluster_anti 1.065x ± 0.032 = [1.033, 1.097]
+- Cluster_rand 0.992x ± 0.032 = [0.960, 1.024]
+
+**Tutte queste confidence interval SI SOVRAPPONGONO.** Non c'e differenza statisticamente significativa tra le strategie. Il "ranking" vicinanza > anti-cluster > dual_target > sparse_random > cluster_random **e rumore**.
+
+### J.4 Il vero payoff: nessuna strategia funziona
+
+Riorganizziamo la gerarchia osservata con errori di stima:
+
+| Strategia | Ratio ± 2σ | Significativamente diverso da 1.00? |
+|-----------|------------|-------------------------------------|
+| Anti-cluster fisso | 1.065 ± 0.032 | Borderline (z≈2.03) |
+| Vicinanza classic | 1.060 ± 0.032 | Borderline (z≈1.87) |
+| Dual target | 1.001 ± 0.032 | No (z≈0.03) |
+| Cluster random | 0.992 ± 0.032 | No (z≈-0.5) |
+| Sparse random | 0.974 ± 0.032 | No (z≈-1.6) |
+
+Con soglia Bonferroni per 5 strategie (0.05/5 = 0.01, z>2.58), NESSUNA e significativamente > baseline. Il "miglior" (anti-cluster fisso) e solo al pelo sopra p=0.05 raw.
+
+### J.5 Lezione profonda: le stime ratio su 34K giocate sono rumorose
+
+Questa appendice e lezione metodologica. Il paper aveva iterativamente:
+1. Ipotizzato hot-hand (Cap. 22, smentita)
+2. Ipotizzato clustering naturale (Appendice H, smentita da H.8a)
+3. Ipotizzato seed-selection momentum (H, smentita da I.1-I.5)
+4. Ipotizzato cluster convexity (I.6, smentita da J.1)
+
+Ogni volta trovavamo ratio 1.02-1.08x e cercavamo un meccanismo. La verita, finalmente chiara: **con payoff asimmetrici 1000€+ e dataset ~34K, la stima del ratio ha sd ≈ 0.016. Tutto quello che sta in [0.95, 1.10] e rumore.**
+
+Il ratio di vicinanza osservato non sopravvive al test di riproducibilita (seed random produce 0.99), non e stabile temporalmente (I.5), non e differenziabile da pick arbitrari fissi (J.1). **E' un artefatto di un singolo campione specifico.**
+
+### J.6 Stima del dataset necessario per segnali reali
+
+Per distinguere un ipotetico edge +0.05 (ratio 1.05 vs 1.00) con confidence 95%:
+- Richiesto: 2σ < 0.05 → σ < 0.025 → N > (5.5/0.025/1.80)² = 14.900 giocate? No, aspetta:
+- sd_ratio(N) = sd_giocata / (EV × √N) = 5.5 / (1.80 × √N)
+- 0.025 = 5.5 / (1.80 × √N) → √N = 122 → **N ≈ 14.900**
+
+Quindi con 34K giocate DOVREMMO riuscire a distinguere un edge reale di 5%. Ma i test di temporal stability (Fold 1-4, I.5) mostrano che il "segnale" cambia direzione tra fold, quindi non esiste un edge genuino del 5%.
+
+**Conclusione definitiva:** l'edge di vicinanza 1.060x non e replicabile, non e stabile, non sopravvive a verifica con pick random o fissi arbitrari. **E varianza di un sample specifico**, amplificata dalla coda pesante dei payoff.
+
+### J.7 La verita ultima sul 10eLotto
+
+Il 10eLotto ha:
+- RNG certificato ADM (Cap. 22 conferma: chi-quadro, autocorr, birthday, coppie: tutti PASS)
+- Nessun hot-hand (I.1-I.3)
+- Nessun adjacency bonus (I.4)
+- Nessuna stabilita temporale di pattern (I.5)
+- Nessuna differenza tra pick clusterati/sparsi oltre la varianza (J.1-J.4)
+
+**Il 10eLotto non e battibile con 34K giocate di dato.** Qualsiasi "segnale" trovato e rumore campionario amplificato dalla skewness dei payoff. L'HE 9.94% e ineluttabile.
+
+L'unica strategia razionale per chi gioca: **giocate minime (K=6 + Extra = 2€) durante Special Time (HE 6.30%), ignorando qualsiasi metodo predittivo**. Nessun algoritmo produce edge.
+
+### J.8 Implicazione per il portale paper-trading
+
+La sezione Paper Trading del portale mostra ratio osservati 1.06x vs 1.11x vs ... Questi numeri sono **matematicamente corretti ma statisticamente non interpretabili come "performance relativa"**. Tutti cadono nell'intervallo di errore [0.95, 1.10] che e pura varianza.
+
+Aggiungere disclaimer piu forti: **"I ratio mostrati non sono significativi finche il dataset non supera 100K giocate. A oggi sono stime rumorose del vero EV atteso, che si aggira intorno a 0.90 per K=6+Extra (HE 9.94%)."**
+
+---
+
 ## 26. Lezioni Finali del Lottery Lab
 
 ### 26.1 Tabella definitiva dei segnali
