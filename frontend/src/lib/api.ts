@@ -284,6 +284,67 @@ export interface StrategyAdvisorStatus {
   };
 }
 
+// MillionDay Advisor types
+export interface MDHotNumber {
+  numero: number;
+  frequenza: number;
+  attesa: number;
+  deviazione: number;
+}
+
+export interface MDStrategy {
+  id: string;
+  label: string;
+  subtitle: string;
+  window_size: number;
+  obiettivo: string;
+  desc: string;
+  numeri: number[];
+  ratio_val_robust: number;
+  ratio_disc_robust: number;
+  p_value: number;
+  big_wins_val: number;
+  regime_b_ratio_avg: number;
+  regime_b_bucket_sopra_be: string;
+  note: string;
+  colore: "amber" | "blue" | "green" | "red" | "purple";
+}
+
+export interface MillionDayAdvisorStatus {
+  dataset: {
+    finestra_visualizzazione: number;
+    totale_db: number;
+    ultima_estrazione: {
+      data: string;
+      ora: string;
+      numeri: number[];
+      extra: number[];
+    } | null;
+  };
+  hot_numbers: MDHotNumber[];
+  cold_numbers: MDHotNumber[];
+  strategies: MDStrategy[];
+  prossima_estrazione: {
+    iso: string;
+    ora: string;
+    secondi_a_estrazione: number;
+    frequenza_giorno: number;
+    orari: string[];
+  };
+  ev_analitico: {
+    ev_base: number;
+    ev_extra: number;
+    ev_totale: number;
+    house_edge: number;
+    breakeven: number;
+  };
+  avvertimenti: {
+    multiple_testing: string;
+    regime_bifase: string;
+    he_reale: string;
+  };
+}
+
 export interface SimulateResult {
   input: {
     numeri: number[];

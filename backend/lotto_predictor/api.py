@@ -1528,6 +1528,27 @@ def strategy_advisor_status():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+@app.get(f"{PREFIX}/millionday/advisor/status")
+def millionday_advisor_status():
+    """Strategy Advisor dedicato a MillionDay.
+
+    Espone le 6 configurazioni top dal window sweep (Appendice L del paper):
+    - cold_plus_hotex W=66/67 (ratio robust 3.25x / 2.97x)
+    - dual_3b2e W=103/104 (ratio robust 2.96x / 2.95x)
+    - spread_fasce W=40 (2.96x)
+    - spread_fasce W=24 (jackpot seeker - ha catturato 5/5 nel backtest)
+
+    Calcola i numeri LIVE sulle ultime estrazioni del DB.
+    """
+    from millionday.advisor import get_status
+
+    try:
+        return get_status()
+    except Exception as e:
+        logger.exception("Errore millionday/advisor/status")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 @app.get(f"{PREFIX}/strategy-advisor/simulate")
 def strategy_advisor_simulate(
     numeri: str = Query(..., description="CSV di 6 numeri 1-90, es. '5,12,23,34,56,78'"),
