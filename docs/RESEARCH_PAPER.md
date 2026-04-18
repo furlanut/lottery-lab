@@ -3936,6 +3936,204 @@ Con sd_ratio ≈ 0.03 su 34K giocate, servirebbe edge > 0.09 (ratio > 1.09) per 
 
 ---
 
+## Appendice L: MillionDay — Window Sweep Esaustivo W=1..300 × 12 Algoritmi
+
+### L.1 Motivazione
+
+Il paper e il portale hanno identificato `optfreq W=60` come "miglior" metodo MillionDay (Appendice E-ter). Domanda aperta: **e davvero W=60 la finestra ottimale?** E lo e per QUALSIASI algoritmo, o solo per optfreq?
+
+Sweep esaustivo: 12 algoritmi × 300 finestre (W=1..300) = **3.600 configurazioni** testate. Per la best config: analisi rolling temporale sul dataset per vedere come cambia il ratio nel tempo.
+
+Script: `backend/millionday/window_sweep.py` (numpy-ottimizzato, ~72 secondi).
+
+### L.2 Algoritmi testati
+
+| ID | Descrizione |
+|----|-------------|
+| hot | Top 5 piu frequenti nel base |
+| cold | Top 5 meno frequenti nel base (ritardo) |
+| optfreq | Top 5 con \|freq - expected\| minima (anti hot/cold) |
+| hot_extra | Top 5 piu frequenti nell'Extra |
+| dual_3b2e | 3 hot base + 2 hot extra disgiunti |
+| dual_2b3e | 2 hot base + 3 hot extra disgiunti |
+| cold_plus_hotex | 3 cold base + 2 hot extra |
+| mix3h2c | 3 hot + 2 cold del base |
+| vicinanza_D3 | seed + 4 vicini in ±3 |
+| vicinanza_D5 | seed + 4 vicini in ±5 |
+| vicinanza_D10 | seed + 4 vicini in ±10 |
+| spread_fasce | 1 hot per ciascuna delle 5 fasce di decina |
+
+### L.3 Metrica robusta vs naive
+
+**Problema critico**: con 3.600 configurazioni su 2.607 estrazioni (1.304 validation), la probabilita che almeno UNA config catturi un 5/5 jackpot (1M€) per puro caso e:
+
+```
+P(>=1 config becca jackpot in val) = 1 - (1 - 1.304 × 2.9e-6)^3600 ≈ 73%
+```
+
+Infatti, il primo sweep ha restituito `spread_fasce W=24` con ratio 58.4x — un JACKPOT catturato nel bucket 2025-06-29.
+
+**Metrica robusta**: cap del payout a 500€ per estrazione. Sopra quella soglia, la vincita viene normalizzata a 500€. Questo esclude:
+- 5/5 base (1.000.000€ → 500€)
+- 5/5 Extra (100.000€ → 500€)
+- 4/5 base (1.000€ → 500€)
+- 4/5 Extra (1.000€ → 500€)
+
+EV teorico capped: ~0.71€/giocata (HE 65%). Con cap, i pattern "reali" emergono sotto il rumore dei jackpot.
+
+### L.4 Top 20 configurazioni (ratio robust val)
+
+| Rank | Algoritmo | W | Ratio disc | Ratio val | Big wins val |
+|------|-----------|---|------------|-----------|--------------|
+| 1 | **cold_plus_hotex** | **66** | +1.127x | **+3.249x** | 2 |
+| 2 | cold_plus_hotex | 67 | +0.946x | +2.972x | 2 |
+| 3 | dual_3b2e | 103 | +1.275x | +2.957x | 3 |
+| 4 | spread_fasce | 40 | +1.035x | +2.957x | 2 |
+| 5 | dual_3b2e | 104 | +1.508x | +2.953x | 3 |
+| 6 | cold | 82 | +0.948x | +2.852x | 2 |
+| 7 | optfreq | 236 | +1.489x | +2.668x | 1 |
+| 8 | hot_extra | 8 | +1.579x | +2.616x | 2 |
+| 9 | spread_fasce | 72 | +1.899x | +2.558x | 1 |
+| 10 | hot | 13 | +1.553x | +2.538x | 2 |
+| 11 | dual_2b3e | 7 | +1.026x | +2.484x | 2 |
+| 12 | optfreq | 170 | +1.845x | +2.480x | 2 |
+| ... | | | | | |
+
+### L.5 Best W per algoritmo (rating robust)
+
+| Algoritmo | Best W | Ratio val robust | Ratio disc robust | Coerenza |
+|-----------|--------|------------------|-------------------|----------|
+| cold_plus_hotex | 66 | +3.249x | +1.127x | ⚠ |
+| dual_3b2e | 103 | +2.957x | +1.275x | ⚠ |
+| spread_fasce | 40 | +2.957x | +1.035x | ⚠ |
+| cold | 82 | +2.852x | +0.948x | ⚠ |
+| optfreq | 236 | +2.668x | +1.489x | ⚠ |
+| hot_extra | 8 | +2.616x | +1.579x | ⚠ |
+| hot | 13 | +2.538x | +1.553x | ⚠ |
+| dual_2b3e | 7 | +2.484x | +1.026x | ⚠ |
+| vicinanza_D5 | 16 | +2.296x | +1.138x | ⚠ |
+| vicinanza_D10 | 12 | +2.281x | +1.148x | ⚠ |
+| mix3h2c | 288 | +2.147x | +0.885x | ⚠ |
+| vicinanza_D3 | 34 | +2.124x | +0.950x | ⚠ |
+
+**Tutte le best config hanno coerenza ⚠** (differenza disc/val > 10%). Questo e il sintomo classico di overfitting del validation set: il ratio e alto in val ma basso in disc.
+
+Osservazione importante: **W varia enormemente tra algoritmi** (da 7 a 288). Non c'e una "finestra universale". Per optfreq era W=60 nella Appendice E-ter, qui W=236 risulta il massimo (ma con W=170 e W=188 simili, e anche W=60 da 1.90x — piu stabile). Tre interpretazioni possibili:
+- (a) L'algoritmo ha bisogno di W specifici — e "ancora" al dato
+- (b) Il W specifico massimizza per fortuna su questo validation set (overfitting)
+- (c) Entrambi
+
+### L.6 Permutation test top 5
+
+Bonferroni soglia (3.600 test): **p < 0.00001** per significativita
+
+| Algoritmo | W | Ratio val robust | p-value | Bonf-sig? |
+|-----------|---|------------------|---------|-----------|
+| cold_plus_hotex | 66 | +3.249x | 0.0040 | raw-sig, **FAIL Bonf** |
+| cold_plus_hotex | 67 | +2.972x | 0.0010 | raw-sig, **FAIL Bonf** |
+| dual_3b2e | 103 | +2.957x | 0.0075 | raw-sig, **FAIL Bonf** |
+| spread_fasce | 40 | +2.957x | 0.0190 | raw-sig, **FAIL Bonf** |
+| dual_3b2e | 104 | +2.953x | 0.0050 | raw-sig, **FAIL Bonf** |
+
+Il miglior p=0.001 e 100x piu alto del soglia Bonferroni 0.00001. Nessuna config sopravvive al multiple testing.
+
+### L.7 Rolling temporal analysis — best config: cold_plus_hotex W=66
+
+Bucket: 300 giocate, stride 100 → 23 bucket che coprono 2022-05 a 2025-10.
+
+| # | Data inizio | Ratio | ROI% | Hit% | Big wins | PnL |
+|---|-------------|-------|------|------|----------|-----|
+| 1 | 2022-05-21 | +0.860x | -43% | 10.3% | 4 | -258€ |
+| 2 | 2022-08-29 | +0.855x | -43% | 10.3% | 4 | -260€ |
+| 3 | 2022-12-07 | +0.970x | -36% | 9.7% | 4 | -214€ |
+| 4 | 2023-03-17 | +0.900x | -40% | 11.3% | 3 | -242€ |
+| 5 | 2023-05-12 | +0.679x | -55% | 12.7% | 2 | -330€ |
+| 6 | 2023-07-01 | +0.392x | -74% | 11.3% | 1 | -444€ |
+| 7 | 2023-08-20 | +0.392x | -74% | 11.3% | 1 | -444€ |
+| 8 | 2023-10-09 | +0.287x | -81% | 12.3% | 0 | -486€ |
+| 9 | 2023-11-28 | +0.337x | -78% | 14.7% | 0 | -466€ |
+| 10 | 2024-01-17 | +0.297x | -80% | 14.3% | 0 | -482€ |
+| 11 | 2024-03-07 | +0.633x | -58% | 13.3% | 2 | -348€ |
+| 12 | 2024-04-26 | +0.618x | -59% | 12.3% | 2 | -354€ |
+| 13 | **2024-06-15** | **+3.378x** | **+124%** | 12.0% | 4 | **+744€** |
+| 14 | 2024-08-04 | +3.026x | +101% | 12.0% | 2 | +604€ |
+| 15 | 2024-09-23 | +3.785x | +151% | 13.7% | 6 | +906€ |
+| 16 | 2024-11-12 | +1.674x | +11% | 16.0% | 7 | +66€ |
+| 17 | 2025-01-01 | +1.920x | +27% | 16.3% | 8 | +164€ |
+| 18 | 2025-02-20 | +1.161x | -23% | 14.7% | 4 | -138€ |
+| 19 | 2025-04-11 | +0.553x | -63% | 14.0% | 1 | -380€ |
+| 20 | 2025-05-31 | +3.041x | +102% | 13.3% | 2 | +610€ |
+| 21 | 2025-07-20 | +3.182x | +111% | 14.0% | 3 | +666€ |
+| 22 | 2025-09-08 | +3.383x | +124% | 11.7% | 4 | +746€ |
+| 23 | 2025-10-28 | +1.513x | +0% | 13.3% | 6 | +2€ |
+
+### L.8 Pattern temporale: due regimi distinti
+
+**Regime A — "freddo" (2022-05 a 2024-05, circa 2 anni, bucket 1-12):**
+- Ratio medio: 0.65x
+- Quasi tutti i bucket sotto breakeven (1.508x)
+- Hit rate tipico 10-14%
+- Perdita sistemica: -40% a -80% ROI
+
+**Regime B — "caldo" (2024-06 a 2025-10, circa 17 mesi, bucket 13-23):**
+- Ratio medio: 2.40x
+- **9 su 11 bucket sopra breakeven**
+- Hit rate tipico 12-16%
+- Vincita ricorrente: +10% a +150% ROI
+
+**Differenza dei regimi:**
+- Big wins: Regime A media 2.0/bucket, Regime B media 4.3/bucket
+- Ratio mediano: A = 0.64x, B = 3.04x
+
+### L.9 Interpretazione: tre ipotesi
+
+**Ipotesi 1 — Non-stazionarieta RNG (pattern reale)**
+Il sistema MillionDay di Sisal ha ricevuto un update/cambio infrastrutturale a giugno 2024. Il nuovo PRNG ha pattern diverso (piu pesca da "residuo base") che favorisce `cold_plus_hotex`. 
+
+**Test che conferma**: se fosse vera, la config dovrebbe continuare a funzionare su dati post-2025-10 (bucket futuri).
+
+**Ipotesi 2 — Fluttuazione campionaria estrema**
+Con payoff skewed (max 1000€ cap vs 2€ cost) e 300 giocate per bucket, sd_ratio per bucket e ~2.5-3.0. Un ratio medio di 3.0x e compatibile con ~1-2 sigma sopra una media vera di 1.0x. Over 11 bucket consecutivi "favorevoli" la probabilita e bassa (~1%) ma non impossibile.
+
+**Test che falsifica**: se fosse vera, la media su lungo termine (es. prossimi 2000 giocate) dovrebbe tornare a ~1.0x.
+
+**Ipotesi 3 — Overfitting di selezione**
+`cold_plus_hotex W=66` e stata selezionata come "best" DOPO aver visto tutti i dati. La stessa config su periodo 2022-2024 sarebbe stata pessima (era infatti sotto baseline). La selezione post-hoc amplifica la varianza della statistica validation.
+
+**Test che falsifica**: se fosse vera, una config scelta a priori (senza vedere i dati) non avrebbe il pattern Regime A/B.
+
+### L.10 Verdetto metodologico
+
+Con solo 2.607 estrazioni e 3.600 config testate, **non si puo distinguere fra le 3 ipotesi**. Ma:
+
+1. **Nessuna config passa Bonferroni** (p=0.001 vs soglia 0.00001)
+2. **Coerenza disc/val e pessima** per tutte le top config
+3. **Il pattern 2022-2024 vs 2024-2025 potrebbe essere reale o rumore** — servirebbero altri 18+ mesi di dati per testare out-of-sample
+
+### L.11 Implicazione operativa
+
+Due scenari:
+
+**Scenario ottimistico (ipotesi 1 vera):**
+Se il RNG ha cambiato comportamento in giugno 2024, allora `cold_plus_hotex W=66` (3 freddi base + 2 caldi extra, W=66) potrebbe effettivamente produrre edge POSITIVO nel prossimo anno. Ma si giocherebbe su un'ipotesi fragile.
+
+**Scenario realista (ipotesi 2-3 vera):**
+Il pattern e varianza campionaria + multiple testing + selection bias. Giocare la config fallirebbe nel futuro. Il vero EV resta 1.326€/giocata (HE 33.7%) per qualsiasi strategia.
+
+**Raccomandazione**: trattare qualsiasi risultato con N<5.000 estrazioni e N_configs>100 come **indicativo, non conclusivo**. La config cold_plus_hotex W=66 merita un follow-up SOLO se si accumulano altri ~1.500 estrazioni e il pattern tiene.
+
+### L.12 Upgrade proposto per il portale MillionDay
+
+Il metodo attuale del portale e `optfreq W=60` (ratio val 1.343x non-robust). Se si volesse aggiornare basandosi su questo sweep, candidati:
+- `cold_plus_hotex W=66` (ratio robust 3.25x, ma Regime B-dipendente)
+- `optfreq W=170` o `W=60` (ratio robust 2.48x/1.9x, piu stabile fra regime)
+
+**Decisione proposta**: NON aggiornare il metodo del portale. Il benchmark stabile e l'`optfreq W=60` dimostrato dalla deep analysis. Cambiare metodo dopo vedere `cold_plus_hotex W=66` brillare sarebbe sintomatico di selection bias.
+
+Tuttavia, **aggiungere alla pagina MillionDay un disclaimer** che la performance recente (2024-06 in poi) e fluttuante e il vero EV atteso resta negativo.
+
+---
+
 ## 26. Lezioni Finali del Lottery Lab
 
 ### 26.1 Tabella definitiva dei segnali
