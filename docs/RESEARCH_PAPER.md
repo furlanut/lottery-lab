@@ -3823,11 +3823,116 @@ Il 10eLotto ha:
 
 L'unica strategia razionale per chi gioca: **giocate minime (K=6 + Extra = 2€) durante Special Time (HE 6.30%), ignorando qualsiasi metodo predittivo**. Nessun algoritmo produce edge.
 
+### J.7-bis Il test specifico di Appendice H.8 finalmente eseguito
+
+**Nota importante**: l'Appendice H aveva proposto come test successivo "autocorrelazione a lag lungo filtrata per adjacency numerica". Questo test NON era stato eseguito da I (che ha testato autocorrelazione stessa-finestra) ne da J (che ha testato strategie fisse vs random). E' stato eseguito separatamente come Appendice K.
+
+**Risultato: CONFERMA ulteriore del verdetto di Appendice J** — nessun pattern lag-adjacency, il PRNG 10eLotto non ha memoria cross-finestra con shift numerico. Vedi Appendice K per dettagli.
+
 ### J.8 Implicazione per il portale paper-trading
 
 La sezione Paper Trading del portale mostra ratio osservati 1.06x vs 1.11x vs ... Questi numeri sono **matematicamente corretti ma statisticamente non interpretabili come "performance relativa"**. Tutti cadono nell'intervallo di errore [0.95, 1.10] che e pura varianza.
 
 Aggiungere disclaimer piu forti: **"I ratio mostrati non sono significativi finche il dataset non supera 100K giocate. A oggi sono stime rumorose del vero EV atteso, che si aggira intorno a 0.90 per K=6+Extra (HE 9.94%)."**
+
+---
+
+## Appendice K: Il Test Originariamente Proposto (e Mai Fatto)
+
+### K.1 Auto-critica: il test specifico mancava
+
+Rileggendo il paper, l'utente ha notato che il test **autocorrelazione a lag lungo filtrata per adjacency numerica** proposto in Appendice H.8 non era stato davvero eseguito. L'Appendice I ha testato cose correlate ma non questo specifico test:
+
+- H.8a: `freq(x, W=100)` → `present(x, t+1)` — stessa x, lag=1, **stessa finestra** → diverso
+- H.8b: `freq(x) + freq(neighbors)` → `present(x)` — tutto sulla **stessa finestra** → diverso
+- H.8c: come H.8a con W variabile — stesso concetto, non cross-finestra → diverso
+
+Il test proposto specifico era: **correlazione fra `freq(x, finestra A)` e `freq(x+d, finestra B)` per lag L tra A e B e offset numerico d**.
+
+E' stato finalmente eseguito: `backend/diecielotto/lag_adjacency_test.py`.
+
+### K.2 Metodologia
+
+Per ogni tempo t (step = W=100, non-overlapping per L ≥ W):
+- Finestra A: `[t-W, t-1]` (100 estrazioni)
+- Finestra B: `[t+L-W, t+L-1]` (100 estrazioni, shiftate di lag L rispetto ad A)
+
+Per ogni numero x ∈ [1, 90] e offset d ∈ {-5..+5}:
+- Registra `freq(x, A)` e `freq(x+d, B)` (quando `1 ≤ x+d ≤ 90`)
+- Accumula pair across tutti (t, x) → (freq_A, freq_B)
+- Calcola Pearson r sulla lista accumulata
+
+Lag testati: **L ∈ {1, 50, 100, 200, 500, 1000}**.
+
+**Caveat critico**: per L < W, le finestre A e B si sovrappongono (overlap = W-L estrazioni), generando correlazione spuria r ≈ (W-L)/W a d=0 che NON e un meccanismo. Il test genuino e **L ≥ W** (finestre disgiunte).
+
+### K.3 Risultati — matrice correlazioni r[L][d]
+
+| L \\ d | -5 | -4 | -3 | -2 | -1 | 0 | +1 | +2 | +3 | +4 | +5 |
+|--------|------|------|------|------|------|------|------|------|------|------|------|
+| 1 (overlap 99%) | -0.007 | -0.011 | -0.011 | -0.019 | -0.013 | **+0.990** | -0.012 | -0.018 | -0.012 | -0.010 | -0.006 |
+| 50 (overlap 50%) | +0.000 | -0.017 | -0.007 | -0.003 | -0.008 | **+0.498** | -0.006 | -0.012 | -0.008 | -0.007 | +0.001 |
+| **100** (disjoint) | +0.006 | -0.007 | +0.005 | +0.015 | -0.013 | +0.008 | +0.014 | -0.012 | -0.001 | -0.001 | +0.005 |
+| **200** (disjoint) | -0.002 | +0.005 | -0.001 | -0.005 | -0.006 | -0.005 | +0.001 | +0.010 | -0.008 | -0.004 | -0.003 |
+| **500** (disjoint) | -0.005 | +0.002 | +0.001 | -0.006 | +0.001 | -0.002 | -0.002 | +0.001 | -0.003 | +0.002 | +0.001 |
+| **1000** (disjoint) | +0.007 | +0.003 | -0.003 | +0.006 | -0.008 | -0.007 | +0.002 | -0.001 | -0.006 | -0.002 | +0.008 |
+
+### K.4 Verifica dell'artefatto overlap
+
+Per L<W, la correlazione attesa a d=0 e esattamente `(W-L)/W` dovuta ai sample condivisi tra le due finestre:
+
+| L | r(d=0) atteso (overlap) | r(d=0) osservato | Match? |
+|---|-------------------------|------------------|--------|
+| 1 | 0.990 | +0.990 | ✓ perfetto |
+| 50 | 0.500 | +0.498 | ✓ perfetto |
+
+L'artefatto e completamente identificato e numericamente calibrato. Questi NON sono segnali RNG.
+
+### K.5 Test genuino: L ≥ W (finestre disgiunte)
+
+Per L ∈ {100, 200, 500, 1000}, tutti gli offset d ∈ [-5..+5]:
+
+- **Max |r| su adjacency (d ≠ 0): 0.015** (L=100, d=+1) → z = +0.29
+- **Max |r| per d = 0 (persistenza stesso numero): 0.008** (L=100) → z = +0.15
+
+Bonferroni per 40 test (4 lag × 10 offset ≠ 0): soglia z > 3.1. **Nessun valore supera 0.3.**
+
+### K.6 Verdetto K: chiusura definitiva
+
+**Non esiste alcun pattern lag-adjacency nel PRNG 10eLotto.** La frequenza di x nella finestra A e la frequenza di x+d nella finestra B (disgiunta, lag ≥ 100) sono statisticamente indipendenti per tutti i d ∈ [-5..+5].
+
+Questo chiude ogni ipotesi di meccanismo PRNG basato su:
+- Memoria a lungo termine (lag ≥ 100)
+- Shift numerico (adjacency)
+- Combinazione di entrambi
+
+### K.7 Bilancio complessivo: 6 ipotesi, 6 smentite
+
+| Cap. | Ipotesi | Risultato |
+|------|---------|-----------|
+| Cap. 22 | RNG ha autocorrelazione lag 1-14 | NEGATIVO |
+| H.8a | Hot-hand numerica | NEGATIVO (z=-1.01) |
+| H.8b | Adjacency bonus controllato | NEGATIVO (z=+0.94) |
+| H.8c | Esiste W ottimale | NEGATIVO (max z=+1.38) |
+| H.8d | Pattern stabile fra fold | NEGATIVO (instabile) |
+| I-J | Cluster convexity | NEGATIVO (stime rumore) |
+| **K** | **Lag-adjacency cross-window** | **NEGATIVO (max z=+0.29)** |
+
+**7 test specifici, 7 smentiti.** Il PRNG 10eLotto e genuinamente perfetto nell'insieme di ipotesi esplorate.
+
+### K.8 La lezione metodologica finale
+
+Questo epilogo e una lezione importante: **l'intuizione "dev'esserci un meccanismo se vedo un edge in backtest" e fallace**. Con payoff asimmetrici (1000-2000€ jackpot) e dataset finiti (34K giocate), le stime del ratio hanno SD ~0.016-0.03. Qualunque valore nell'intervallo [0.95, 1.10] e compatibile con rumore.
+
+La procedura corretta per dichiarare un edge:
+1. Se vedi edge ε > 0 in backtest, calcola `sd_ratio = sd_giocata / (EV × √N)`
+2. Se `ε < 3 × sd_ratio`, fermati — non e un segnale
+3. Altrimenti, prima cerca il meccanismo, poi valida con dataset indipendente
+4. Anche se meccanismo plausibile, richiedi riproducibilita su dataset out-of-sample
+
+Con sd_ratio ≈ 0.03 su 34K giocate, servirebbe edge > 0.09 (ratio > 1.09) per essere distinguibile da rumore. Nessuno dei metodi testati lo produce.
+
+**Conclusione del viaggio**: abbiamo iterativamente cercato meccanismi in un sistema genuinamente casuale. Ogni "scoperta" si e rivelata un'illusione della coda del rumore. Il valore del progetto Lottery Lab e proprio questo: **dimostrare per esclusione, con rigore metodologico, che NESSUN meccanismo sfruttabile esiste**.
 
 ---
 
