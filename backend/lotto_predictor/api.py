@@ -1508,3 +1508,40 @@ def paper_trading_verifica(user: str = Depends(verify_token)):
         "vincicasa": verifica_vincicasa(),
         "diecielotto": verifica_diecielotto(),
     }
+
+
+# ---------------------------------------------------------------------------
+# Strategy Advisor
+# ---------------------------------------------------------------------------
+
+
+@app.get(f"{PREFIX}/strategy-advisor/status")
+def strategy_advisor_status():
+    """Stato completo per il Strategy Advisor: hot numbers, strategie,
+    Special Time countdown, EV analitico."""
+    from diecielotto.strategy_advisor import get_status
+
+    try:
+        return get_status()
+    except Exception as e:
+        logger.exception("Errore strategy-advisor/status")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get(f"{PREFIX}/strategy-advisor/simulate")
+def strategy_advisor_simulate(
+    numeri: str = Query(..., description="CSV di 6 numeri 1-90, es. '5,12,23,34,56,78'"),
+    backtest_limit: int = Query(1000, ge=100, le=5000),
+):
+    """Simula un pick custom: EV analitico + backtest su ultime N estrazioni."""
+    from diecielotto.strategy_advisor import simulate_custom_pick
+
+    try:
+        nums = [int(x.strip()) for x in numeri.split(",") if x.strip()]
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Parse error: {e}") from e
+
+    result = simulate_custom_pick(nums, limit_backtest=backtest_limit)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result

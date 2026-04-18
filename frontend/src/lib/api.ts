@@ -218,6 +218,95 @@ export interface DiecieLottoCompare {
   per_metodo: Record<string, DiecieLottoCompareMetodo>;
 }
 
+// Strategy Advisor types
+export interface HotNumber {
+  numero: number;
+  frequenza: number;
+  attesa: number;
+  deviazione: number;
+}
+
+export interface StrategyInfo {
+  id: string;
+  label: string;
+  obiettivo: string;
+  desc: string;
+  numeri: number[];
+  p_win_any_osservata: number;
+  p_win_10plus_osservata: number;
+  p_win_100plus_osservata: number;
+  ratio_backtest: number;
+  note: string;
+}
+
+export interface SpecialTimeInfo {
+  in_corso: boolean;
+  prossima_start_iso: string;
+  secondi_a_inizio: number;
+  he_normale: number;
+  he_special_time: number;
+  vantaggio_pp: number;
+}
+
+export interface EVAnalitico {
+  ev_base: number;
+  ev_extra: number;
+  ev_totale: number;
+  house_edge: number;
+  breakeven: number;
+  p_base: Record<string, number>;
+  p_win_qualsiasi: number;
+}
+
+export interface StrategyAdvisorStatus {
+  dataset: {
+    finestra_estrazioni: number;
+    W: number;
+    ultima_estrazione: {
+      data: string;
+      ora: string;
+      numeri: number[];
+      numero_oro: number;
+      numeri_extra: number[];
+    } | null;
+    totale_db: number;
+  };
+  hot_numbers: HotNumber[];
+  cold_numbers: HotNumber[];
+  strategies: StrategyInfo[];
+  special_time: SpecialTimeInfo;
+  ev_analitico: EVAnalitico;
+  invarianti: {
+    p_vincita_qualsiasi_media: number;
+    note_invariante: string;
+    he_base: number;
+    breakeven_base: number;
+  };
+}
+
+export interface SimulateResult {
+  input: {
+    numeri: number[];
+    costo: number;
+  };
+  ev_analitico: EVAnalitico;
+  backtest: {
+    estrazioni_testate: number;
+    vincite_1plus: number;
+    vincite_10plus: number;
+    vincite_100plus: number;
+    p_1plus_oss: number;
+    p_10plus_oss: number;
+    p_100plus_oss: number;
+    totale_vinto: number;
+    totale_giocato: number;
+    pnl: number;
+    roi: number;
+    ratio_vs_ev: number;
+    match_base_dist: Record<string, number>;
+  };
+}
+
 export interface PaperTradingRecord {
   data: string;
   ora?: string;
